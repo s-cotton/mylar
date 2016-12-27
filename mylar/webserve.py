@@ -81,7 +81,10 @@ class WebInterface(object):
         myDB = db.DBConnection()
         comic = myDB.selectone('SELECT * FROM comics WHERE ComicID=?', [ComicID]).fetchone()
         if comic is None:
-            raise cherrypy.HTTPRedirect("home")
+            if mylar.SAFESTART:
+                raise cherrypy.HTTPRedirect("manageComics")
+            else:
+                raise cherrypy.HTTPRedirect("home")
         #let's cheat. :)
         #comicskip = myDB.select('SELECT * from comics order by ComicSortName COLLATE NOCASE')
         skipno = len(mylar.COMICSORT['SortOrder'])
@@ -803,7 +806,10 @@ class WebInterface(object):
                 logger.warn('Unable to remove directory as it does not exist in : ' + seriesdir)
 
         helpers.ComicSort(sequence='update')
-        raise cherrypy.HTTPRedirect("home")
+        if mylar.SAFESTART:
+            raise cherrypy.HTTPRedirect("manageComics")
+        else:
+            raise cherrypy.HTTPRedirect("home")
     deleteSeries.exposed = True
 
     def wipenzblog(self, ComicID=None, IssueID=None):
@@ -1834,7 +1840,10 @@ class WebInterface(object):
         weeklyresults = myDB.select("SELECT * from weekly")
         pulldate = myDB.selectone("SELECT * from weekly").fetchone()
         if pulldate is None:
-            raise cherrypy.HTTPRedirect("home")
+            if mylar.SAFESTART:
+                raise cherrypy.HTTPRedirect("manageComics")
+            else:
+                raise cherrypy.HTTPRedirect("home")
         return serve_template(templatename="weeklypull.html", title="Weekly Pull", weeklyresults=weeklyresults, pulldate=pulldate['SHIPDATE'], pullfilter=True)
     filterpull.exposed = True
 
@@ -2340,7 +2349,10 @@ class WebInterface(object):
     def checkGithub(self):
         from mylar import versioncheck
         versioncheck.checkGithub()
-        raise cherrypy.HTTPRedirect("home")
+        if mylar.SAFESTART:
+            raise cherrypy.HTTPRedirect("manageComics")
+        else:
+            raise cherrypy.HTTPRedirect("home")
     checkGithub.exposed = True
 
     def history(self):
@@ -3979,7 +3991,7 @@ class WebInterface(object):
                     "transmission_username": mylar.TRANSMISSION_USERNAME,
                     "transmission_password": mylar.TRANSMISSION_PASSWORD,
                     "transmission_directory": mylar.TRANSMISSION_DIRECTORY,
-					"deluge_host": mylar.DELUGE_HOST,
+                    "deluge_host": mylar.DELUGE_HOST,
                     "deluge_username": mylar.DELUGE_USERNAME,
                     "deluge_password": mylar.DELUGE_PASSWORD,
                     "deluge_label": mylar.DELUGE_LABEL,
@@ -4276,8 +4288,9 @@ class WebInterface(object):
         raise cherrypy.HTTPRedirect("comicDetails?ComicID=%s" % ComicID)
     comic_config.exposed = True
 
-    def readlistOptions(self, send2read=0, tab_enable=0, tab_host=None, tab_user=None, tab_pass=None, tab_directory=None):
+    def readlistOptions(self, send2read=0, tab_enable=0, tab_host=None, tab_user=None, tab_pass=None, tab_directory=None, maintainseriesfolder=0):
         mylar.SEND2READ = int(send2read)
+        mylar.MAINTAINSERIESFOLDER = int(maintainseriesfolder)
         mylar.TAB_ENABLE = int(tab_enable)
         mylar.TAB_HOST = tab_host
         mylar.TAB_USER = tab_user
