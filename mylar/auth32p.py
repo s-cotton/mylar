@@ -6,6 +6,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from cookielib import LWPCookieJar
+import cfscrape
 
 from operator import itemgetter
 
@@ -52,7 +53,7 @@ class info32p(object):
         feedinfo = []
 
         try:
-            with requests.Session() as s:
+            with cfscrape.create_scraper() as s:
                 s.headers = self.headers
                 cj = LWPCookieJar(os.path.join(mylar.CACHE_DIR, ".32p_cookies.dat"))
                 cj.load()
@@ -71,7 +72,10 @@ class info32p(object):
                     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
                 # post to the login form
-                r = s.post(self.url, verify=verify)
+                
+                r = s.post(self.url, verify=verify, allow_redirects=True)
+
+                #logger.debug(self.module + " Content session reply" + r.text)
 
                 #need a way to find response code (200=OK), but returns 200 for everything even failed signons (returns a blank page)
                 #logger.info('[32P] response: ' + str(r.content))
@@ -215,7 +219,7 @@ class info32p(object):
                     logger.warn('No results found for search on 32P.')
                     return "no results"
 
-        with requests.Session() as s:
+        with cfscrape.create_scraper() as s:
             s.headers = self.headers
             cj = LWPCookieJar(os.path.join(mylar.CACHE_DIR, ".32p_cookies.dat"))
             cj.load()
@@ -229,7 +233,7 @@ class info32p(object):
                     url = 'https://32pag.es/torrents.php' #?action=serieslist&filter=' + series_search #&filter=F
                     params = {'action': 'serieslist', 'filter': series_search}
                     time.sleep(1)  #just to make sure we don't hammer, 1s pause.
-                    t = s.get(url, params=params, verify=True)
+                    t = s.get(url, params=params, verify=True, allow_redirects=True)
                     soup = BeautifulSoup(t.content, "html.parser")
                     results = soup.find_all("a", {"class":"object-qtip"},{"data-type":"torrentgroup"})
 
@@ -302,15 +306,24 @@ class info32p(object):
 
                 logger.info('payload: ' + str(payload))
                 url = 'https://32pag.es/ajax.php'
-
                 time.sleep(1)  #just to make sure we don't hammer, 1s pause.
-                d = s.get(url, params=payload, verify=True)
+                try:
+                    d = s.post(url, params=payload, verify=True, allow_redirects=True)
+                    logger.debug(self.module + ' Reply from AJAX: \n %s', d.text)
+                except Exception as e:
+                    logger.info(self.module + ' Could not POST URL %s', url)
+                
+
 
                 try:
                     searchResults = d.json()
                 except:
                     searchResults = d.text
-                logger.info(searchResults)
+                    logger.debug(self.module + ' Search Result did not return valid JSON, falling back on text: %s', searchResults.text)
+                    return False
+
+                logger.debug(self.module + " Search Result: %s", searchResults)
+                    
                 if searchResults['status'] == 'success' and searchResults['count'] > 0:
                     logger.info('successfully retrieved ' + str(searchResults['count']) + ' search results.')
                     for a in searchResults['details']:
@@ -345,7 +358,11 @@ class info32p(object):
 
             '''
             self.module = '[32P-AUTHENTICATION]'
-            self.ses = requests.Session()
+            try:
+                self.ses = cfscrape.create_scraper()
+            except Exception as e:
+                logger.error(self.module + " Can't create session with cfscrape")
+
             self.session_path = session_path if session_path is not None else os.path.join(mylar.CACHE_DIR, ".32p_cookies.dat")
             self.ses.cookies = LWPCookieJar(self.session_path)
             if not os.path.exists(self.session_path):
@@ -447,28 +464,33 @@ class info32p(object):
             u = 'https://32pag.es/login.php?ajax=1'
 
             try:
-                r = self.ses.post(u, data=postdata, timeout=60, allow_redirects=False)
+                r = self.ses.post(u, data=postdata, timeout=60, allow_redirects=True)
+                logger.debug(self.module + ' Status Code: ' + str(r.status_code))
             except Exception as e:
-                logger.error("Got an exception when trying to login to %s POST", u)
+                logger.error(self.module + " Got an exception when trying to login to %s POST", u)
                 self.error = {'status':'exception', 'message':'Exception when trying to login'}
                 return False
 
             if r.status_code != 200:
-                logger.warn("Got bad status code from login POST: %d\n%s\n%s", r.status_code, r.text, r.headers)
+                logger.warn(self.module + " Got bad status code from login POST: %d\n%s\n%s", r.status_code, r.text, r.headers)
+                logger.debug(self.module + " Request URL: %s \n Content: %s \n History: %s \n Json: %s", r.url ,r.text, r.history, d)
                 self.error = {'status':'Bad Status code', 'message':(r.status_code, r.text, r.headers)}
                 return False
 
             try:
+                logger.debug(self.module + ' Trying to analyze login JSON reply from 32P: %s', r.text)
                 d = r.json()
             except:
-                logger.error("The data returned by the login page was not JSON: %s", r.text)
+                logger.debug(self.module + " Request URL: %s \n Content: %s \n History: %s \n Json: %s", r.url ,r.text, r.history, d)
+                logger.error(self.module + " The data returned by the login page was not JSON: %s", r.text)
                 self.error = {'status':'JSON not returned', 'message':r.text}
                 return False
 
             if d['status'] == 'success':
                 return True
 
-            logger.error("Got unexpected status result: %s", d)
+            logger.error(self.module + " Got unexpected status result: %s", d)
+            logger.debug(self.module + " Request URL: %s \n Content: %s \n History: %s \n Json: %s", r.url ,r.text, r.history, d)
             self.error = d
             return False
 
