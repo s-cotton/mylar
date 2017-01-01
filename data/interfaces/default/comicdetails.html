@@ -36,6 +36,8 @@
                         %if annuals:
                                 <a id="menu_link_delete" href="annualDelete?comicid=${comic['ComicID']}">Delete Annuals</a>
                         %endif
+
+                        <a id="menu_link_addalltoRL" href="#" class="menu_link_addalltoRL">Add All to Readinglist</a>
 		</div>
 	</div>
 </%def>
@@ -427,7 +429,7 @@
                         %>
                         <tr class="${issue['Status']} grade${grade}">
 
-                                <td id="select"><input type="checkbox" name="${issue['IssueID']}" class="issCheck" value="${issue['IssueID']}"/></td>
+                                <td id="select"><input type="checkbox" name="${issue['IssueID']}" class="issCheck checkbox" value="${issue['IssueID']}"/></td>
                                 <td id="int_issuenumber">${issue['Int_IssueNumber']}</td>
                                 <td id="issuenumber">${issue['Issue_Number']}</td>
                                 <%
@@ -810,6 +812,12 @@
                     $(this).hide();
                 }
             });
+        });
+
+        $('#menu_link_addalltoRL').click(function(){
+          $('#issue_table tbody tr').each(function(){
+            $(this).find('a[title="Add to Reading List"]').click();            
+          });
         });
 
         $.fn.showHideRows = function(whichClass){
