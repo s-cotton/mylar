@@ -1,0 +1,163 @@
+<%inherit file="base.html" />
+<%!
+        import mylar
+        from mylar.helpers import checked
+
+%>
+
+<%def name="headerIncludes()">
+        <div id="subhead_container">
+                <div id="subhead_menu">
+                    %if explicit == 'loose':
+                        <a id="menu_link_retry" title="This will search for ALL of the terms given : ${name}" href="searchit?name=${name |u}&explicit=loose">Search ALL terms</a>
+                        <a id="menu_link_retry" title="This will search EXPLICITLY for only the terms given : ${name}" href="searchit?name=${name |u}&explicit=explicit">Explicit Search</a>
+                    %elif explicit == 'explicit':
+                        <a id="menu_link_retry" title="Warning: This will search for ANY of the terms given : ${name} (this could take awhile)" href="searchit?name=${name |u}&explicit=loose">Loose Search</a>
+                        <a id="menu_link_retry" title="This will search for ALL of the terms given : ${name}" href="searchit?name=${name |u}&explicit=all">Search ALL terms</a>
+                    %elif explicit == 'all':
+                        <a id="menu_link_retry" title="This will search EXPLICITLY for only the terms given : ${name}" href="searchit?name=${name |u}&explicit=explicit">Explicit Search</a>
+                        <a id="menu_link_retry" title="Warning: This will search for ANY of the terms given : ${name} (this could take awhile)" href="searchit?name=${name |u}&explicit=loose">Loose Search</a>
+                    %endif
+                </div>
+        </div>
+</%def>
+<%def name="body()">
+	<div id="paddingheader">
+                <%
+                      if type == 'story_arc':
+                          typesel = " Story Arc"
+                      else:
+                          typesel = ""
+                      if explicit == 'loose':
+                          searchtext = "Loose Search results for: </br><center> " + name + "</center>"
+                      elif explicit == 'explicit':
+                          searchtext = "Explicit " + typesel.rstrip() + " Search results for: </br><center> " + name + "</center>"
+                      else:
+                          searchtext = "Search results for : </br><center>" + name + "</center>"
+                 %>
+
+		<h1 class="clearfix"><img src="interfaces/default/images/icon_search.png" alt="Search results"/>${searchtext}</h1>
+<!--
+            <div>
+              <form action="CreateFolders" method="GET" id="CreatetheFolders">
+                  <fieldset>
+                       <div class="row">
+                            <input type="checkbox" name="createfolders" id="createfolders" value=1 ${checked(mylar.CREATE_FOLDERS)} /><label>Automatic Folder Creation</label>
+                       </div>
+                       <input type="submit" style="display:none" />
+                  </fieldset>
+              </form>
+            </div>
+-->
+        </div>
+        <div class="table_wrapper">
+	<table class="display" id="searchresults_table">
+		<thead>
+			<tr>
+				<th id="blank"></th>
+				<th id="name">Comic Name</th>
+                                <th id="publisher">Publisher</th>
+                                <th id="comicyear">Year</th>
+				<th id="issues">Issues</th>
+				<th id="add"></th>
+			</tr>
+		</thead>
+		<tbody>
+			%if searchresults:
+				%for result in searchresults:
+				<%
+					if result['comicyear'] == '2016':
+					    grade = 'A'
+					else:
+					    grade = 'Z'
+					if result['haveit'] != "No":
+					    grade = 'H';
+
+                                        rtype = None
+                                        if type != 'story_arc':
+                                            if result['type'] == 'Digital':
+                                                rtype = '[Digital]'
+				%>
+				<tr class="grade${grade}">
+					<td class="blank"></td>
+                                        %if result['deck'] == 'None' or result['deck'] is None:
+                                            %if rtype is None:
+   					        <td class="name"><a href="${result['url']}" target="_blank">${result['name']}</a></td>
+                                            %else:
+   					        <td class="name"><a href="${result['url']}" target="_blank">${result['name']} ${rtype}</a></td>
+                                            %endif
+                                        %else:
+                                            %if rtype is None:
+   					        <td class="name"><a href="${result['url']}" title="${result['deck']}" target="_blank">${result['name']}</a></td>
+                                            %else:
+   					        <td class="name"><a href="${result['url']}" title="${result['deck']}" target="_blank">${result['name']} ${rtype}</a></td>
+                                            %endif
+                                        %endif
+                                        <td class="publisher">${result['publisher']}</a></td>
+                                        <td class="comicyear">${result['comicyear']}</a></td>
+					<td class="issues">${result['issues']}</td>
+
+					%if result['haveit'] == "No":
+                                            %if type == 'story_arc':
+						<td class="add" nowrap="nowrap"><a href="addStoryArc?arcid=${result['comicid']}&cvarcid=${result['cvarcid']}&storyarcname=${result['name'] |u}&storyarcyear=${result['comicyear']}&storyarcpublisher=${result['publisher'] |u}&storyarcissues=${result['issues']}&arclist=${result['arclist']}&desc=${result['description']}&image=${result['comicimage']}"><span class="ui-icon ui-icon-plus"></span> Add this Story Arc</a></td>
+                                            %else:
+						<td class="add" nowrap="nowrap"><a href="addComic?comicid=${result['comicid']}&comicname=${result['name'] |u}&comicyear=${result['comicyear']}&comicpublisher=${result['publisher'] |u}&comicimage=${result['comicimage']}&comicissues=${result['issues']}&imported=${imported}&ogcname=${ogcname}&serinfo=${serinfo}"><span class="ui-icon ui-icon-plus"></span> Add this Comic</a></td>
+                                            %endif
+					%else:
+						<td class="add" nowrap="nowrap"><a href="comicDetails?ComicID=${result['haveit']}"><span class="ui-icon ui-icon-arrowreturnthick-1-n"></span> Already in library</a></td>
+					%endif
+				</tr>
+				%endfor
+			%endif
+		</tbody>
+	</table>
+	</div>
+</%def>
+
+<%def name="headIncludes()">
+	<link rel="stylesheet" href="interfaces/default/css/data_table.css">
+</%def>
+
+<%def name="javascriptIncludes()">
+        <script type="text/javascript">
+        $("#createfolders").click(function() {
+            $('#CreatetheFolders').submit();
+            return true;
+        });
+        </script>
+
+	<script src="js/libs/jquery.dataTables.min.js"></script>
+
+	<script>
+        function initThisPage(){
+
+                initActions();
+		$('#searchresults_table').dataTable(
+			{
+			       "bDestroy": true,
+			       "aoColumnDefs": [
+			         { 'bSortable': false, 'aTargets': [ 0 ] }
+			       ],
+			       "oLanguage": {
+			     	       "sLengthMenu":"Show _MENU_ results per page",
+				       "sEmptyTable": "No results",
+				       "sInfo":"Showing _START_ to _END_ of _TOTAL_ results",
+				       "sInfoEmpty":"Showing 0 to 0 of 0 results",
+				       "sInfoFiltered":"(filtered from _MAX_ total results)",
+				       "sSearch" : ""},
+			       "iDisplayLength": 25,
+			       "sPaginationType": "full_numbers",
+			       "aaSorting": []
+                        });
+
+                resetFilters("result");
+                setTimeout(function(){
+                    initFancybox();
+                },1500);
+        }
+
+        $(document).ready(function() {
+                initThisPage();
+        });
+	</script>
+</%def>

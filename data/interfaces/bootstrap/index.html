@@ -1,0 +1,116 @@
+<%inherit file="base.html"/>
+<%!
+	from mylar import helpers, db
+        import datetime
+%>
+
+<%def name="body()">
+        <div class="table_wrapper">
+
+	<table class="display" id="series_table">
+		<thead>
+			<tr>
+				<th id="publisher">Publisher</th>
+				<th id="name">Comic</th>
+                                <th id="year">Year</th>
+				<th id="issue">Last Issue</th>
+                                <th id="published">Published</th>
+                                <th class="hidden" id="have_percent">Have %</th>
+				<th id="have">Have</th>
+                                <th id="status">Status</th>
+                                <th id="active">Active</th>
+                                <th class="hidden" id="active_state">ActiveSt</th>
+			</tr>
+		</thead>
+		<tbody>
+		%for comic in comics:
+			<%
+                                if comic['percent'] == 101:
+                                        css = '<div class=\"progress-container warning\">'
+                                if comic['percent'] == 100:
+                                        css = '<div class=\"progress-container complete\">'
+                                if comic['percent'] < 100:
+                                        css = '<div class=\"progress-container missing\">'
+
+				if comic['Status'] == 'Paused':
+					grade = 'X'
+				elif comic['Status'] == 'Loading':
+			        	grade = 'L'
+                                elif comic['Status'] == 'Error':
+                                        grade = 'X'
+                                else:
+                                        grade = 'A'
+
+			%>
+			<tr class="grade${grade}">
+				<td id="publisher">${comic['ComicPublisher']}</td>
+                                <td id="name"><span title="${comic['ComicSortName']}"></span><a href="comicDetails?ComicID=${comic['ComicID']}">${comic['ComicName']}</a></td>
+                                <td id="year"><span title="${comic['ComicYear']}"></span>${comic['ComicYear']}</td>
+				<td id="issue"><span title="${comic['LatestIssue']}"></span># ${comic['LatestIssue']}</td>
+                                <td id="published">${comic['LatestDate']}</td>
+                                <td class="hidden" id="have_percent">${comic['percent']}</td>
+				<td id="have"><span title="${comic['percent']}"></span>${css}<div style="width:${comic['percent']}%"><span class="progressbar-front-text">${comic['haveissues']}/${comic['totalissues']}</span></div></td>
+				<td id="status">${comic['recentstatus']}</td>
+                                <td id="active" align="center">
+                                %if comic['Status'] == "Active":
+                                    <img src="interfaces/default/images/checkmark.png" alt="Y" width="16" height="16" />
+                                %elif comic['Status'] == 'Paused':
+                                    <img src="interfaces/default/images/pause-icon.png" alt="Paused" width="16" height="16" />
+                                %elif comic['Status'] == 'Loading':
+                                    <img src="interfaces/default/images/hourglass.png" alt="Loading" width="16" height="16" />
+                                %else:
+                                    <img src="interfaces/default/images/cross.png" alt="N" width="16" height="16" />
+                                %endif
+                                </td>
+                                <td class="hidden" id="active_state">${comic['Status']}</td>
+                         </tr>
+		%endfor
+		</tbody>
+	</table>
+      </div>
+</%def>
+
+<%def name="headIncludes()">
+	<link rel="stylesheet" href="interfaces/default/css/data_table.css">
+</%def>
+
+<%def name="javascriptIncludes()">
+	<script src="js/libs/jquery.dataTables.min.js"></script>
+	<script>
+
+	function initThisPage() {
+		$('#series_table').dataTable(
+                        {
+			        "bDestroy": true,
+                                "aoColumnDefs": [
+                                     { 'bSortable': false, 'aTargets': [5, 9] },
+                                     { 'bVisible': false, 'aTargets': [5, 9] },
+                                     { 'sType': 'numeric', 'aTargets': [5] },
+                                     { 'iDataSort': [5], 'aTargets': [6] },
+                                     { 'iDataSort': [9], 'aTargets': [8] }
+                                ],
+                                "aLengthMenu": [[10, 15, 25, 50, -1], [10, 15, 25, 50, 'All' ]],
+			        "oLanguage": {
+                                        "sLengthMenu":"Show _MENU_ results per page",
+                                        "sEmptyTable": "No results",
+                                        "sInfo":"Showing _START_ to _END_ of _TOTAL_ results",
+                                        "sInfoEmpty":"Showing 0 to 0 of 0 results",
+                                        "sInfoFiltered":"(filtered from _MAX_ total results)",
+                                        "sSearch" : ""},
+                                "bStateSave": true,
+                                "iDisplayLength": 25,
+                                "sPaginationType": "full_numbers",
+                                "aaSorting": [[7,'asc'],[1,'asc']]
+		        });
+		        resetFilters("comic");
+	}
+	
+	$(document).ready(function(){
+		        initThisPage();
+	});
+	$(window).load(function(){
+		initFancybox();
+	});
+	</script>
+	
+</%def>
