@@ -133,14 +133,20 @@
             Mark Selected Issues
             <span class="caret"></span>
           </button>
-          <ul class="dropdown-menu">
-            <li><a href="#">Wanted</a></li>
-            <li><a href="#">Skipped</a></li>
-            <li><a href="#">Archived</a></li>
-            <li><a href="#">Ignored</a></li>
-            %if mylar.FAILED_DOWNLOAD_HANDLING:
-            <li><a href="#">Failed</a></li>
-            %endif
+          <!-- <select name="action" onChange="" data-error="You didn't select any issues" data-success="selected issues marked">
+                                <option disabled="disabled" selected="selected">Choose...</option>
+                                <option value="Added">Added</option>
+                                <option value="Downloaded">Downloaded</option>
+                                <option value="Read">Read</option>
+                                <option value="Remove">Remove</option>
+                                <option value="Send">Send</option>
+                </select> -->
+          <ul class="dropdown-menu mark-all-as">
+            <li><a href="#">Added</a></li>
+            <li><a href="#">Downloaded</a></li>
+            <li><a href="#">Read</a></li>
+            <li><a href="#">Remove</a></li>
+            <li><a href="#">Send</a></li>
           </ul>
         </div>
       </div>
@@ -176,7 +182,7 @@
                 comic_context = 'active'
 
             %>
-                  <tr class="grade${grade} ${comic_context}" data-issueid="${issue['IssueID']}">
+                  <tr class="grade${grade} ${comic_context}" data-issueid="${issue['IssueID']}" data-comicname="${issue['ComicName']}" data-issuenumber="${issue['Issue_Number']}" >
                     <td id="select">
                       <input type="checkbox" name="${issue['IssueID']}" value="${issue['IssueID']}" class="checkbox" />
                     </td>
@@ -199,7 +205,7 @@
                     </td>
                     <td id="options">
                       <div class="btn-group">
-                        <a data-success="Sucessfully removed ${issue['ComicName']} #${issue['Issue_Number']} from Reading List" class="btn btn-default btn-sm remove-from-read-list">
+                        <a class="btn btn-default btn-sm remove-from-read-list">
                           <span class="glyphicon glyphicon-remove" title="Remove from Reading List"></span>
                         </a>
                         <a data-success="Marked ${issue['ComicName']} ${issue['Issue_Number']} as Read." class="btn btn-default btn-sm mark-as-read">

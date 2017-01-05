@@ -38,7 +38,8 @@ var mylar = {
 					offset: {
 						y: 70,
 						x: 20
-					}
+					},
+					delay: 5000
 				}
 			},
 			info : {
@@ -74,6 +75,16 @@ var mylar = {
 					allow_dismiss: false
 				}
 			},
+		},
+		ajax: {
+			options: {
+				url: 'ajax',
+				method: 'GET',
+				dataType: 'json'
+			},
+			data: {
+				apikey: window.mylarAPIKey
+			}			
 		}
 	},
 
@@ -152,46 +163,90 @@ var mylar = {
 	},
 	notify: {
 		info: function(message){
+			var messageOptions = {},
+				messageSettings = {};
 
-			var messageOptions  = ( arguments.length > 1 ) ? $.extend(mylar.config.notify.info.options, arguments[1]) : mylar.config.notify.info.options;
-			var messageSettings = ( arguments.length > 2 ) ? $.extend(mylar.config.notify.info.settings, arguments[2]) : mylar.config.notify.info.settings;
+			if( arguments.length > 1 ){
+				var messageOptions  = $.extend(messageOptions,mylar.config.notify.info.options, arguments[1])
+			} else {
+				var messageOptions  = mylar.config.notify.info.options;
+			}
+			if( arguments.length > 2 ){
+				var messageSettings = $.extend(messageSettings,mylar.config.notify.info.settings, arguments[2])
+			} else {
+				var messageSettings = mylar.config.notify.info.settings;
+			}
 
 			messageOptions.message = message;
 
-			mylar.notify.show( messageOptions, messageSettings );
+			return mylar.notify.show( messageOptions, messageSettings );
 		},
 		success: function(message){
+			var messageOptions = {},
+				messageSettings = {};
 
-			var messageOptions  = ( arguments.length > 1 ) ? $.extend(mylar.config.notify.success.options, arguments[1]) : mylar.config.notify.success.options;
-			var messageSettings = ( arguments.length > 2 ) ? $.extend(mylar.config.notify.success.settings, arguments[2]) : mylar.config.notify.success.settings;
+			if( arguments.length > 1 ){
+				var messageOptions  = $.extend(messageOptions, mylar.config.notify.success.options, arguments[1])
+			} else {
+				var messageOptions  = mylar.config.notify.success.options;
+			}
+			if( arguments.length > 2 ){
+				var messageSettings = $.extend(messageSettings, mylar.config.notify.success.settings, arguments[2])
+			} else {
+				var messageSettings = mylar.config.notify.success.settings;
+			}
 
 			messageOptions.message = message;
 
-			mylar.notify.show( messageOptions, messageSettings );
+			return mylar.notify.show( messageOptions, messageSettings );
 		},
 		warn: function(message){
+			var messageOptions = {},
+				messageSettings = {};
 
-			var messageOptions  = ( arguments.length > 1 ) ? $.extend(mylar.config.notify.warn.options, arguments[1]) : mylar.config.notify.warn.options;
-			var messageSettings = ( arguments.length > 2 ) ? $.extend(mylar.config.notify.warn.settings, arguments[2]) : mylar.config.notify.warn.settings;
+			if( arguments.length > 1 ){
+				var messageOptions  = $.extend(messageOptions, mylar.config.notify.warn.options, arguments[1])
+			} else {
+				var messageOptions  = mylar.config.notify.warn.options;
+			}
+			if( arguments.length > 2 ){
+				var messageSettings = $.extend(messageSettings, mylar.config.notify.warn.settings, arguments[2])
+			} else {
+				var messageSettings = mylar.config.notify.warn.settings;
+			}
 
 			messageOptions.message = message;
 
-			mylar.notify.show( messageOptions, messageSettings );
+			return mylar.notify.show( messageOptions, messageSettings );
 		},
 		error: function(message){
+			var messageOptions = {},
+				messageSettings = {};
 
-			var messageOptions  = ( arguments.length > 1 ) ? $.extend(mylar.config.notify.error.options, arguments[1]) : mylar.config.notify.error.options;
-			var messageSettings = ( arguments.length > 2 ) ? $.extend(mylar.config.notify.error.settings, arguments[2]) : mylar.config.notify.error.settings;
+			if( arguments.length > 1 ){
+				var messageOptions  = $.extend(messageOptions, mylar.config.notify.error.options, arguments[1])
+			} else {
+				var messageOptions  = mylar.config.notify.error.options;
+			}
+			if( arguments.length > 2 ){
+				var messageSettings = $.extend(messageSettings, mylar.config.notify.error.settings, arguments[2])
+			} else {
+				var messageSettings = mylar.config.notify.error.settings;
+			}
 
 			messageOptions.message = message;
 
-			mylar.notify.show( messageOptions, messageSettings );
+			return mylar.notify.show( messageOptions, messageSettings );
 		},
 		show: function(options,settings){
-			var messageOptions  = $.extend(mylar.config.notify.default.options, options);
-			var messageSettings = $.extend(mylar.config.notify.default.settings, settings);
-			if( mylar.debug ) mylar.console.log(options,settings);
-			$.notify( messageOptions, messageSettings );
+			var messageOptions = {},
+				messageSettings = {};
+
+			$.extend(messageOptions,mylar.config.notify.default.options, options);
+			$.extend(messageSettings, mylar.config.notify.default.settings, settings);
+			
+			if( mylar.debug ) mylar.console.log(messageOptions.message, messageOptions,messageSettings);
+			return $.notify( messageOptions, messageSettings );
 		}
 	},
 	console: {
@@ -221,6 +276,50 @@ var mylar = {
 			mylar.console._sendToServer( arguments );
 		}
 
+	},
+
+	ajax: function(data){
+		var ajaxOptions = mylar.config.ajax.options;
+		var ajaxData = $.extend(mylar.config.ajax.data, data);
+		
+		ajaxOptions.data = ajaxData;
+
+		if ( arguments.length > 1 ){
+			ajaxOptions.success = arguments[1];
+		} else {
+			ajaxOptions.success = mylar.ajaxFunctions.success;
+		}
+		if ( arguments.length > 2 ){
+			ajaxOptions.error = arguments[2];
+		} else {
+			ajaxOptions.error = mylar.ajaxFunctions.error;
+		}
+
+		return $.ajax( ajaxOptions );
+	},
+
+	ajaxFunctions: {
+		success: function(data, status, jqXHR){
+
+		},
+		error: function(jqXHR, status, error){
+
+		},
+		complete: function(jqXHR, status){
+
+		},
+		beforeSend: function(jqXHR, settings){
+
+		},
+
+	},
+
+	getCheckedIssues: function( tableSelector ){
+		var data = {};
+		$(tableSelector + ' tbody').find(':checked').each(function(){
+			data[ $(this).attr('name') ] = $(this).val();
+		});
+		return data;
 	}
 }
 
