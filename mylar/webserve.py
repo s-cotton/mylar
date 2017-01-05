@@ -4849,6 +4849,20 @@ class WebInterface(object):
 
     api.exposed = True
 
+    def ajax(self, *args, **kwargs):
+
+        from mylar.ajax import Ajax
+
+        a = Ajax()
+
+        a.checkParams(*args, **kwargs)
+
+        data = a.fetchData()
+
+        return data
+
+    ajax.exposed = True
+
     def downloadthis(self, pathfile=None):
         #pathfile should be escaped via the |u tag from within the html call already.
         logger.fdebug('filepath to retrieve file from is : ' + pathfile)
