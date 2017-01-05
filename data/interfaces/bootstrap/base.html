@@ -34,9 +34,9 @@
 	<script src="js/libs/modernizr-2.8.3.min.js"></script>
 </head>
 <body>
-    <%
-         mylar.DONATEBUTTON = True
-    %>
+	<%
+		 mylar.DONATEBUTTON = True
+	%>
 	<nav class="navbar navbar-default navbar-fixed-top">
 		<div class="container">
 			<div class="navbar-header">
@@ -54,19 +54,19 @@
 			<div class="collapse navbar-collapse" id="navbar-main">
 				<ul class="nav navbar-nav navbar-right">
 					<li>
-                    %if mylar.WANTED_TAB_OFF:
-                        <a href="#">Wanted</a>
-                    %else:
-                        <a href="upcoming">Wanted</a>
-                    %endif
-                    </li>
-                    <li><a href="pullist">
-                            %if mylar.PULLNEW == 'no':
-                              <img src="interfaces/bootstrap/images/grey-circle.png" height="10" width="10" />
-                            %else:
-                              <img src="interfaces/bootstrap/images/green-circle.png" height="10" width="10" />
-                            %endif
-                             &nbsp;This Week</a></li>
+					%if mylar.WANTED_TAB_OFF:
+						<a href="#">Wanted</a>
+					%else:
+						<a href="upcoming">Wanted</a>
+					%endif
+					</li>
+					<li><a href="pullist">
+							%if mylar.PULLNEW == 'no':
+							  <img src="interfaces/bootstrap/images/grey-circle.png" height="10" width="10" />
+							%else:
+							  <img src="interfaces/bootstrap/images/green-circle.png" height="10" width="10" />
+							%endif
+							 &nbsp;This Week</a></li>
 					<li><a href="manage">Manage</a></li>
 					<li><a href="history">History</a></li>
 					<li><a href="logs" class="log">Logs</a></li>
@@ -90,17 +90,6 @@
 
 	<div class="container">
 		<div id="ajaxMsg"></div>
-		% if not mylar.CURRENT_VERSION:
-            <div id="updatebar">
-                You're running an unknown version of Mylar. <a href="update">Update</a> or 
-                <a href="#" onclick="$('#updatebar').slideUp('slow');">Close</a>
-            </div>
-        % elif mylar.CURRENT_VERSION != mylar.LATEST_VERSION and mylar.INSTALL_TYPE != 'win' and mylar.COMMITS_BEHIND > 0:
-	        <div id="updatebar">
-	            A <a href="https://github.com/evilhero/mylar/compare/${mylar.CURRENT_VERSION}...${mylar.LATEST_VERSION}" target="_blank"> newer version</a> is available. You're ${mylar.COMMITS_BEHIND} commits behind. <a href="update">Update</a> or <a href="#" onclick="$('#updatebar').slideUp('slow');">Close</a>
-	        </div>
-		% endif
-	
 		<div class="row" id="main">
 			<div class="col-xs-12" id="subhead">
 				<div class="pull-right">
@@ -129,8 +118,8 @@
 					<li>
 						<p class="navbar-text">
 						<a href="https://twitter.com/mylarcomics" class="twitter-follow-button" data-show-count="false">@mylarcomics</a>
-                        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
-                        </p>
+						<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+						</p>
 					</li>
 					<li><a href="#main" id="toTop"><span>Back to top</span></a></li>
 				</ul>
@@ -165,9 +154,29 @@
 
 	<script src="interfaces/bootstrap/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 
+	<script src="interfaces/bootstrap/bower_components/remarkable-bootstrap-notify/dist/bootstrap-notify.min.js"></script>
+
 	<script src="js/common.js"></script>
 
 	<script src="interfaces/bootstrap/js/mylar.js"></script>
+	
+	% if not mylar.CURRENT_VERSION:
+		<script type="text/javascript">
+			(function($,undefined){
+				$(document).ready(function(){
+					mylar.notify.warn("You're running an unknown version of Mylar. Click here to update.", { url: "/update" }, { delay: -1 } );
+				});
+			})(jQuery)
+		</script>
+	% elif mylar.CURRENT_VERSION != mylar.LATEST_VERSION and mylar.INSTALL_TYPE != 'win' and mylar.COMMITS_BEHIND > 0:
+		<script type="text/javascript">
+			(function($,undefined){
+				$(document).ready(function(){
+					mylar.notify.warn("A <a href=\"https://github.com/evilhero/mylar/compare/${mylar.CURRENT_VERSION}...${mylar.LATEST_VERSION}\" target=\"_blank\"> newer version</a> is available. You're ${mylar.COMMITS_BEHIND} commits behind. <a href=\"/update\" target=\"_blank\">Click here to update</a>", {}, { delay: -1 } );
+				});
+			})(jQuery)
+		</script>
+	% endif
 	
 	${next.javascriptIncludes()}
 	

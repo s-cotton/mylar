@@ -7,214 +7,243 @@
 %>
 
 <%def name="headerIncludes()">
-	<div id="subhead_container">
-		<div id="subhead_menu">
-                        %if mylar.TAB_ENABLE:
-   			    <a id="menu_link_delete" href="#" onclick="doAjaxCall('syncfiles',$(this),'table')" data-success="Syncing complete.">Sync</a>
-                        %endif
-			<a id="menu_link_delete" href="#" onclick="doAjaxCall('removefromreadlist?AllRead=1',$(this),'table')" data-success="All Read Records Removed">Remove Read</a>
-			<a id="menu_link_delete" href="#">Force New Check</a>
-                        <a id="menu_link_refresh" href="#">Clear File Cache</a>
-		</div>
-	</div>
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="btn-group pull-right">
+        %if mylar.TAB_ENABLE:
+        <a id="menu_link_delete" href="#" data-success="Syncing complete." class="btn btn-success sync-to-device">
+          <span class="glyphicon glyphicon-upload"></span>&nbsp;Sync
+        </a>
+        %endif
+        <a id="menu_link_delete" href="#" data-success="All Read Records Removed" class="btn btn-warning remove-read-from-list">
+          <span class="glyphicon glyphicon-trash"></span>&nbsp;Remove Read
+        </a>
+        <a id="menu_link_delete" href="#" class="btn btn-info force-new-check">
+          <span class="glyphicon glyphicon-refresh"></span>&nbsp;Force New Check
+        </a>
+        <a id="menu_link_refresh" href="#" class="btn btn-warning clear-file-cache">
+          <span class="glyphicon glyphicon-trash"></span>&nbsp;Clear File Cache
+        </a>
+      </div>
+    </div>
+  </div>
 </%def>
 
 <%def name="body()">
-	<div id="paddingheader">
-		<h1 class="clearfix"><img src="interfaces/default/images/ReadingList-icon.png" height="26" width="26" alt="Reading List"/>Reading List Management</h1>
-	</div>
-        <div id="tabs">
-                <ul>
-                        <li><a href="#tabs-1">General</a></li>
-                        <li><a href="#tabs-2">Readlist options</a></li>
-                </ul>
-          <div id="tabs-1">
-            <table class="comictable" summary="Comic Details">
-              <tr>
-                 <td>
-                   <fieldset>
-                       <center><legend>Individual Reading Lists</legend>
-                       <p>Your watchlisted series' that you have issues marked as wanting to add
-                       to the Reading List go here.<br/></p></center>
-                   </fieldset>
-                 </td>
-                  <td>
-                   <fieldset>
-                      <legend>Reading List Statistics</legend>
-                        <div>
-                           <label><strong># of Issues Added: </strong>${counts['added']}</br></label>
-                           <label><strong># of Issues Sent to device: </strong>${counts['sent']}</br></label>
-                           <label><strong># of Issues Read: </strong>${counts['read']}</br></label>
-                           <label><strong> ... total in Readlist Management: </strong>${counts['total']}</br></label>
-                        </div>
-                    <div id="actions">
-                      <small><a href="#" id="helpout"><span class="ui-button-icon-primary ui-icon ui-icon-help"></span>Help.</a></small>
-                      <div id="dialog" title="Help with Reading Lists" style="display:none" class="configtable">
-                       <p>Status definitions:</br>
-                            Added: Issue has been added to your RL.</br>
-                            Downloaded: Issue has been downloaded to your device.</br>
-                            Read: Issue has been marked as Read.</br>
-                       </p>
-                      </div>
-                    </div>
-                   </fieldset>
-                  </td>
-              </tr>
-            </table>
-          </div>
-          <div id="tabs-2">
-            <table class="configtable">
-               <td>
-                <form action="readlistOptions" id="chkoptions" method="GET">
-                   <fieldset>
-                     <legend>ReadList Options</legend>
-                     <div class="row checkbox left clearfix">
-                         <input type="checkbox" style="vertical-align: middle; margin: 3px; margin-top: -1px;" name="send2read" id="send2read" value="1" ${checked(mylar.SEND2READ)} /><label>Automatically send new pulls to Readlist (Added)</label></br>
-                     </div>
-                   </fieldset>
-               </td>
-               <td width="100%">
-                 <img src="interfaces/default/images/android.png" style="float:right" height="50" width="50" />
-                   <fieldset>
-                           <div>
-                              <legend>Tablet Device</legend>
-                              <small class="heading"><span style="float: left; margin-right: .3em; margin-top: 4px;" class="ui-icon ui-icon-info"></span>Requires SFTP Server running on tablet</small>
-                           </div>
-                                <div class="row checkbox left clearfix">
-                                    <input id="tabenable" type="checkbox" style="vertical-align: middle; margin: 3px; margin-top: -1px;" onclick="initConfigCheckbox($this);" name="tab_enable" id="tab_enable" value="1" ${checked(mylar.TAB_ENABLE)} /><label>Enable Tablet (Android)</label>
-                                </div>
-                                <div class="config">
-                                    <div class="row">
-                                        <label>IP:PORT</label>
-                                        <input type="text" placeholder="IP Address of tablet" name="tab_host" value="${mylar.TAB_HOST}" size="30">
-                                    </div>
-                                    <div class="row">
-                                        <label>Username</label>
-                                        <input type="text" name="tab_user" value="${mylar.TAB_USER}" size="20">
-                                    </div>
-                                    <div class="row">
-                                        <label>Password:</label>
-                                        <input type="password" name="tab_pass" value="${mylar.TAB_PASS}" size="20">
-                                    </div>
-                                    <div class="row">
-                                        <label>Download Location:</label>
-                                        <input type="text" placeholder="Full path (or jailed path)" name="tab_directory" value="${mylar.TAB_DIRECTORY}" size="36" /></br>
-                                    </div>
-                                    <div class="row checkbox left clearfix">
-                                      <input type="checkbox" style="vertical-align: middle; margin: 3px; margin-top: -1px;" name="maintainseriesfolder" id="maintainseriesfolder" value="1" ${checked(mylar.MAINTAINSERIESFOLDER)} /><label for="maintainseriesfolder">Maintain Comic Folder Structure when Syncing to Tablet</label></br>
-                                    </div>
-                                </div>
-                   </fieldset>
-                  </td>
-                  <div>
-                      <input type="submit" value="Update"/>
-                  </div>
-                </form>
-               </td>
-             </table>
-           </div>
-        </div>
-        <form action="markreads" method="get" id="markreads">
-        <div id="markissue" style="top:0;">
-                Mark selected issues as
-                <select name="action" onChange="doAjaxCall('markreads',$(this),'table',true);" data-error="You didn't select any issues" data-success="selected issues marked">
-                                <option disabled="disabled" selected="selected">Choose...</option>
-                                <option value="Added">Added</option>
-                                <option value="Downloaded">Downloaded</option>
-                                <option value="Read">Read</option>
-                                <option value="Remove">Remove</option>
-                                <option value="Send">Send</option>
-                </select>
-                <input type="hidden" value="Go">
-        </div>
+  <div class="row">
+    <div class="col-xs-12">
+      <h1>
+        <span class="glyphicon glyphicon-book"></span>&nbsp;&nbsp;Reading List Management
+      </h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12">
+      <div class="tabs-container">
+        <ul class="nav nav-tabs" role="tablist">
+          <li role="presentation" class="active"><a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a></li>
+          <li role="presentation"><a href="#options" aria-controls="options" role="tab" data-toggle="tab">Reading List Options</a></li>
 
-
-        <div class="table_wrapper">
-
-                    <table class="display" id="read_detail">
-
-                    <thead>
-                        <tr>
-                                <th id="select"><input type="checkbox" onClick="toggle(this)" /></th>
-                                <th id="comicname">ComicName</th>
-                                <th id="issue">Issue</th>
-                                <th id="issueyear">Pub Date</th>
-                                <th id="status">Status</th>
-                                <th id="statuschange">Change</th>
-                                <th id="options">Options</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                         %for issue in issuelist:
-                        <%
-                                if issue['Status'] == 'Read':
-                                        grade = 'A'
-                                elif issue['Status'] == 'Added':
-                                        grade = 'X'
-                                elif issue['Status'] == 'Downloaded':
-                                        grade = 'C'
-                                else:
-                                        grade = 'Z'
-
-                        %>
-                              <tr class="grade${grade}">
-                                <td id="select"><input type="checkbox" name="${issue['IssueID']}" value="${issue['IssueID']}" class="checkbox" /></td>
-                                <td id="comicname"><a href="comicDetails?ComicID=${issue['ComicID']}">${issue['ComicName']} (${issue['SeriesYear']})</td>
-                                <td id="issue">${issue['Issue_Number']}</td>
-                                <td id="issueyear">${issue['IssueDate']}</td>
-                                <td id="status">${issue['Status']}</td>
-                                <td id="statuschange">${issue['StatusChange']}</td>
-                                <td id="options">
-                                    <a onclick="doAjaxCall('removefromreadlist?IssueID=${issue['IssueID']}',$(this),'table')" data-success="Sucessfully removed ${issue['ComicName']} #${issue['Issue_Number']} from Reading List"><img src="interfaces/default/images/skipped_icon.png" height="25" width="25" title="Remove from Reading List" /></a>
-                                    <a onclick="doAjaxCall('markasRead?IssueID=${issue['IssueID']}', $(this),'table')" data-success="Marked ${issue['ComicName']} ${issue['Issue_Number']} as Read."><img src="interfaces/default/images/wanted_icon.png" height="25" width="25" title="Mark as Read" /></a>
-                                    
-                                    %if issue['Location'] is not None:
-                                    <a href="downloadthis?pathfile=${issue['Location'] |u}"><img src="interfaces/default/images/download_icon.png" height="25" width="25" title="Download the Issue" class="highqual" /></a>
-                                    %endif
-                                </td>
-                              </tr>
-                         %endfor
-                    </tbody>
-                </table>
+        </ul>
+        <div class="tab-content">
+          <div role="tabpanel" class="tab-pane active" id="general">
+            <div class="row">
+              <div class="col-xs-12 col-sm-6">
+                <h3>Individual Reading Lists</h3>
+                <p>Your watchlisted series' that you have issues marked as wanting to add to the Reading List go here.</p>
+              </div>
+              <div class="col-xs-12 col-sm-6">
+                <h3>Reading List Statistics <small><a tabindex="0" role="button" data-container="body" data-toggle="popover" data-placement="bottom" data-trigger="focus" title="Status Definitions" data-content="<p><strong>Added:</strong> Issue has been added to your RL.</br><strong>Downloaded:</strong> Issue has been downloaded to your device.</br><strong>Read:</strong> Issue has been marked as Read.</p>" data-html="true"><span class="glyphicon glyphicon-info-sign"></span></a></small></h3>
+                <dl class="dl-horizontal">
+                  <dt># of Issues Added</dt>
+                  <dd>${counts['added']}</dd>
+                  <dt># of Issues Sent to device</dt>
+                  <dd>${counts['sent']}</dd>
+                  <dt># of Issues Read</dt>
+                  <dd>${counts['read']}</dd>
+                  <dt>Total in Readlist Management</dt>
+                  <dd>${counts['total']}</dd>
+                </dl>
+              </div>
             </div>
+          </div>
+          <div role="tabpanel" class="tab-pane" id="options">
+            <form action="readlistOptions" id="chkoptions" method="GET">
+              <div class="row">
+                <div class="col-xs-12 col-sm-6">
+                  <h3>ReadList Options</h3>
+                  <div class="checkbox">
+                    <label for="send2read">
+                      <input type="checkbox" name="send2read" id="send2read" value="1" ${checked(mylar.SEND2READ)} />Automatically send new pulls to Readlist (Added)
+                    </label>
+                  </div>
+                  <input type="submit" value="Update" class="btn btn-default" />
+                </div>
+                <div class="col-xs-12 col-sm-6">
+                  <h3>Tablet Device</h3>
+                  <p><em>Requires SFTP Server running on tablet (Install: <a href="https://play.google.com/store/apps/details?id=com.icecoldapps.httpsftpsserver">HTTPS / FTPS / SFTP Server</a>)</em></p>
+                  <div class="checkbox">
+                    <label for="tab_enable">
+                      <input id="tabenable" type="checkbox" onclick="initConfigCheckbox($this);" name="tab_enable" id="tab_enable" value="1" ${checked(mylar.TAB_ENABLE)} />
+                      Enable Tablet (Android)
+                    </label>
+                  </div>
+                  <div class="form-group">
+                    <label for="tab_host">Host (IP:Port)</label>
+                    <input type="text" placeholder="IP Address of tablet" name="tab_host" id="tab_host" value="${mylar.TAB_HOST}" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="tab_user">Username</label>
+                    <input type="text" name="tab_user" id="tab_user" value="${mylar.TAB_USER}" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="tab_pass">Password</label>
+                    <input type="password" name="tab_pass" id="tab_pass" value="${mylar.TAB_PASS}" class="form-control" />
+                  </div>
+                  <div class="form-group">
+                    <label for="tab_directory">Path on Tablet</label>
+                    <input type="text" placeholder="Full path (or jailed path)" name="tab_directory" id="tab_directory" value="${mylar.TAB_DIRECTORY}" class="form-control" />
+                  </div>
+                  <div class="checkbox">
+                    <label for="maintainseriesfolder">
+                      <input type="checkbox" name="maintainseriesfolder" id="maintainseriesfolder" value="1" ${checked(mylar.MAINTAINSERIESFOLDER)} />
+                      Maintain Comic Folder Structure when Syncing to Tablet
+                    </label>
+                  </div>
+                  <div class="checkbox">
+                    <label for="removereadfromdevice">
+                      <input type="checkbox" name="removereadfromdevice" id="removereadfromdevice" value="1" ${checked(mylar.SEND2READ)} />Remove Read Issues from Tablet during Sync
+                    </label>
+                  </div>
+                  <input type="submit" value="Update" class="btn btn-default" />
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form action="markreads" method="get" id="markreads">
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Mark Selected Issues
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a href="#">Wanted</a></li>
+            <li><a href="#">Skipped</a></li>
+            <li><a href="#">Archived</a></li>
+            <li><a href="#">Ignored</a></li>
+            %if mylar.FAILED_DOWNLOAD_HANDLING:
+            <li><a href="#">Failed</a></li>
+            %endif
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <table class="table table-striped table-bordered table-sorted" id="bsIssuesTable">
+          <thead>
+            <tr>
+              <th id="select"><input type="checkbox" onClick="toggle(this)" /></th>
+              <th id="comicname">ComicName</th>
+              <th id="issue">Issue</th>
+              <th id="issueyear">Pub Date</th>
+              <th id="status">Status</th>
+              <th id="statuschange">Change</th>
+              <th class="filter-false" id="options">Options</th>
+            </tr>
+          </thead>
+          <tbody>
+            %for issue in issuelist:
+            <%
+              if issue['Status'] == 'Read':
+                grade = 'A'
+                comic_context = 'info'
+              elif issue['Status'] == 'Added':
+                grade = 'X'
+                comic_context = 'active'
+              elif issue['Status'] == 'Downloaded':
+                grade = 'C'
+                comic_context = 'success'
+              else:
+                grade = 'Z'
+                comic_context = 'active'
+
+            %>
+                  <tr class="grade${grade} ${comic_context}" data-issueid="${issue['IssueID']}">
+                    <td id="select">
+                      <input type="checkbox" name="${issue['IssueID']}" value="${issue['IssueID']}" class="checkbox" />
+                    </td>
+                    <td id="comicname">
+                      <a href="comicDetails?ComicID=${issue['ComicID']}">
+                        ${issue['ComicName']} (${issue['SeriesYear']})
+                      </a>
+                    </td>
+                    <td id="issue">
+                      ${issue['Issue_Number']}
+                    </td>
+                    <td id="issueyear">
+                      ${issue['IssueDate']}
+                    </td>
+                    <td id="status">
+                      ${issue['Status']}
+                    </td>
+                    <td id="statuschange">
+                      ${issue['StatusChange']}
+                    </td>
+                    <td id="options">
+                      <div class="btn-group">
+                        <a data-success="Sucessfully removed ${issue['ComicName']} #${issue['Issue_Number']} from Reading List" class="btn btn-default btn-sm remove-from-read-list">
+                          <span class="glyphicon glyphicon-remove" title="Remove from Reading List"></span>
+                        </a>
+                        <a data-success="Marked ${issue['ComicName']} ${issue['Issue_Number']} as Read." class="btn btn-default btn-sm mark-as-read">
+                          <span class="glyphicon glyphicon-eye-open" title="Mark as Read"></span>
+                        </a>
+                        
+                        %if issue['Location'] is not None:
+                        <a href="downloadthis?pathfile=${issue['Location'] |u}" class="btn btn-default btn-sm">
+                          <span class="glyphicon glyphicon-download" title="Download the Issue"></span>
+                        </a>
+                        %endif
+                      </div>
+                        
+                    </td>
+                  </tr>
+            %endfor
+          </tbody>
+          <tfoot>
+          <tr>
+            <th colspan="7" class="ts-pager form-horizontal">
+              <button type="button" class="btn first"><i class="icon-step-backward glyphicon glyphicon-step-backward"></i></button>
+              <button type="button" class="btn prev"><i class="icon-arrow-left glyphicon glyphicon-backward"></i></button>
+              <span class="pagedisplay"></span> <!-- this can be any element, including an input -->
+              <button type="button" class="btn next"><i class="icon-arrow-right glyphicon glyphicon-forward"></i></button>
+              <button type="button" class="btn last"><i class="icon-step-forward glyphicon glyphicon-step-forward"></i></button>
+              <select class="pagesize input-mini" title="Select page size">
+                <option selected="selected" value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="40">40</option>
+              </select>
+              <select class="pagenum input-mini" title="Select page number"></select>
+            </th>
+          </tr>
+        </tfoot>
+        </table>
+      </div>
+    </div>
 </%def>
 
 <%def name="headIncludes()">
-	<link rel="stylesheet" href="interfaces/default/css/data_table.css">
+	
 </%def>
 
 <%def name="javascriptIncludes()">
-        <script src="js/libs/jquery.dataTables.min.js"></script>
-        <script>
-        function openHelp() {
-            $("#dialog").dialog();
-        };
-        function initThisPage(){
-
-                $(function() {
-                        $( "#tabs" ).tabs();
-                });
-                $("#helpout").click(openHelp);
-                initActions();
-                $('#read_detail').dataTable({
-                        "bDestroy": true,
-                        "oLanguage": {
-                                "sLengthMenu":"Show _MENU_ items per page",
-                                "sEmptyTable": "<em>No History to Display</em>",
-                                "sInfo":"Showing _START_ to _END_ of _TOTAL_ items",
-                                "sInfoEmpty":"Showing 0 to 0 of 0 items",
-                                "sInfoFiltered":"(filtered from _MAX_ total items)"},
-                        "iDisplayLength": 25,
-                        "sPaginationType": "full_numbers",
-                        "aaSorting": []
-
-                });
-                resetFilters("issuelist");
-        }
-        $(document).ready(function() {
-                initThisPage();
-                initActions();
-                initConfigCheckbox("#tabenable");
-        });
-        </script>
+  <script type="text/javascript" src="interfaces/bootstrap/js/views/readlist.js"></script>
 </%def>
