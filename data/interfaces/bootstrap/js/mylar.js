@@ -75,6 +75,16 @@ var mylar = {
 					allow_dismiss: false
 				}
 			},
+			progress : {
+				options: {
+					icon: 'glyphicon glyphicon-time'
+				},
+				settings: {
+					type: 'info',
+					showProgressbar: true,
+					allow_dismiss: false
+				}
+			},
 		},
 		ajax: {
 			options: {
@@ -232,6 +242,25 @@ var mylar = {
 				var messageSettings = $.extend(messageSettings, mylar.config.notify.error.settings, arguments[2])
 			} else {
 				var messageSettings = mylar.config.notify.error.settings;
+			}
+
+			messageOptions.message = message;
+
+			return mylar.notify.show( messageOptions, messageSettings );
+		},
+		progress: function(message){
+			var messageOptions = {},
+				messageSettings = {};
+
+			if( arguments.length > 1 ){
+				var messageOptions  = $.extend(messageOptions, mylar.config.notify.progress.options, arguments[1])
+			} else {
+				var messageOptions  = mylar.config.notify.progress.options;
+			}
+			if( arguments.length > 2 ){
+				var messageSettings = $.extend(messageSettings, mylar.config.notify.progress.settings, arguments[2])
+			} else {
+				var messageSettings = mylar.config.notify.progress.settings;
 			}
 
 			messageOptions.message = message;

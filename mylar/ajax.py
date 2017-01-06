@@ -29,7 +29,9 @@ from cherrypy.lib.static import serve_file, serve_download
 
 cmd_list = [
     # Reading List Screen
-    'readslist','markreads','removefromreadlist','markasRead','syncfiles','removefromreadlist'
+    'readslist','markreads','removefromreadlist','markasRead','syncfiles','removefromreadlist','forcenewcheck','clearfilecache',
+    # Comic Details Screen
+    'refreshSeries','manualRename','forceRescan','group_metatag','resumeSeries','pauseSeries','addtoreadlist'
     ]
 
 
@@ -120,6 +122,10 @@ class Ajax(object):
         cherrypy.response.status = 200
         return simplejson.dumps(error)
 
+    #
+    # Reading List AJAX Actions
+    #
+
     def _markreads(self, **kwargs):
         # TODO
         self.data = self._success_with_message(**kwargs)
@@ -144,4 +150,50 @@ class Ajax(object):
         # TODO
         self.data = self._success_with_message(**kwargs)
         return;
+
+    def _forcenewcheck(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+
+    def _clearfilecache(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+
+    def _refreshSeries(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+
+    def _manualRename(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+
+    def _forceRescan(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+
+    def _group_metatag(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+
+    def _resumeSeries(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+
+    def _pauseSeries(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+
+    def _addtoreadlist(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+        
         

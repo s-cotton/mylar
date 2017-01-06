@@ -11,13 +11,17 @@ screen.readlist = {
 
 	docReady: function(){
 		mylar.initTable( $('#bsIssuesTable') );
-		$('.sync-to-device').click( screen.readlist.syncFiles );
-		$('.remove-read-from-list').click( screen.readlist.removeReadFromList );
-		$('.force-new-check').click( screen.readlist.forceNewCheck );
-		$('.clear-file-cache').click( screen.readlist.clearFileCache );
-		$('.remove-from-read-list').click( screen.readlist.removeFromReadList );
-		$('.mark-as-read').click( screen.readlist.markAsRead );
-		$('.mark-all-as a').click( screen.readlist.markAllAs );
+
+		/**
+		 * Set up click handlers for various actions around page
+		 */
+		$('body').on( "click", ".sync-to-device", screen.readlist.syncFiles );
+		$('body').on( "click", '.remove-read-from-list', screen.readlist.removeReadFromList );
+		$('body').on( "click", '.force-new-check', screen.readlist.forceNewCheck );
+		$('body').on( "click", '.clear-file-cache', screen.readlist.clearFileCache );
+		$('body').on( "click", '.remove-from-read-list', screen.readlist.removeFromReadList );
+		$('body').on( "click", '.mark-as-read', screen.readlist.markAsRead );
+		$('body').on( "click", '.mark-all-as a', screen.readlist.markAllAs );
 	},
 
 	windowLoad: function(){},
@@ -58,7 +62,7 @@ screen.readlist = {
 			startMsg.close();
 		});
 	},
-	syncFiles: function(){
+	syncFiles: function( e ){
 		var startMsg = mylar.notify.info('Starting Sync with Tablet');
 		mylar.ajax({
 			cmd: 'syncfiles',
@@ -83,8 +87,32 @@ screen.readlist = {
 			startMsg.close();
 		});
 	},
-	forceNewCheck: function(){},
-	clearFileCache: function(){},
+	forceNewCheck: function(){
+		var startMsg = mylar.notify.info('Forcing New Check');
+		mylar.ajax({
+			cmd: 'forcenewcheck',
+			AllRead: 1
+		}).fail(function(){
+			mylar.notify.error( 'Could not Force New Check' );
+			startMsg.close();
+		}).done(function(){
+			mylar.notify.success( 'Successfully Forced New Check' );
+			startMsg.close();
+		});
+	},
+	clearFileCache: function(){
+		var startMsg = mylar.notify.info('Clearing File Cache');
+		mylar.ajax({
+			cmd: 'clearfilecache',
+			AllRead: 1
+		}).fail(function(){
+			mylar.notify.error( 'Could not Clear File Cache' );
+			startMsg.close();
+		}).done(function(){
+			mylar.notify.success( 'Successfully Cleared File Cache' );
+			startMsg.close();
+		});
+	},
 	markAllAs: function(){
 		var thisAction = $(this).text();
 		var selectedIssues = mylar.getCheckedIssues( '#bsIssuesTable' );
@@ -110,14 +138,6 @@ screen.readlist = {
 		}
 		
 	},
-
-	getCheckedIssues: function(){
-		var data = {};
-		$('#bsIssuesTable tbody').find(':checked').each(function(){
-			data[ $(this).attr('name') ] = $(this).val();
-		});
-		return data;
-	}
 }
 
 mylar.registerScreen( screen.readlist, [

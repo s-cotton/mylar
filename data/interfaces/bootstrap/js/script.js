@@ -336,9 +336,9 @@ function resetFilters(text){
 }
 
 function preventDefault(){
-	$("a[href='#']").on('click', function(){
+	/*$("a[href='#']").on('click', function(){
 		return false;
-	});
+	});*/
 }
 
 function initFancybox() {
