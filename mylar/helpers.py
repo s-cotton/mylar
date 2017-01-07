@@ -1368,7 +1368,7 @@ def filesafe(comic):
 
 
 def IssueCovers(ComicID=None):
-    if mylar.COVER_VIEW:
+    if mylar.ENABLE_COVER_COMPOSITION:
         import zipfile, logger, pillow
         if ComicID is None:
             logger.fdebug('No Comic provided for Issue Cover Extraction')
@@ -1514,6 +1514,10 @@ def IssueCovers(ComicID=None):
                 for singlecoverset in coverlist:
                     if len(singlecoverset) > maxCovers:
                         maxCovers = len(singlecoverset)
+
+
+
+                # issuesImage = PIL.Image.new( 'RGB', '')
 
                 for singlecoverset in coverfile:
                     logger.fdebug("Adding covers for single issue")
