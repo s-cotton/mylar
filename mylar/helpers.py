@@ -1370,6 +1370,141 @@ def filesafe(comic):
 
     return comicname_filesafe
 
+
+def IssueCovers(ComicID=None):
+    import zipfile, logger
+    if ComicID is None:
+        logger.fdebug('No Comic provided for Issue Cover Extraction')
+        return
+    else:
+        comic = myDB.selectone('SELECT * FROM comics WHERE ComicID=?', [ComicID]).fetchone()
+        if comic is None:
+            logger.fdebug('Invalid Comic passed for Issue Cover Extraction');
+            return
+        else :
+            issues = myDB.select('SELECT * FROM issues WHERE ComicID=? order by Int_IssueNumber DESC', [ComicID])
+            for issue in issues:
+                iszip = false
+                if issue['Location'].endswith('.cbz'):
+                    iszip = true
+                    dstlocation = os.path.join(mylar.CACHE_DIR, 'imgtemp.zip')
+                else :
+                    dstlocation = os.path.join(mylar.CACHE_DIR, 'imgtemp.rar')
+
+                shutil.copy( issue['Location'], dstlocation );
+
+                issueimages = []
+
+                cover = "notfound"
+                covercount = 0
+                low_infile = 999999
+
+                if iszip:
+                    try:
+                        with zipfile.ZipFile(dstlocation, 'r') as issuefile:
+                            
+                            for infile in issuefile.namelist():
+                                tmp_infile = re.sub("[^0-9]","", infile).strip()
+                                if tmp_infile == '':
+                                    pass
+                                elif int(tmp_infile) < int(low_infile):
+                                    low_infile = tmp_infile
+                                    low_infile_name = infile
+
+                                if any(['000.' in infile, '00.' in infile]) and infile.endswith(pic_extensions):
+                                    logger.fdebug('Extracting primary image ' + infile + ' as coverfile for display.')
+                                    local_file = open(os.path.join(mylar.CACHE_DIR, 'temp-cover-' + covercount + '.jpg'), "wb")
+                                    local_file.write(inzipfile.read(infile))
+                                    local_file.close
+                                    cover = "found"
+                                    covercount += 1
+                                elif any(['00a' in infile, '00b' in infile, '00c' in infile, '00d' in infile, '00e' in infile]) and infile.endswith(pic_extensions):
+                                    logger.fdebug('Found Alternate cover - ' + infile + ' . Extracting.')
+                                    altlist = ('00a', '00b', '00c', '00d', '00e')
+                                    for alt in altlist:
+                                        if alt in infile:
+                                            local_file = open(os.path.join(mylar.CACHE_DIR, 'temp-cover-' + covercount + '.jpg'), "wb")
+                                            local_file.write(inzipfile.read(infile))
+                                            local_file.close
+                                            cover = "found"
+                                            covercount += 1
+                                            break
+
+                                elif any(['001.jpg' in infile, '001.png' in infile, '001.webp' in infile, '01.jpg' in infile, '01.png' in infile, '01.webp' in infile]):
+                                    logger.fdebug('Extracting primary image ' + infile + ' as coverfile for display.')
+                                    local_file = open(os.path.join(mylar.CACHE_DIR, 'temp-cover-' + covercount + '.jpg'), "wb")
+                                    local_file.write(inzipfile.read(infile))
+                                    local_file.close
+                                    cover = "found"
+                                    covercount += 1
+
+                            if cover != "found":
+                                logger.fdebug('Invalid naming sequence for jpgs discovered. Attempting to find the lowest sequence and will use as cover (it might not work). Currently : ' + str(low_infile))
+                                local_file = open(os.path.join(mylar.CACHE_DIR, 'temp-cover-' + covercount + '.jpg'), "wb")
+                                local_file.write(inzipfile.read(low_infile_name))
+                                local_file.close
+                                cover = "found"                
+
+                    except:
+                        logger.info('ERROR. Could not open ' + issue['Location'] + ' for cover extraction')
+                    return
+                else:
+                    if mylar.ENABLE_RAR:
+                        import rarfile
+                        # is rar, TODO
+                        logger.fdebug("Processing Rar")
+                        try:
+                            with rarfile.RarFile(dstlocation, 'r') as issuefile:
+                                for inifile in issuefile.infolist():
+                                    tmp_infile = re.sub("[^0-9]","", infile.filename).strip()
+                                    if tmp_infile == '':
+                                        pass
+                                    elif int(tmp_infile) < int(low_infile):
+                                        low_infile = tmp_infile
+                                        low_infile_name = infile
+
+                                    if any(['000.' in infile, '00.' in infile]) and infile.endswith(pic_extensions):
+                                        logger.fdebug('Extracting primary image ' + infile + ' as coverfile for display.')
+                                        local_file = open(os.path.join(mylar.CACHE_DIR, 'temp-cover-' + covercount + '.jpg'), "wb")
+                                        local_file.write(inzipfile.read(infile))
+                                        local_file.close
+                                        cover = "found"
+                                        covercount += 1
+                                    elif any(['00a' in infile, '00b' in infile, '00c' in infile, '00d' in infile, '00e' in infile]) and infile.endswith(pic_extensions):
+                                        logger.fdebug('Found Alternate cover - ' + infile + ' . Extracting.')
+                                        altlist = ('00a', '00b', '00c', '00d', '00e')
+                                        for alt in altlist:
+                                            if alt in infile:
+                                                local_file = open(os.path.join(mylar.CACHE_DIR, 'temp-cover-' + covercount + '.jpg'), "wb")
+                                                local_file.write(inzipfile.read(infile))
+                                                local_file.close
+                                                cover = "found"
+                                                covercount += 1
+                                                break
+
+                                    elif any(['001.jpg' in infile, '001.png' in infile, '001.webp' in infile, '01.jpg' in infile, '01.png' in infile, '01.webp' in infile]):
+                                        logger.fdebug('Extracting primary image ' + infile + ' as coverfile for display.')
+                                        local_file = open(os.path.join(mylar.CACHE_DIR, 'temp-cover-' + covercount + '.jpg'), "wb")
+                                        local_file.write(inzipfile.read(infile))
+                                        local_file.close
+                                        cover = "found"
+                                        covercount += 1
+
+                                if cover != "found":
+                                    logger.fdebug('Invalid naming sequence for jpgs discovered. Attempting to find the lowest sequence and will use as cover (it might not work). Currently : ' + str(low_infile))
+                                    local_file = open(os.path.join(mylar.CACHE_DIR, 'temp-cover-' + covercount + '.jpg'), "wb")
+                                    local_file.write(inzipfile.read(low_infile_name))
+                                    local_file.close
+                                    cover = "found"                
+
+                        except:
+                            logger.info('ERROR. Could not open ' + issue['Location'] + ' for cover extraction')
+                    else :
+                        logger.fdebug("RAR File Processing not enabled")
+
+                if cover != "notfound":
+                    logger.fdebug("No Covers found for this issue?")
+
 def IssueDetails(filelocation, IssueID=None):
     import zipfile, logger
     from xml.dom.minidom import parseString
