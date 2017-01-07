@@ -213,23 +213,124 @@ screen.comicdetails = {
 	},
 
 	manualSearch: function(event){
-	
+		var issueNumber = $(this).parents('tr').eq(0).data('issuenumber');
+		var issueID = $(this).parents('tr').eq(0).data('issueid');
+		var issueDate = $(this).parents('tr').eq(0).data('issuedate');
+
+		var startMsg = mylar.notify.info( 'Initiating manual search for ' + screen.comicdetails.comicName + ' #' + issueNumber );
+		mylar.ajax({
+			cmd: 'queueit',
+			ComicID: screen.comicdetails.comicID,
+			IssueID: issueID,
+			ComicIssue: issueNumber,
+			ComicYear: issueDate,
+			mode: 'want',
+			manualsearch: 'True'
+		}).fail(function(){
+			mylar.notify.error( 'Could not manually search for ' + screen.comicdetails.comicName + ' #' + issueNumber );
+			startMsg.close();
+		}).done(function(){
+			mylar.notify.success( 'Manually searching for ' + screen.comicdetails.comicName + ' #' + issueNumber );
+			startMsg.close();
+		});
+		if( screen.comicdetails.debug ){
+			doAjaxCall('queueit?ComicID=' + screen.comicdetails.comicID + '&IssueID=' + issueID + '&ComicIssue=' + issueNumber + '&ComicYear=' + issueDate + '&mode=want&manualsearch=True',$(this),'table')
+		}
 	},
 
 	markIssueAsWanted: function(event){
-	
+		var issueNumber = $(this).parents('tr').eq(0).data('issuenumber');
+		var issueID = $(this).parents('tr').eq(0).data('issueid');
+		var issueDate = $(this).parents('tr').eq(0).data('issuedate');
+
+		var startMsg = mylar.notify.info( 'Initiating status change for ' + screen.comicdetails.comicName + ' #' + issueNumber );
+		mylar.ajax({
+			cmd: 'queueit',
+			ComicID: screen.comicdetails.comicID,
+			IssueID: issueID,
+			ComicIssue: issueNumber,
+			ComicYear: issueDate,
+			mode: 'want'
+		}).fail(function(){
+			mylar.notify.error( 'Could not mark ' + screen.comicdetails.comicName + ' #' + issueNumber + ' as wanted' );
+			startMsg.close();
+		}).done(function(){
+			mylar.notify.success( screen.comicdetails.comicName + ' #' + issueNumber + ' marked as wanted' );
+			startMsg.close();
+		});
+		if( screen.comicdetails.debug ){
+			doAjaxCall('queueit?ComicID=' + screen.comicdetails.comicID + '&IssueID=' + issueID + '&ComicIssue=' + issueNumber + '&ComicYear=' + issueDate + '&mode=want',$(this),'table');
+		}
 	},
 
 	markIssueAsSkipped: function(event){
-	
+		var issueNumber = $(this).parents('tr').eq(0).data('issuenumber');
+		var issueID = $(this).parents('tr').eq(0).data('issueid');
+		var issueDate = $(this).parents('tr').eq(0).data('issuedate');
+
+		var startMsg = mylar.notify.info( 'Initiating status change for ' + screen.comicdetails.comicName + ' #' + issueNumber );
+		mylar.ajax({
+			cmd: 'unqueueissue',
+			ComicID: screen.comicdetails.comicID,
+			IssueID: issueID
+		}).fail(function(){
+			mylar.notify.error( 'Could not mark ' + screen.comicdetails.comicName + ' #' + issueNumber + ' as skipped' );
+			startMsg.close();
+		}).done(function(){
+			mylar.notify.success( screen.comicdetails.comicName + ' #' + issueNumber + ' marked as skipped' );
+			startMsg.close();
+		});
+		if( screen.comicdetails.debug ){
+			doAjaxCall('unqueueissue?IssueID=' + issueID + '&ComicID=' + screen.comicdetails.comicID,$(this),'table');
+		}
 	},
 
 	markIssueAsFailed: function(event){
-	
+		var issueNumber = $(this).parents('tr').eq(0).data('issuenumber');
+		var issueID = $(this).parents('tr').eq(0).data('issueid');
+		var issueDate = $(this).parents('tr').eq(0).data('issuedate');
+
+		var startMsg = mylar.notify.info( 'Initiating status change for ' + screen.comicdetails.comicName + ' #' + issueNumber );
+		mylar.ajax({
+			cmd: 'unqueueissue',
+			ComicID: screen.comicdetails.comicID,
+			IssueID: issueID,
+			mode: 'failed'
+		}).fail(function(){
+			mylar.notify.error( 'Could not mark ' + screen.comicdetails.comicName + ' #' + issueNumber + ' as failed' );
+			startMsg.close();
+		}).done(function(){
+			mylar.notify.success( screen.comicdetails.comicName + ' #' + issueNumber + ' marked as failed' );
+			startMsg.close();
+		});
+		if( screen.comicdetails.debug ){
+			doAjaxCall('unqueueissue?IssueID=' + issueID + '&ComicID=' + screen.comicdetails.comicID+'&mode=failed',$(this),'table');
+		}
 	},
 
 	retryIssue: function(event){
-	
+		var issueNumber = $(this).parents('tr').eq(0).data('issuenumber');
+		var issueID = $(this).parents('tr').eq(0).data('issueid');
+		var issueDate = $(this).parents('tr').eq(0).data('issuedate');
+
+		var startMsg = mylar.notify.info( 'Initiating download retry for ' + screen.comicdetails.comicName + ' #' + issueNumber );
+		mylar.ajax({
+			cmd: 'retryit',
+			ComicName: screen.comicdetails.comicName,
+			ComicID: screen.comicdetails.comicID,
+			IssueID: issueID,
+			IssueNumber: issueNumber,
+			ComicYear: issueDate
+		}).fail(function(){
+			mylar.notify.error( 'Could not retry the download for ' + screen.comicdetails.comicName + ' #' + issueNumber );
+			startMsg.close();
+		}).done(function(){
+			mylar.notify.success( 'The download for ' + screen.comicdetails.comicName + ' #' + issueNumber + ' has been retried' );
+			startMsg.close();
+		});
+		if( screen.comicdetails.debug ){
+			doAjaxCall('retryit?ComicName=' + encodeURIComponent( screens.comicdetails.comicName ) + '&ComicID=' + screen.comicdetails.comicID + '&IssueID=' + issueID + '&IssueNumber=' + issueNumber + '&ComicYear=' + issueDate + '', $(this),'table');
+		}		
 	},
 
 	viewIssueDetails: function(event){

@@ -31,7 +31,7 @@ cmd_list = [
     # Reading List Screen
     'readslist','markreads','removefromreadlist','markasRead','syncfiles','removefromreadlist','forcenewcheck','clearfilecache',
     # Comic Details Screen
-    'refreshSeries','manualRename','forceRescan','group_metatag','resumeSeries','pauseSeries','addtoreadlist'
+    'refreshSeries','manualRename','forceRescan','group_metatag','resumeSeries','pauseSeries','addtoreadlist','queueit','unqueueissue'
     ]
 
 
@@ -195,5 +195,16 @@ class Ajax(object):
         # TODO
         self.data = self._success_with_message(**kwargs)
         return;
+
+    def _queueit(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+
+    def _unqueueissue(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
         
+
         
