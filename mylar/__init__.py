@@ -499,7 +499,7 @@ def initialize():
                 ENABLE_RSS, RSS_CHECKINTERVAL, RSS_LASTRUN, FAILED_DOWNLOAD_HANDLING, FAILED_AUTO, ENABLE_TORRENT_SEARCH, ENABLE_TPSE, TPSE_PROXY, TPSE_VERIFY, ENABLE_32P, SEARCH_32P, MODE_32P, KEYS_32P, RSSFEED_32P, USERNAME_32P, PASSWORD_32P, AUTHKEY_32P, PASSKEY_32P, FEEDINFO_32P, VERIFY_32P, SNATCHEDTORRENT_NOTIFY, \
                 PROWL_ENABLED, PROWL_PRIORITY, PROWL_KEYS, PROWL_ONSNATCH, NMA_ENABLED, NMA_APIKEY, NMA_PRIORITY, NMA_ONSNATCH, PUSHOVER_ENABLED, PUSHOVER_PRIORITY, PUSHOVER_APIKEY, PUSHOVER_USERKEY, PUSHOVER_ONSNATCH, BOXCAR_ENABLED, BOXCAR_ONSNATCH, BOXCAR_TOKEN, \
                 PUSHBULLET_ENABLED, PUSHBULLET_APIKEY, PUSHBULLET_DEVICEID, PUSHBULLET_ONSNATCH, LOCMOVE, NEWCOM_DIR, FFTONEWCOM_DIR, \
-                PREFERRED_QUALITY, MOVE_FILES, RENAME_FILES, LOWERCASE_FILENAMES, ENABLE_RAR, USE_MINSIZE, MINSIZE, USE_MAXSIZE, MAXSIZE, CORRECT_METADATA, \
+                PREFERRED_QUALITY, MOVE_FILES, RENAME_FILES, LOWERCASE_FILENAMES, ENABLE_RAR, ENABLE_COVER_COMPOSITION, USE_MINSIZE, MINSIZE, USE_MAXSIZE, MAXSIZE, CORRECT_METADATA, \
                 FOLDER_FORMAT, FILE_FORMAT, REPLACE_CHAR, REPLACE_SPACES, ADD_TO_CSV, CVINFO, LOG_LEVEL, POST_PROCESSING, POST_PROCESSING_SCRIPT, \
                 FILE_OPTS, SEARCH_DELAY, GRABBAG_DIR, READ2FILENAME, SEND2READ, MAINTAINSERIESFOLDER, TAB_ENABLE, TAB_HOST, TAB_USER, TAB_PASS, TAB_DIRECTORY, \
                 STORYARCDIR, COPY2ARCDIR, ARC_FOLDERFORMAT, ARC_FILEOPS, CVURL, CHECK_FOLDER, ENABLE_CHECK_FOLDER, \
@@ -621,6 +621,7 @@ def initialize():
         ZERO_LEVEL_N = check_setting_str(CFG, 'General', 'zero_level_n', '')
         LOWERCASE_FILENAMES = bool(check_setting_int(CFG, 'General', 'lowercase_filenames', 0))
         ENABLE_RAR = bool(check_setting_int(CFG, 'General', 'enable_rar', 0))
+        ENABLE_COVER_COMPOSITION = bool(check_setting_int(CFG, 'General', 'enable_cover_composition', 0))
         IGNORE_HAVETOTAL = bool(check_setting_int(CFG, 'General', 'ignore_havetotal', 0))
         SNATCHED_HAVETOTAL = bool(check_setting_int(CFG, 'General', 'snatched_havetotal', 0))
         SYNO_FIX = bool(check_setting_int(CFG, 'General', 'syno_fix', 0))
@@ -1456,6 +1457,7 @@ def config_write():
     new_config['General']['zero_level_n'] = ZERO_LEVEL_N
     new_config['General']['lowercase_filenames'] = int(LOWERCASE_FILENAMES)
     new_config['General']['enable_rar'] = int(ENABLE_RAR)
+    new_config['General']['enable_cover_composition'] = int(ENABLE_COVER_COMPOSITION)
     new_config['General']['ignore_havetotal'] = int(IGNORE_HAVETOTAL)
     new_config['General']['snatched_havetotal'] = int(SNATCHED_HAVETOTAL)
     new_config['General']['syno_fix'] = int(SYNO_FIX)
