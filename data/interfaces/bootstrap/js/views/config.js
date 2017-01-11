@@ -47,43 +47,23 @@ screen.config = {
 		$('body').on( "change", '#enable_meta', screen.config.hideShowMetaOptions );
 		$('body').on( "change", '#cbr2cbz', screen.config.hideShowCBR2CBZOptions );
 		$('body').on( "change", '#rename_files', screen.config.hideShowRenameFilesOptions );
-		
-		
-		
-		
-		
+		$('body').on( "change", '#replace_spaces', screen.config.hideShowReplaceSpacesOptions );
+		$('body').on( "change", '#zero_level', screen.config.hideShowZeroLevelOptions );
+		$('body').on( "change", '#prowl_enabled', screen.config.hideShowProwlOptions );
+		$('body').on( "change", '#nma_enabled', screen.config.hideShowNMAOptions );
+		$('body').on( "change", '#pushover_enabled', screen.config.hideShowPushoverOptions );
+		$('body').on( "change", '#boxcar_enabled', screen.config.hideShowBoxcarOptions );
+		$('body').on( "change", '#pushbullet_enabled', screen.config.hideShowPushbulletOptions );
+		$('body').on( "change", '#telegram_enabled', screen.config.hideShowTelegramOptions );
 
 		/**
 		 * Initialize Hide/Show functionality
 		 */
-		screen.config.hideShowHTTPSOptions();
-		screen.config.hideShowAPIOptions();
-		screen.config.hideShowPermissionOptions();
-		screen.config.hideShowTorrentOptions();
-		screen.config.hideShowNZBOptions();
-		screen.config.hideShowTorrentClientOptions();
-		screen.config.hideShowLocalWatchDirOptions();
-		screen.config.hideShowRemoteWatchDirOptions();
-		screen.config.hideShowRTorrentSSLOptions();
-		screen.config.hideShowRSSSearchOptions();
-		screen.config.hideShowNZBSUOptions();
-		screen.config.hideShowDogNZBOptions();
-		screen.config.hideShowTorrentSearchOptions();
-		screen.config.hideShow32POptions();
-		screen.config.hideShow32PTypeOptions();
-		screen.config.hideShowTorznabOptions();
-		screen.config.hideShowNewzNABOptions();
-		screen.config.hideShowMinSizeOptions();
-		screen.config.hideShowMaxSizeOptions();
-		screen.config.hideShowDuplicateDumpOptions();
-		screen.config.hideShowFailedOptions();
-		screen.config.hideShowPostProcessingOptions();
-		screen.config.hideShowCheckFolderOptions();
-		screen.config.hideShowPreScriptOptions();
-		screen.config.hideShowPostScriptOptions();
-		screen.config.hideShowMetaOptions();
-		screen.config.hideShowCBR2CBZOptions();
-		screen.config.hideShowRenameFilesOptions();
+		for( var methodI in screen.config ){
+			if( methodI.indexOf('hideShow') == 0 ){
+				screen.config[methodI]();
+			}
+		}
 		
 	},
 
@@ -122,59 +102,41 @@ screen.config = {
 		});
 	},
 
-	hideShowRenameFilesOptions: function(){
-		if( $('#rename_files').is(':checked') ) $('.rename_files_options').show();
-		else $('.rename_files_options').hide();
-	},
-	hideShowMetaOptions: function(){
-		if( $('#enable_meta').is(':checked') ) $('.enable_meta_options').show();
-		else $('.enable_meta_options').hide();
-	},
-	hideShowCBR2CBZOptions: function(){
-		// NOTE THAT THIS ONE IS BACKWARDS, BUT WHATEVER, PATTERNS LIVE FOREVER
-		if( $('#cbr2cbz').is(':checked') ) $('.cbr2cbz_options').hide();
-		else $('.cbr2cbz_options').show();
-	},
-	hideShowPostScriptOptions: function(){
-		if( $('#enable_extra_scripts').is(':checked') ) $('.enable_extra_scripts_options').show();
-		else $('.enable_extra_scripts_options').hide();
-	},
-	hideShowPreScriptOptions: function(){
-		if( $('#enable_pre_scripts').is(':checked') ) $('.enable_pre_scripts_options').show();
-		else $('.enable_pre_scripts_options').hide();
-	},
-	hideShowCheckFolderOptions: function(){
-		if( $('#enable_check_folder').is(':checked') ) $('.enable_check_folder_options').show();
-		else $('.enable_check_folder_options').hide();
-	},
-	hideShowPostProcessingOptions: function(){
-		if( $('#post_processing').is(':checked') ) $('.post_processing_options').show();
-		else $('.post_processing_options').hide();
-	},
-	hideShowFailedOptions: function(){
-		if( $('#enable_failed').is(':checked') ) $('.enable_failed_options').show();
-		else $('.enable_failed_options').hide();
-	},
-	hideShowDuplicateDumpOptions: function(){
-		if( $('#enable_ddump').is(':checked') ) $('.enable_ddump_options').show();
-		else $('.enable_ddump_options').hide();
-	},
-	hideShowMaxSizeOptions: function(){
-		if( $('#use_maxsize').is(':checked') ) $('.use_maxsize_options').show();
-		else $('.use_maxsize_options').hide();
-	},
-	hideShowMinSizeOptions: function(){
-		if( $('#use_minsize').is(':checked') ) $('.use_minsize_options').show();
-		else $('.use_minsize_options').hide();
-	},
-	hideShowNewzNABOptions: function(){
-		if( $('#usenewznab').is(':checked') ) $('.usenewznab_options').show();
-		else $('.usenewznab_options').hide();
-	},
-	hideShowTorznabOptions: function(){
-		if( $('#enable_torznab').is(':checked') ) $('.enable_torznab_options').show();
-		else $('.enable_torznab_options').hide();
-	},
+	hideShowProwlOptions: function(){ 				screen.config.defaultShowIfChecked('prowl_enabled'); },
+	hideShowNMAOptions: function(){ 				screen.config.defaultShowIfChecked('nma_enabled'); },
+	hideShowPushoverOptions: function(){ 			screen.config.defaultShowIfChecked('pushover_enabled'); },
+	hideShowBoxcarOptions: function(){ 				screen.config.defaultShowIfChecked('boxcar_enabled'); },
+	hideShowPushbulletOptions: function(){ 			screen.config.defaultShowIfChecked('pushbullet_enabled'); },
+	hideShowTelegramOptions: function(){ 			screen.config.defaultShowIfChecked('telegram_enabled'); },
+	hideShowZeroLevelOptions: function(){			screen.config.defaultShowIfChecked('zero_level'); },
+	hideShowReplaceSpacesOptions: function(){		screen.config.defaultShowIfChecked('replace_spaces');	},
+	hideShowRenameFilesOptions: function(){			screen.config.defaultShowIfChecked('rename_files');	},
+	hideShowMetaOptions: function(){				screen.config.defaultShowIfChecked('enable_meta'); 	},	
+	hideShowPostScriptOptions: function(){			screen.config.defaultShowIfChecked('enable_extra_scripts');	},
+	hideShowPreScriptOptions: function(){			screen.config.defaultShowIfChecked('enable_pre_scripts');	},
+	hideShowCheckFolderOptions: function(){			screen.config.defaultShowIfChecked('enable_check_folder');	},
+	hideShowPostProcessingOptions: function(){		screen.config.defaultShowIfChecked('post_processing');	},
+	hideShowFailedOptions: function(){				screen.config.defaultShowIfChecked('enable_failed');	},
+	hideShowDuplicateDumpOptions: function(){		screen.config.defaultShowIfChecked('enable_ddump');	},
+	hideShowMaxSizeOptions: function(){				screen.config.defaultShowIfChecked('use_maxsize');	},
+	hideShowMinSizeOptions: function(){				screen.config.defaultShowIfChecked('use_minsize');	},
+	hideShowNewzNABOptions: function(){				screen.config.defaultShowIfChecked('usenewznab');	},
+	hideShowTorznabOptions: function(){				screen.config.defaultShowIfChecked('enable_torznab');	},	
+	hideShow32POptions: function(){					screen.config.defaultShowIfChecked('enable_32p');	},
+	hideShowTorrentSearchOptions: function(){		screen.config.defaultShowIfChecked('enable_torrent_search');	},
+	hideShowDogNZBOptions: function(){				screen.config.defaultShowIfChecked('usedognzb');	},
+	hideShowNZBSUOptions: function(){				screen.config.defaultShowIfChecked('usenzbsu');	},
+	hideShowRSSSearchOptions: function(){			screen.config.defaultShowIfChecked('enable_rss');	},
+	hideShowRTorrentSSLOptions: function(){			screen.config.defaultShowIfChecked('rtorrent_ssl');	},
+	hideShowLocalWatchDirOptions: function(){		screen.config.defaultShowIfChecked('local_watchdir');	},
+	hideShowRemoteWatchDirOptions: function(){		screen.config.defaultShowIfChecked('remote_watchdir');	},
+	hideShowHTTPSOptions: function(){				screen.config.defaultShowIfChecked('enable_https', '.https_options');	},
+	hideShowAPIOptions: function(){					screen.config.defaultShowIfChecked('api_enabled', '.api_options');		},
+	hideShowPermissionOptions: function(){			screen.config.defaultShowIfChecked('enforce_perms', '.perm_options');	},
+	hideShowTorrentOptions: function(){				screen.config.defaultShowIfChecked('enable_torrents', '.torrent_options');	},
+
+	hideShowCBR2CBZOptions: function(){				screen.config.defaultHideIfChecked('cbr2cbz');	},
+
 	hideShow32PTypeOptions: function(){
 		if( $('[name="mode_32p"]:checked').eq(0).val() == '0' ){
 			$('.legacymode_32p_options').show();
@@ -184,54 +146,7 @@ screen.config = {
 			$('.authmode_32p_options').show();
 		}
 	},
-	hideShow32POptions: function(){
-		if( $('#enable_32p').is(':checked') ) $('.enable_32p_options').show();
-		else $('.enable_32p_options').hide();
-	},
-	hideShowTorrentSearchOptions: function(){
-		if( $('#enable_torrent_search').is(':checked') ) $('.enable_torrent_search_options').show();
-		else $('.enable_torrent_search_options').hide();
-	},
-	hideShowDogNZBOptions: function(){
-		if( $('#usedognzb').is(':checked') ) $('.usedognzb_options').show();
-		else $('.usedognzb_options').hide();
-	},
-	hideShowNZBSUOptions: function(){
-		if( $('#usenzbsu').is(':checked') ) $('.usenzbsu_options').show();
-		else $('.usenzbsu_options').hide();
-	},
-	hideShowRSSSearchOptions: function(){
-		if( $('#enable_rss').is(':checked') ) $('.enable_rss_options').show();
-		else $('.enable_rss_options').hide();
-	},
-	hideShowRTorrentSSLOptions: function(){
-		if( $('#rtorrent_ssl').is(':checked') ) $('.rtorrent_ssl_options').show();
-		else $('.rtorrent_ssl_options').hide();
-	},
-	hideShowLocalWatchDirOptions: function(){
-		if( $('#local_watchdir').is(':checked') ) $('.local_watchdir_options').show();
-		else $('.local_watchdir_options').hide();
-	},
-	hideShowRemoteWatchDirOptions: function(){
-		if( $('#remote_watchdir').is(':checked') ) $('.remote_watchdir_options').show();
-		else $('.remote_watchdir_options').hide();
-	},
-	hideShowHTTPSOptions: function(){
-		if( $('#enable_https').is(':checked') ) $('.https_options').show();
-		else $('.https_options').hide();
-	},
-	hideShowAPIOptions: function(){
-		if( $('#api_enabled').is(':checked') ) $('.api_options').show();
-		else $('.api_options').hide();
-	},
-	hideShowPermissionOptions: function(){
-		if( $('#enforce_perms').is(':checked') ) $('.perm_options').show();
-		else $('.perm_options').hide();
-	},
-	hideShowTorrentOptions: function(){
-		if( $('#enable_torrents').is(':checked') ) $('.torrent_options').show();
-		else $('.torrent_options').hide();
-	},
+
 	hideShowNZBOptions: function(){
 		$('#sabnzbd_options,#nzbget_options,#blackhole_options').hide();
 		switch( $('[name="nzb_downloader"]:checked').eq(0).val() ){
@@ -248,6 +163,28 @@ screen.config = {
 			case '2': $('#rtorrent_options').show(); break;
 			case '3': $('#transmission_options').show(); break;
 			case '4': $('#deluge_options').show(); break;
+		}
+	},
+
+	defaultShowIfChecked: function(id){
+		
+		if( arguments.length > 1 ) options_block = arguments[1];
+		else options_block = '.' + id + '_options';
+
+		if( $('#' + id ).length ){
+			if( $('#' + id ).is(':checked') ) $( options_block ).show();
+			else $( options_block ).hide();	
+		}		
+	},
+
+	defaultHideIfChecked: function(id){
+		
+		if( arguments.length > 1 ) options_block = arguments[1];
+		else options_block = '.' + id + '_options';
+
+		if( $('#' + id ).length ){
+			if( $('#' + id ).is(':checked') ) $( options_block ).hide();
+			else $( options_block ).show();
 		}
 	}
 
