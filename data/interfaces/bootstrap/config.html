@@ -187,7 +187,7 @@
                       <label for="http_port">HTTP Port</label>
                       <input type="text" name="http_port" value="${config['http_port']}" class="form-control" />
                     </div>
-                    
+
                     <div class="checkbox">
                       <label>
                         <input type="checkbox" name="enable_https" id="enable_https" value="1" ${config['enable_https']} />
@@ -843,30 +843,30 @@
                           <h4>Newznab #${newznab_number}</h4>
                           <div class="form-group">
                             <label for="newznab_name${newznab_number}">Newznab Name</label>
-                            <input type="text" name="newznab_name${newznab_number}" value="${newznab[0]}" class="form-control" />
+                            <input type="text" name="newznab_name${newznab_number}" id="newznab_name${newznab_number}" value="${newznab[0]}" class="form-control" />
                           </div>
                           <div class="form-group">
                             <label for="newznab_host${newznab_number}">Newznab Host</label>
-                            <input type="text" name="newznab_host${newznab_number}" value="${newznab[1]}" class="form-control" />
+                            <input type="text" name="newznab_host${newznab_number}" id="newznab_host${newznab_number}" value="${newznab[1]}" class="form-control" />
                           </div>
                           <div class="checkbox">
                             <label>
-                              <input id="newznab_verify" type="checkbox" name="newznab_verify${newznab_number}" value="1" ${newznab_verify} />
+                              <input id="newznab_verify${newznab_number}" type="checkbox" name="newznab_verify${newznab_number}" value="1" ${newznab_verify} />
                               Verify SSL
                             </label>
                           </div>
                           <div class="form-group">
                             <label for="newznab_api${newznab_number}">Newznab API</label>
-                            <input type="text" name="newznab_api${newznab_number}" value="${newznab[3]}" class="form-control" />
+                            <input type="text" name="newznab_api${newznab_number}" id="newznab_api${newznab_number}" value="${newznab[3]}" class="form-control" />
                           </div>
                           <div class="form-group">
                             <label for="newznab_uid${newznab_number}">Newznab UID</label>
-                            <input type="text" name="newznab_uid${newznab_number}" value="${newznab[4]}" class="form-control" />
+                            <input type="text" name="newznab_uid${newznab_number}" id="newznab_uid${newznab_number}" value="${newznab[4]}" class="form-control" />
                             <span class="help-block">( only needed for RSS feed )</span>
                           </div>
                           <div class="checkbox">
                             <label>
-                              <input id="newznab_enabled" type="checkbox" name="newznab_enabled${newznab_number}" value="1" ${newznab_enabled} />
+                              <input id="newznab_enabled${newznab_number}" type="checkbox" name="newznab_enabled${newznab_number}" value="1" ${newznab_enabled} />
                               Enabled
                             </label>
                           </div>
@@ -877,6 +877,41 @@
                         %>
                       %endfor
                       <a class="btn btn-info" type="button" class="add_newznab" id="add_newznab">Add Newznab</a>
+                    </div>
+                    <div class="hidden newznab-template">
+                      <div id="newznab" class="well">
+                        <h4>Newznab #</h4>
+                        <div class="form-group">
+                          <label for="newznab_name">Newznab Name</label>
+                          <input type="text"  name="newznab_name" id="newznab_name" value="" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                          <label for="newznab_host">Newznab Host</label>
+                          <input type="text" name="newznab_host" id="newznab_host" value="" class="form-control" />
+                        </div>
+                        <div class="checkbox">
+                          <label>
+                            <input id="newznab_verify" type="checkbox" name="newznab_verify" value="1" />
+                            Verify SSL
+                          </label>
+                        </div>
+                        <div class="form-group">
+                          <label for="newznab_api">Newznab API</label>
+                          <input type="text" name="newznab_api" id="newznab_api" value="" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                          <label for="newznab_uid">Newznab UID</label>
+                          <input type="text" name="newznab_uid" id="newznab_uid" value="" class="form-control" />
+                          <span class="help-block">( only needed for RSS feed )</span>
+                        </div>
+                        <div class="checkbox">
+                          <label>
+                            <input id="newznab_enabled" type="checkbox" name="newznab_enabled" value="1" />
+                            Enabled
+                          </label>
+                        </div>
+                        <a class="btn btn-danger remove" id="newznab">Remove </a>
+                      </div>
                     </div>
                   </div>
                   <div class="col-xs-12 col-sm-12 col-md-6">
@@ -1088,7 +1123,7 @@
                     <div class="post_processing_options">
                       <div class="form-group">
                         <label for="file_opts">When Post-Processing, do this to the files</label>
-                        <select name="file_opts" onchange="changeTest()" id="file_opts" class="form-control">
+                        <select name="file_opts" id="file_opts" class="form-control">
                           <%
                           if 'windows' in mylar.OS_DETECT.lower():
                             optionlist = ['move', 'copy']
@@ -1198,7 +1233,11 @@
                         <span class="help-block">If ComicVine API Key specified, will use with ComicTagger</span>
                         <span class="help-block">Writing each type of metadata will increase API count respectively</span>
                       </div>
-                      <div id="warningmeta" style="color:Green; font-family:Calibri; font-size:small; font-weight:bold; text-align:center"></div>
+                    </div>
+                    <div class="bad_meta">
+                      <div class="alert alert-danger">
+                        <p>Metadata cannot be used when Hardlink / Softlink options are enabled.</p>
+                      </div>
                     </div>
 
 
@@ -1596,305 +1635,4 @@
 
 <%def name="javascriptIncludes()">
   <script type="text/javascript" src="interfaces/bootstrap/js/views/config.js"></script>
-
-        <script>
-        function changeTest()
-        {
-            var answer = document.getElementById("file_opts");
-            var meta = document.getElementById("enable_meta");
-            if(answer[answer.selectedIndex].value == "hardlink" || answer[answer.selectedIndex].value == "softlink"){
-                meta.checked = false;
-                initConfigCheckbox("#enable_meta");
-                document.getElementById("warningmeta").style.display = "block";
-                document.getElementById("warningmeta").innerHTML = "Metadata cannot be used when Hardlink / Softlink options are enabled.";
-                meta.setAttribute("disabled", "disabled");
-            } else {
-                document.getElementById("warningmeta").style.display = "none";
-                meta.removeAttribute("disabled");
-            }
-        }
-        </script>
-
-	<script>
-	function initThisPage() 
-	
-	{
-
-                
-
-                if ($("#prowl").is(":checked"))
-                        {
-                                $("#prowloptions").show();
-                        }
-                else
-                        {
-                                $("#prowloptions").hide();
-                        }
-
-                $("#prowl").click(function(){
-                        if ($("#prowl").is(":checked"))
-                        {
-                                $("#prowloptions").slideDown();
-                        }
-                        else
-                        {
-                                $("#prowloptions").slideUp();
-                        }
-                });
-
-                if ($("#nma").is(":checked"))
-                        {
-                                $("#nmaoptions").show();
-                        }
-                else
-                        {
-                                $("#nmaoptions").hide();
-                        }
-
-                $("#nma").click(function(){
-                        if ($("#nma").is(":checked"))
-                        {
-                                $("#nmaoptions").slideDown();
-                        }
-                        else
-                        {
-                                $("#nmaoptions").slideUp();
-                        }
-                });
-
-                if ($("#pushover").is(":checked"))
-                        {
-                                $("#pushoveroptions").show();
-                        }
-                else
-                        {
-                                $("#pushoveroptions").hide();
-                        }
-
-                $("#pushover").click(function(){
-                        if ($("#pushover").is(":checked"))
-                        {
-                                $("#pushoveroptions").slideDown();
-                        }
-                        else
-                        {
-                                $("#pushoveroptions").slideUp();
-                        }
-                });
-
-                if ($("#telegram").is(":checked"))
-                        {
-                                $("#telegramoptions").show();
-                        }
-                else
-                        {
-                                $("#telegramoptions").hide();
-                        }
-
-                $("#telegram").click(function(){
-                        if ($("#telegram").is(":checked"))
-                        {
-                                $("#telegramoptions").slideDown();
-                        }
-                        else
-                        {
-                                $("#telegramoptions").slideUp();
-                        }
-                });
-
-                if ($("#boxcar").is(":checked"))
-                        {
-                                $("#boxcaroptions").show();
-                        }
-                else
-                        {
-                                $("#boxcaroptions").hide();
-                        }
-
-                $("#boxcar").click(function(){
-                        if ($("#boxcar").is(":checked"))
-                        {
-                                $("#boxcaroptions").slideDown();
-                        }
-                        else
-                        {
-                                $("#boxcaroptions").slideUp();
-                        }
-                });
-
-                if ($("#pushbullet").is(":checked"))
-                        {
-                                $("#pushbulletoptions").show();
-                        }
-                else
-                        {
-                                $("#pushbulletoptions").hide();
-                        }
-
-                $("#pushbullet").click(function(){
-                        if ($("#pushbullet").is(":checked"))
-                        {
-                                $("#pushbulletoptions").slideDown();
-                        }
-                        else
-                        {
-                                $("#pushbulletoptions").slideUp();
-                        }
-                });
-
-                if ($("#legacymode_32p").is(":checked"))
-                        {
-                                $("#auth32p_options").hide();
-                                $("#legacy32p_options").show();
-                        }
-                else
-                        {
-                                $("#legacy32p_options").hide();
-                                $("#auth32p_options").show();
-                        }
-
-                $('input[type=radio]').change(function(){
-                        if ($("#legacymode_32p").is(":checked"))
-                        {
-                                $("#auth32p_options").fadeOut("fast", function() { $("#legacy32p_options").fadeIn() });
-                        }
-                        else
-                        {
-                                $("#legacy32p_options").fadeOut("fast", function() { $("#auth32p_options").fadeIn() });
-                        }
-                });
-
-               
-
-                
-
-                
-                var deletedNewznabs = 0;
-
-                $(".remove").click(function() {
-                    $(this).parent().parent().remove();
-                    deletedNewznabs = deletedNewznabs + 1;
-                });
-
-                
-                $("#test_32p").click(function(){
-                    $.get('test_32p',
-                        function(data){
-                            if (data.error != undefined) {
-                                alert(data.error);
-                                return;
-                            }
-                            $('#status32p').val(data);
-                    });
-                });
-                $("#test_sab").click(function(){
-                    $.get('SABtest',
-                        function(data){
-                            if (data.error != undefined) {
-                                alert(data.error);
-                                return;
-                            }
-                            $('#sabstatus').val(data);
-                    });
-                });
-               
-               
-                $('#sab_apikey').click(function(){ $('#sab_apikey').select() });
-                $("#find_sabapi").click(function(){
-                    $.get('findsabAPI',
-                        function(data){
-                            if (data.error != undefined) {
-                                alert(data.error);
-                                return;
-                            }
-                            $('#sab_apikey').val(data);
-                    });
-                });
-
-                $("#add_newznab").click(function() {
-                    var intId = $("#newznab_providers > div").size() + deletedNewznabs + 1;
-                    var formfields = $("<div class=\"config\" id=\"newznab" + intId + "\"><div class=\"row\"><label>Newznab Name</label><input type=\"text\" name=\"newznab_name" + intId + "\" size=\"36\"></div><div class=\"row\"><label>Newznab Host</label><input type=\"text\" name=\"newznab_host" + intId + "\" + value=\"http://\" + size=\"30\"></div><div class=\"row checkbox\"><input type=\"checkbox\" name=\"newznab_verify" + intId + "\" value=\"0\" checked /><label>Verify SSL</label></div><div class=\"row\"><label>Newznab API</label><input type=\"text\" name=\"newznab_api" + intId + "\" size=\"36\"></div><div class=\"row\"><label>Newznab UID</label><input type=\"text\" name=\"newznab_uid" + intId + "\" size=\"15\"></div><div class=\"row checkbox\"><input type=\"checkbox\" name=\"newznab_enabled" + intId + "\" value=\"1\" checked /><label>Enabled</label></div>");
-                    var removeButton = $("<div class=\"row\"><input type=\"button\" class=\"remove\" value=\"Remove\" /></div>");
-                    removeButton.click(function() {
-                        $(this).parent().remove();
-                        deletedNewznabs = deletedNewznabs + 1;
-
-                    });
-                    formfields.append(removeButton);
-                    formfields.append("</div>");
-                    $("#add_newznab").before(formfields);
-                });
-                function addAction() {
-                        $('#autoadd').append('<input type="hidden" name="tsab" value=1 />');
-                };
-
-                $('#nma_test').click(function () {
-                    $.get("testNMA",
-                        function (data) { $('#ajaxMsg').html("<div class='msg'><span class='ui-icon ui-icon-check'></span>"+data+"</div>"); });
-                    $('#ajaxMsg').addClass('success').fadeIn().delay(3000).fadeOut();
-                });
-
-                $('#prowl_test').click(function () {
-                    $.get("testprowl",
-                        function (data) { $('#ajaxMsg').html("<div class='msg'><span class='ui-icon ui-icon-check'></span>"+data+"</div>"); });
-                    $('#ajaxMsg').addClass('success').fadeIn().delay(3000).fadeOut();
-                });
-
-                $('#pushover_test').click(function () {
-                    $.get("testpushover",
-                        function (data) { $('#ajaxMsg').html("<div class='msg'><span class='ui-icon ui-icon-check'></span>"+data+"</div>"); });
-                    $('#ajaxMsg').addClass('success').fadeIn().delay(3000).fadeOut();
-                });
-
-                $('#boxcar_test').click(function () {
-                    $.get("testboxcar",
-                        function (data) { $('#ajaxMsg').html("<div class='msg'><span class='ui-icon ui-icon-check'></span>"+data+"</div>"); });
-                    $('#ajaxMsg').addClass('success').fadeIn().delay(3000).fadeOut();
-                });
-
-                $('#pushbullet_test').click(function () {
-                    $.get("testpushbullet",
-                        function (data) { $('#ajaxMsg').html("<div class='msg'><span class='ui-icon ui-icon-check'></span>"+data+"</div>"); });
-                    $('#ajaxMsg').addClass('success').fadeIn().delay(3000).fadeOut();
-                });
-
-                $('#telegram_test').click(function () {
-                    $.get("testtelegram",
-                        function (data) { $('#ajaxMsg').html("<div class='msg'><span class='ui-icon ui-icon-check'></span>"+data+"</div>"); });
-                    $('#ajaxMsg').addClass('success').fadeIn().delay(3000).fadeOut();
-                });
-
-		
-		initActions();
-                changeTest();
-                initConfigCheckbox("#launch_browser");
-                initConfigCheckbox("#enable_https");
-                initConfigCheckbox("#enforce_perms");
-                initConfigCheckbox("#enable_api");
-                initConfigCheckbox("#sab_to_mylar");
-                initConfigCheckbox("#usenewznab");
-                initConfigCheckbox("#enable_torznab");
-		initConfigCheckbox("#usenzbsu");
-                initConfigCheckbox("#usedognzb");
-                
-                initConfigCheckbox("#enable_32p");
-                initConfigCheckbox("#enable_rss");
-		initConfigCheckbox("#useraw");
-                initConfigCheckbox("#replace_spaces");
-                initConfigCheckbox("#use_minsize");
-                initConfigCheckbox("#use_maxsize");
-                initConfigCheckbox("#enable_ddump");
-                initConfigCheckbox("#enable_failed");
-                initConfigCheckbox("#enable_meta");
-                initConfigCheckbox("#zero_level");
-                initConfigCheckbox("#post_processing");
-                initConfigCheckbox("#enable_check_folder");
-                initConfigCheckbox("#enable_pre_scripts");
-                initConfigCheckbox("#enable_extra_scripts");
-	}
-	$(document).ready(function() {
-		initThisPage();
-	});
-	
-	</script>
 </%def>
