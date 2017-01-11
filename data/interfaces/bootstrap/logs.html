@@ -5,23 +5,82 @@
 %>
 
 <%def name="headerIncludes()">
-    <div id="subhead_container">
-        <div id="subhead_menu">
-            <a id="menu_link_delete" href="#" onclick="doAjaxCall('clearLogs',$(this),'table')" data-success="All logs cleared">Clear Log</a>
-            <a id="menu_link_edit" href="toggleVerbose">Toggle Debug Log
+    <div class="btn-group" role="group" aria-label="Manage Actions">
+        <a class="btn btn-default clear-log" id="menu_link_delete" href="#">
+            <span class="glyphicon glyphicon-trash"></span>&nbsp;Clear Log
+        </a>
+        <a class="btn btn-default" id="menu_link_edit" href="toggleVerbose">
+            <span class="glyphicon glyphicon-pencil"></span>&nbsp;
             %if mylar.VERBOSE:
-              ON 
+            Turn Off Debug Logging
+            %else:
+            Turn On Debug Logging
             %endif
-            </a>
-        </div>
+        </a>
     </div>
 </%def>
 
 
 <%def name="body()">
-	<div class="title">
-		<h1 class="clearfix"><img src="interfaces/default/images/icon_logs.png" alt="Logs"/>Logs</h1>
-	</div>
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-6">
+            <h1>
+                <span class="glyphicon glyphicon-flag"></span>&nbsp;Logs
+            </h1>
+        </div>
+        <div class="col-xs-12 col-sm-3 col-sm-push-9 col-md-3 col-md-push-3">
+            <div class="form-group">
+                <label for="refreshrate"><span class="sr-only">Refresh Rate</span></label>
+                <select id="refreshrate" onchange="setRefresh()" class="form-control">
+                    <option value="0" selected="selected">No Refresh</option>
+                    <option value="5">5 Seconds</option>
+                    <option value="15">15 Seconds</option>
+                    <option value="30">30 Seconds</option>
+                    <option value="60">60 Seconds</option>
+                    <option value="300">5 Minutes</option>
+                    <option value="600">10 Minutes</option>
+                </select>
+            </div>
+            
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-sorted" id="logTable">    
+                    <thead>
+                        <tr>
+                            <th id="timestamp">Timestamp</th>
+                            <th id="level">Level</th>
+                            <th id="message">Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="7" class="ts-pager form-horizontal">
+                                <button type="button" class="btn first"><i class="icon-step-backward glyphicon glyphicon-step-backward"></i></button>
+                                <button type="button" class="btn prev"><i class="icon-arrow-left glyphicon glyphicon-backward"></i></button>
+                                <span class="pagedisplay"></span> <!-- this can be any element, including an input -->
+                                <button type="button" class="btn next"><i class="icon-arrow-right glyphicon glyphicon-forward"></i></button>
+                                <button type="button" class="btn last"><i class="icon-step-forward glyphicon glyphicon-step-forward"></i></button>
+                                <select class="pagesize input-mini" title="Select page size">
+                                    <option selected="selected" value="10">10</option>
+                                    <option value="20">20</option>
+                                    <option value="30">30</option>
+                                    <option value="40">40</option>
+                                </select>
+                                <select class="pagenum input-mini" title="Select page number"></select>
+                            </th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+            
+	
 	<table class="display_log" id="log_table">
 		<thead>
 			<tr>
@@ -51,6 +110,8 @@
 </%def>
 
 <%def name="javascriptIncludes()">
+    <script type="text/javascript" src="interfaces/bootstrap/js/views/logs.js"></script>
+    
 	<script src="js/libs/jquery.dataTables.min.js"></script>
         <script>
         $(document).ready(function() {

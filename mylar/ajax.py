@@ -33,7 +33,7 @@ cmd_list = [
     # Comic Details Screen
     'refreshSeries','manualRename','forceRescan','group_metatag','resumeSeries','pauseSeries','addtoreadlist','queueit','unqueueissue',
     # Config
-    'generateAPI','force_rss'
+    'generateAPI','force_rss','clearLogs'
     ]
 
 
@@ -219,6 +219,11 @@ class Ajax(object):
         return;
 
     def _force_rss(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+
+    def _clearLogs(self, **kwargs):
         # TODO
         self.data = self._success_with_message(**kwargs)
         return;
