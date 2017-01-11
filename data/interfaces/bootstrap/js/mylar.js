@@ -111,7 +111,10 @@ var mylar = {
 	},
 	docReady: function(){
 		mylar.console.log('Into main app docReady');
-		$('[data-toggle="popover"]').popover()
+		$('[data-toggle="popover"]').popover();
+		$('.responsive-tabs').responsiveTabs({
+		  accordionOn: ['xs', 'sm'] // xs, sm, md, lg
+		});
 		
 	},
 	windowLoad: function(){},
