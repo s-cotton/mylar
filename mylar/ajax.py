@@ -31,7 +31,9 @@ cmd_list = [
     # Reading List Screen
     'readslist','markreads','removefromreadlist','markasRead','syncfiles','removefromreadlist','forcenewcheck','clearfilecache',
     # Comic Details Screen
-    'refreshSeries','manualRename','forceRescan','group_metatag','resumeSeries','pauseSeries','addtoreadlist','queueit','unqueueissue'
+    'refreshSeries','manualRename','forceRescan','group_metatag','resumeSeries','pauseSeries','addtoreadlist','queueit','unqueueissue',
+    # Config
+    'generateAPI','force_rss'
     ]
 
 
@@ -117,10 +119,10 @@ class Ajax(object):
         return simplejson.dumps(error)
 
     def _success_with_message(self, **message):
-        error = {'success': {'message': message} }
+        success = {'success': {'message': message} }
         cherrypy.response.headers['Content-Type'] = "application/json"
         cherrypy.response.status = 200
-        return simplejson.dumps(error)
+        return simplejson.dumps(success)
 
     #
     # Reading List AJAX Actions
@@ -205,6 +207,21 @@ class Ajax(object):
         # TODO
         self.data = self._success_with_message(**kwargs)
         return;
-        
+    
+    def _generateAPI(self, **kwargs):
+        import hashlib, random
 
-        
+        apikey = hashlib.sha224(str(random.getrandbits(256))).hexdigest()[0:32]
+        logger.info("New API generated")
+        mylar.API_KEY = apikey
+
+        self.data = self._success_with_message(apikey);
+        return;
+
+    def _force_rss(self, **kwargs):
+        # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+
+
+    
