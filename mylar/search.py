@@ -329,6 +329,9 @@ def NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDa
         if name_newznab[-7:] == '[local]':
             name_newznab = name_newznab[:-7].strip()
             newznab_local = True
+        elif name_newznab[-10:] == '[nzbhydra]':
+            name_newznab = name_newznab[:-10].strip()
+            newznab_local = False
         apikey = newznab_host[3].rstrip()
         verify = bool(newznab_host[2].rstrip())
         if '#' in newznab_host[4].rstrip():
@@ -612,7 +615,7 @@ def NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDa
                             else:
                                 hnc = host_newznab_fix
 
-                            if any([hnc[:3] == '10.', hnc[:4] == '172.', hnc[:4] == '192.', hnc.startswith('localhost'), newznab_local]):
+                            if any([hnc[:3] == '10.', hnc[:4] == '172.', hnc[:4] == '192.', hnc.startswith('localhost'), newznab_local is True]) and newznab_local != False:
                                 logger.info('local domain bypass for ' + name_newznab + ' is active.')
                                 localbypass = True
 
@@ -843,6 +846,7 @@ def NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDa
                         else:
                             # convert it to a tuple
                             dateconv = email.utils.parsedate_tz(pubdate)
+                            dateconv2 = datetime.datetime(*dateconv[:6])
                             try:
                                 # convert it to a numeric time, then subtract the timezone difference (+/- GMT)
                                 if dateconv[-1] is not None:
@@ -864,6 +868,7 @@ def NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDa
                             issconv = issue_convert.strftime('%a, %d %b %Y %H:%M:%S')
                         #convert it to a tuple
                         econv = email.utils.parsedate_tz(issconv)
+                        econv2 = datetime.datetime(*econv[:6])
                         #convert it to a numeric and drop the GMT/Timezone
                         try:
                             issuedate_int = time.mktime(econv[:len(econv) -1])
@@ -876,12 +881,20 @@ def NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDa
                                 issuedate_int = int(time.mktime(tm.timetuple()))
                             else:
                                 continue
-                        if postdate_int < issuedate_int:
-                            logger.fdebug(str(pubdate) + ' is before store date of ' + str(stdate) + '. Ignoring search result as this is not the right issue.')
-                            continue
-                        else:
-                            logger.fdebug(str(pubdate) + ' is after store date of ' + str(stdate))
-
+                        try:
+                            #try new method to get around issues populating in a diff timezone thereby putting them in a different day.
+                            if dateconv2.date() < econv2.date():
+                                logger.fdebug(str(pubdate) + ' is before store date of ' + str(stdate) + '. Ignoring search result as this is not the right issue.')
+                                continue
+                            else:
+                                logger.fdebug(str(pubdate) + ' is after store date of ' + str(stdate))
+                        except:
+                            #if the above fails, drop down to the integer compare method as a failsafe.
+                            if postdate_int < issuedate_int:
+                                logger.fdebug(str(pubdate) + ' is before store date of ' + str(stdate) + '. Ignoring search result as this is not the right issue.')
+                                continue
+                            else:
+                                logger.fdebug(str(pubdate) + ' is after store date of ' + str(stdate))
 # -- end size constaints.
 
                     if '(digital first)' in ComicTitle.lower(): #entry['title'].lower():
@@ -1549,6 +1562,13 @@ def NZB_SEARCH(ComicName, IssueNumber, ComicYear, SeriesYear, Publisher, IssueDa
                                 foundc = "no"
 
                     if downloadit:
+                        try:
+                            if entry['chkit']:
+                                helpers.checkthe_id(ComicID, entry['chkit'])
+
+                        except:
+                            pass
+
                         #generate nzbname
                         nzbname = nzbname_create(nzbprov, info=comicinfo, title=ComicTitle) #entry['title'])
 
@@ -2161,7 +2181,6 @@ def searcher(nzbprov, nzbname, comicinfo, link, IssueID, ComicID, tmpprov, direc
         logger.fdebug("link:" + link)
         logger.fdebug("Torrent Provider:" + nzbprov)
         foundc = "yes"
-
 
         rcheck = rsscheck.torsend2client(ComicName, IssueNumber, comyear, link, nzbprov)
         if rcheck == "fail":
