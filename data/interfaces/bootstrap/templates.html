@@ -15,8 +15,8 @@
 	                        <span class="caret"></span>
 	                    </button>
 	                    <ul class="dropdown-menu">
+							<li><a href="#" class="change-sort-by active" data-sortby="ComicSortName">Name</a></li>
 							<li><a href="#" class="change-sort-by" data-sortby="ComicYear">Year</a></li>
-							<li><a href="#" class="change-sort-by" data-sortby="ComicSortName">Name</a></li>
 							<li><a href="#" class="change-sort-by" data-sortby="Status">Status</a></li>
 							<li><a href="#" class="change-sort-by" data-sortby="totalissues">Issue Count</a></li>
 	                    </ul>
@@ -28,7 +28,7 @@
 	                    </button>
 	                    <ul class="dropdown-menu">
 	                        {{#each perpage}}
-							<li><a href="#" class="change-page-size" data-perpage="{{count}}">{{count}}</a></li>
+							<li><a href="#" class="change-page-size {{#if default}}active{{/if}}" data-perpage="{{count}}">{{count}}</a></li>
 	                        {{/each}}
 	                    </ul>
 	                </div>

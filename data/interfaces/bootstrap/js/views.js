@@ -28,18 +28,35 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 	render: function(){
 		var that = this;
 
+		var templateData = this.dataObj();
+		console.log( templateData );
+		this.$el.html( this.template( templateData ) );
+
+		this.renderCovers();
+
+		this.setupPagination();
+		
+		return this;
+	},
+
+	renderCovers: function(){
+		this.$el.find('.covers').empty();
 		this.collection.setPageSize( this.perPage );
 		if( this.currentPage > this.collection.state.totalPages ) this.currentPage = this.collection.state.totalPages;
 
 		this.collection.getPage( this.currentPage );
-		var templateData = this.dataObj();
-		console.log( templateData );
-		this.$el.html( this.template( templateData ) );
+
 		for( var single_model in this.collection.models ){
 			var thisCover = new mylar.views.comicCover({ model: this.collection.models[ single_model ] });
 			this.$el.find('.covers').append( thisCover.render() );
 		}
 		this.setClearfix();
+		
+	},
+
+	setupPagination: function(){
+		var that = this;
+		this.$el.find('.pagination').twbsPagination("destroy");
 		this.$el.find('.pagination').twbsPagination({
 	        totalPages: this.collection.state.totalPages,
 	        visiblePages: 7,
@@ -50,7 +67,6 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 	        	}
 	        }
 	    });
-		return this;
 	},
 
 	dataObj: function(){
@@ -64,14 +80,14 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 		if( mylar.viewport.is('lg') || mylar.viewport.is('md') ){
 			sizes = [
 				{ count: 8 },
-				{ count: 16 },
+				{ count: 16, default: true },
 				{ count: 32 },
 				{ count: 64 }
 			];
 		} else if ( mylar.viewport.is('sm') || mylar.viewport.is('xs') ){
 			sizes = [
 				{ count: 10 },
-				{ count: 20 },
+				{ count: 20, default: true },
 				{ count: 40 },
 				{ count: 80 }
 			];
@@ -83,15 +99,20 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 		this.currentPage = page;
 		/*console.log(event,page);*/
 		console.log('Changed Page?',page);
-		this.render();
+		this.renderCovers();
 	},
 	changePageSize: function(e){
+		$(e.target).parents('ul').eq(0).find('.active').removeClass('active');
+		$(e.target).addClass('active');
 		this.perPage = $(e.target).data('perpage');
-		this.render();
+		this.renderCovers();
+		this.setupPagination();
 	},
 	changeSortBy: function(e){
+		$(e.target).parents('ul').eq(0).find('.active').removeClass('active');
+		$(e.target).addClass('active');
 		var sortBy = $(e.target).data('sortby');
-		console.log('new',sortBy,'old',this.sortBy,'dir',this.sortDir);
+		//console.log('new',sortBy,'old',this.sortBy,'dir',this.sortDir);
 		if( sortBy != this.sortBy ){
 			this.sortBy = sortBy;
 			this.sortDir = 1;
@@ -101,7 +122,7 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 			this.collection.setSorting( this.sortBy, this.sortDir, {full: true} );
 		}		
 		this.collection.fullCollection.sort();
-		this.render();
+		this.renderCovers();
 	},
 
 	setClearfix: function(){

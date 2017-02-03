@@ -45,3 +45,6 @@ body {
 .per-page-dropdown {
   margin: 20px 0px;
 }
+.per-page-dropdown .active {
+  color: blue;
+}
