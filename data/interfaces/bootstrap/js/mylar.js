@@ -17,7 +17,7 @@
   }
 })();
 
-var mylar = {
+var mylar = $.extend({},mylar,{
 	
 	debug: true,
 
@@ -95,6 +95,21 @@ var mylar = {
 			data: {
 				apikey: window.mylarAPIKey
 			}			
+		},
+		table: {
+			options: {
+				theme : "bootstrap",
+				widthFixed: true,
+				headerTemplate : '{content} {icon}',
+
+				widgets : [ "uitheme", "filter", "zebra" ],
+
+			},
+			widgetOptions : {
+				zebra : ["even", "odd"],
+				filter_reset : ".reset",
+				filter_cssFilter: "form-control",
+			}
 		}
 	},
 
@@ -115,6 +130,21 @@ var mylar = {
 		$('.responsive-tabs').responsiveTabs({
 		  accordionOn: ['xs', 'sm'] // xs, sm, md, lg
 		});
+		$('div.btn-group[data-toggle-name]').each(function() {
+		    var group   = $(this);
+		    var form    = group.parents('form').eq(0);
+		    var name    = group.attr('data-toggle-name');
+		    var hidden  = $('input[name="' + name + '"]', form);
+		    $('button', group).each(function(){
+		      var button = $(this);
+		      button.on('click', function(){
+		        hidden.val($(this).val());
+		      });
+		      if(button.val() == hidden.val()) {
+		        button.addClass('active');
+		      }
+		    });
+		  });
 		
 	},
 	windowLoad: function(){},
@@ -153,19 +183,23 @@ var mylar = {
 	},
 
 	initTable: function( target ){
-		target.tablesorter({
-			theme : "bootstrap",
-			widthFixed: true,
-			headerTemplate : '{content} {icon}',
+		if( arguments.length > 1 ){
+			var customOptions  = $.extend(true,{},mylar.config.table.options, arguments[1])
+		} else {
+			var customOptions  = mylar.config.table.options;
+		}
+		if( arguments.length > 2 ){
+			var customWidgetOptions  = $.extend(true,{},mylar.config.table.widgetOptions, arguments[2])
+		} else {
+			var customWidgetOptions  = mylar.config.table.widgetOptions;
+		}
+		
+		customOptions.widgetOptions = customWidgetOptions;
 
-			widgets : [ "uitheme", "filter", "zebra" ],
+		mylar.console.log( customOptions );
 
-			widgetOptions : {
-				zebra : ["even", "odd"],
-				filter_reset : ".reset",
-				filter_cssFilter: "form-control",
-			}
-		})
+		target
+		.tablesorter( customOptions )
 		.tablesorterPager({
 			container: $(".ts-pager"),
 			cssGoto  : ".pagenum",
@@ -173,6 +207,7 @@ var mylar = {
 			output: '{startRow} - {endRow} / {filteredRows} ({totalRows})'
 
 		});
+		return target;
 	},
 	notify: {
 		info: function(message){
@@ -353,7 +388,7 @@ var mylar = {
 		});
 		return data;
 	}
-}
+});
 
 mylar.init();
 

@@ -144,6 +144,8 @@
 		</div>
 	</nav>	
 
+	<%include file="templates.html" />
+
 	<script src="interfaces/bootstrap/bower_components/jquery/dist/jquery.min.js"></script>
 
 	<!-- Tablesorter Plugin -->
@@ -158,6 +160,11 @@
 	<script src="interfaces/bootstrap/bower_components/remarkable-bootstrap-notify/dist/bootstrap-notify.min.js"></script>
 	<script src="interfaces/bootstrap/bower_components/bootbox.js/bootbox.js"></script>
 	<script src="interfaces/bootstrap/bower_components/jquery.bootstrap-responsive-tabs/dist/js/jquery.bootstrap-responsive-tabs.min.js"></script>
+	<script src="interfaces/bootstrap/bower_components/handlebars/handlebars.min.js"></script>
+	<script src="interfaces/bootstrap/bower_components/underscore/underscore-min.js"></script>
+	<script src="interfaces/bootstrap/bower_components/backbone/backbone-min.js"></script>
+	<script src="interfaces/bootstrap/bower_components/backbone.paginator/lib/backbone.paginator.min.js"></script>
+	<script src="interfaces/bootstrap/bower_components/twbs-pagination/jquery.twbsPagination.min.js"></script>
 
 	<script src="js/common.js"></script>
 
@@ -165,8 +172,11 @@
 		var mylarAPIKey = '${mylar.API_KEY}';
 	</script>
 
-	<script src="interfaces/bootstrap/js/mylar.js"></script>
 	
+	<script src="interfaces/bootstrap/js/models.js"></script>
+	<script src="interfaces/bootstrap/js/views.js"></script>
+	<script src="interfaces/bootstrap/js/mylar.js"></script>
+
 	% if not mylar.CURRENT_VERSION:
 		<script type="text/javascript">
 			(function($,undefined){
@@ -189,6 +199,9 @@
 	
 	<script src="js/plugins.js"></script>
 	<script src="interfaces/bootstrap/js/script.js"></script>
+
+	
+
 	<!--[if lt IE 7 ]>
 	<script src="js/libs/dd_belatedpng.js"></script>
 	<script> DD_belatedPNG.fix('img, .png_bg');</script>

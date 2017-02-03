@@ -4,109 +4,134 @@
 %>
 
 <%def name="headerIncludes()">
+	<div class="btn-group" role="group" aria-label="Manage Actions">
+		<a class="btn btn-default clear-all-history" href="#">
+			<span class="glyphicon glyphicon-trash"></span>&nbsp;Clear All History
+		</a>
+		<a class="btn btn-default clear-processed" href="#">
+			<span class="glyphicon glyphicon-trash"></span>&nbsp;Clear Processed
+		</a>
+		<a class="btn btn-default clear-unprocessed" href="#">
+			<span class="glyphicon glyphicon-trash"></span>&nbsp;Clear Unprocessed
+		</a>
+		<a class="btn btn-default clear-snatched" href="#">
+			<span class="glyphicon glyphicon-trash"></span>&nbsp;Clear Snatched
+		</a>
+		<a class="btn btn-default clear-nzblog" href="#">
+			<span class="glyphicon glyphicon-trash"></span>&nbsp;Wipe NZBLOG
+		</a>
+		
+	</div>
+	<!--
 	<div id="subhead_container">
 		<div id="subhead_menu">
 			<a id="menu_link_delete" href="#" onclick="doAjaxCall('clearhistory?type=all',$(this),'table')" data-success="All History cleared">Clear All History</a>
 			<a id="menu_link_delete" href="#" onclick="doAjaxCall('clearhistory?type=Processed',$(this),'table')" data-success="All Processed cleared">Clear Processed</a>
 			<a id="menu_link_delete" href="#" onclick="doAjaxCall('clearhistory?type=Unprocessed',$(this),'table')" data-success="All Unprocessed cleared">Clear Unprocessed</a>
 			<a id="menu_link_delete" href="#" onclick="doAjaxCall('clearhistory?type=Snatched',$(this),'table')" data-success="All Snatched cleared">Clear Snatched</a>
-                        <a id="menu_link_delete" href="#" onclick="doAjaxCall('wipenzblog',$(this),'table')" data-success="Wiped entire NZB DB">Wipe NZBLOG</a>
+            <a id="menu_link_delete" href="#" onclick="doAjaxCall('wipenzblog',$(this),'table')" data-success="Wiped entire NZB DB">Wipe NZBLOG</a>
 		</div>
-	</div>	
+	</div>
+	-->
 </%def>
 
 <%def name="body()">
-	<div id="paddingheader">
-		<h1 class="clearfix"><img src="interfaces/default/images/icon_history.png" alt="History"/>History</h1>
+	<div class="row">
+		<div class="col-xs-12">
+			<h1>
+				<span class="glyphicon glyphicon-hourglass"></span>&nbsp;
+				History
+			</h1>
+		</div>
 	</div>
+	<form action="markissues" method="get" id="markissues">
+		<div class="row">
+			<div class="col-xs-12">
+				<div class="btn-group mark-issues-as" role="group">
+					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						Mark Selected Issues
+						<span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu">
+						<li><a href="#" data-value="Retry">Retry</a></li>
+						<li><a href="#" data-value="Clear">Clear</a></li>
+					</ul>
+				</div>
+				<input type="hidden" name="action" />
+			</div>
+		</div>
+		<div class="row">
+			<div class="table-responsive">
+				<table class="table table-striped table-bordered table-sorted" id="bsIssuesTable">
+					<thead>
+						<tr>
+							<th id="select" align="left">
+								<input type="checkbox" onClick="toggle(this)" class="checkbox" />
+							</th>
+							<th id="dateadded">Date Added</th>
+							<th id="filename">Comic Name</th>
+							<th id="issue">Issue</th>
+							<th id="status">Status</th>
+							<th id="action"></th>
+						</tr>
+					</thead>
+					<tbody>
+						%for item in history:
+						<%
+							if item['Status'] == 'Processed':
+								grade = 'A'
+							elif item['Status'] == 'Snatched':
+								grade = 'C'
+							elif item['Status'] == 'Unprocessed':
+								grade = 'X'
+							else:
+								grade = 'U'
+								
+						%>
+						<tr class="grade${grade}" data-issueid="${item['IssueID']}" data-comicname="${item['ComicName']}" data-issuenumber="${item['Issue_Number']}" data-issuedate="${item['IssueDate']}">
+							<td id="select">
+								<input type="checkbox" name="${item['IssueID']}" class="checkbox" />
+							</td>
+							<td id="dateadded">
+								${item['DateAdded']}
+							</td>
+							<td id="filename">
+								<a href="comicDetails?ComicID=${item['ComicID']}">
+									${item['ComicName']}
+								</a>
+							</td>
+							<td id="issue">
+								${item['Issue_Number']}
+							</td>
+							<td id="status">
+								${item['Status']}
+								%if item['Provider'] == '32P' or item['Provider'] == 'KAT' or item['Provider'] == 'CBT':
+									<img src="interfaces/default/images/torrent-icon.png" height="20" width="20" title="${item['Provider']}" />
+								%else:
+									%if item['Status'] != 'Downloaded' and item['Status'] != 'Post-Processed':
+										(${item['Provider']})
+									%endif
+								%endif
+							</td>
+							<td id="action">
+								[<a href="#" onclick="doAjaxCall('retryit?ComicName=${item['ComicName'] |u}&ComicID=${item['ComicID']}&IssueID=${item['IssueID']}&IssueNumber=${item['Issue_Number']}&redirect=history', $(this),'table')"  data-success="Successful re-download of '${item['ComicName']}' '${item['Issue_Number']}'">
+								retry
+								</a>]
+							</td>
+						</tr>
+						%endfor
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</form>
 
-        <form action="markissues" method="get" id="markissues">
-        <div id="markissue">Mark selected issues as
-                <select name="action" onChange="doAjaxCall('markissues',$(this),'table',true);" data-success="selected issues marked">
-                        <option disabled="disabled" selected="selected">Choose...</option>
-                        <option value="Retry">Retry</option>
-                        <option value="Clear">Clear</option>
-                </select>
-                selected issues
-                <input type="hidden" value="Go">
-        </div>
-
-     <div class="table_wrapper" id="history_table_wrapper">
-
-	<table class="display" id="history_table">
-		<thead>
-			<tr>
-                                <th id="select" align="left"><input type="checkbox" onClick="toggle(this)" class="checkbox" /></th>
-				<th id="dateadded">Date Added</th>
-				<th id="filename">Comic Name</th>
-                                <th id="issue">Issue</th>
-				<th id="status">Status</th>
-				<th id="action"></th>
-			</tr>
-		</thead>
-		<tbody>
-		%for item in history:
-			<%
-				if item['Status'] == 'Processed':
-					grade = 'A'
-				elif item['Status'] == 'Snatched':
-					grade = 'C'
-				elif item['Status'] == 'Unprocessed':
-					grade = 'X'
-				else:
-					grade = 'U'
-					
-			%>
-			<tr class="grade${grade}">
-                                <td id="select"><input type="checkbox" name="${item['IssueID']}" class="checkbox" /></td>
-				<td id="dateadded">${item['DateAdded']}</td>
-				<td id="filename"><a href="comicDetails?ComicID=${item['ComicID']}">${item['ComicName']}</a></td>
-                                <td id="issue">${item['Issue_Number']}</td>
-				<td id="status">${item['Status']}
-                                %if item['Provider'] == '32P' or item['Provider'] == 'KAT' or item['Provider'] == 'CBT':
-                                    <img src="interfaces/default/images/torrent-icon.png" height="20" width="20" title="${item['Provider']}" />
-                                %else:
-                                    %if item['Status'] != 'Downloaded' and item['Status'] != 'Post-Processed':
-                                        (${item['Provider']})
-                                    %endif
-                                %endif
-                                </td>
-				<td id="action">[<a href="#" onclick="doAjaxCall('retryit?ComicName=${item['ComicName'] |u}&ComicID=${item['ComicID']}&IssueID=${item['IssueID']}&IssueNumber=${item['Issue_Number']}&redirect=history', $(this),'table')"  data-success="Successful re-download of '${item['ComicName']}' '${item['Issue_Number']}'">retry</a>]</td>
-			</tr>
-		%endfor
-		</tbody>
-	</table>
-      </div>
-
-        </form>
 </%def>
 
 <%def name="headIncludes()">
-	<link rel="stylesheet" href="interfaces/default/css/data_table.css">
+	
 </%def>
 
 <%def name="javascriptIncludes()">
-	<script src="js/libs/jquery.dataTables.min.js"></script>
-	<script>
-	function initThisPage() {
-		$('#history_table').dataTable({
-			"bDestroy": true,
-			"oLanguage": {
-				"sLengthMenu":"Show _MENU_ items per page",
-				"sEmptyTable": "<em>No History to Display</em>",
-				"sInfo":"Showing _START_ to _END_ of _TOTAL_ items",
-				"sInfoEmpty":"Showing 0 to 0 of 0 items",
-				"sInfoFiltered":"(filtered from _MAX_ total items)"},
-			"iDisplayLength": 25,
-			"sPaginationType": "full_numbers",
-			"aaSorting": []
-
-		});
-		resetFilters("history");
-	}
-	$(document).ready(function() {
-		initThisPage();
-		initActions();
-	});
-	</script>
+	<script type="text/javascript" src="interfaces/bootstrap/js/views/history.js"></script>
 </%def>

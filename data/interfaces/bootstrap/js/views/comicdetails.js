@@ -17,7 +17,20 @@ screen.comicdetails = {
 	},
 
 	docReady: function(){
-		mylar.initTable( $('#bsIssuesTable') );
+		mylar.initTable( $('#bsIssuesTable'), { 
+
+      		textExtraction: {
+      			'#status' : function(node, table, cellindex){ mylar.console.log( $(node).data('status') ); return $(node).data('status') }
+      		}
+      		
+		}, {
+			filter_saveFilters : true,
+      		filter_reset: '.clearAll',
+      		filter_external : '.statusfilter',
+      		filter_placeholder: { search : 'Search...' },
+      		filter_hideFilters : true,
+      		filter_ignoreCase : true,
+		} );
 
 		$( "body" ).on( "click", ".refresh-comic", screen.comicdetails.refreshComic );
 		$( "body" ).on( "click", ".delete-comic", screen.comicdetails.deleteComic );

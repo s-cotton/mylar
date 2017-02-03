@@ -5,24 +5,109 @@
 %>
 
 <%def name="headerIncludes()">
-	<div id="subhead_container">
-			&nbsp;
-	</div>	
-	<a href="manage" class="back">&laquo; Back to manage overview</a>
+    <div class="btn-group" role="group" aria-label="Manage Actions">
+        <a class="btn btn-default" href="manage">
+            <span class="glyphicon glyphicon-menu-left"></span>&nbsp;Back to Manage Overview
+        </a>
+    </div>
 </%def>
 
 
 <%def name="body()">
-	<div id="manageheader" class="title">
-		<h1 class="clearfix">Manage comics</h1>
-	</div>
+    <% 
+    import simplejson as json
+    json_output = json.dumps( comics ) 
+    %>
+    
+    <script type="text/javascript">
+        var initialData = initialData || {};
+        initialData.comics = ${json_output}
+    </script>
+    
+    
+
+
+    <form action="markComics" method="get" id="markComics">
+        <div class="row">
+            <div class="col-xs-12">
+                <h1>Manage Comics</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-6">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Mark Selected Comics
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Delete Series</a></li>
+                        <li><a href="#">MetaTag Series</a></li>
+                        <li><a href="#">Pause Series</a></li>
+                        <li><a href="#">Recheck Files</a></li>
+                        <li><a href="#">Refresh Series</a></li>
+                        <li><a href="#">Resume Series</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+                <div class="btn-group pull-right" data-toggle-name="list_view" data-toggle="buttons-radio">
+                    <button type="button" value="0" class="btn" data-toggle="button">
+                        <span class="glyphicon glyphicon-list"></span>
+                    </button>
+                    <button type="button" value="1" class="btn" data-toggle="button">
+                        <span class="glyphicon glyphicon-th-large"></span>
+                    </button>
+                </div>
+                <input type="hidden" name="list_view" value="0" />
+            </div>
+            <div class="col-xs-12">&nbsp;</div>
+        </div>
+        <div class="item-view-container">
+            <div class="table-view hidden">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <table class="table table-striped table-bordered table-sorted" id="bsComicsTable">
+                            <thead>
+                                <tr>
+                                    <th id="select" class="filter-false">
+                                        <input type="checkbox" onClick="toggle(this)" />
+                                    </th>
+                                    <th id="albumart"></th>
+                                    <th id="name">Comic Name</th>
+                                    <th id="status">Status</th>
+                                    <th id="stat_icon"></th>
+                                    <th id="latest">Latest Issue</th>
+                                    <th id="publisher">Publisher</th>
+                                    <th id="have">Have</th>
+                                    <th id="lastupdated">Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="block-view">
+                <div class="row">
+                    <div class="cover-browser col-xs-12">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </form>
+	
 	<form action="markComics" method="get" id="markComics">
         <div id="markcomics" style="top:0;">
 		<select name="action" onChange="doAjaxCall('markComics',$(this),'table',true);" data-error="You didn't select any comics">
   			<option disabled="disabled" selected="selected">Choose...</option>
   			<option value="delete">Delete Series</option>
-                        <option value="metatag">MetaTag Series</option>
-                        <option value="pause">Pause Series</option>
+            <option value="metatag">MetaTag Series</option>
+            <option value="pause">Pause Series</option>
   			<option value="recheck">Recheck Files</option>
   			<option value="refresh">Refresh Series</option>
   			<option value="resume">Resume Series</option>
@@ -30,70 +115,19 @@
 		selected comics
 		<input type="hidden" value="Go">
 	</div>
-	<div class="table_wrapper">
 
-	<table class="display" id="manage_comic">
-		<thead>
-			<tr>
-				<th id="select"><input type="checkbox" onClick="toggle(this)" /></th>
-				<th id="albumart"></th>
-				<th id="name">Comic Name</th>
-				<th id="status">Status</th>
-                                <th id="stat_icon"></th>
-                                <th id="latest">Latest Issue</th>
-                                <th id="publisher">Publisher</th>
-                                <th id="have">Have</th>
-				<th id="lastupdated">Updated</th>
-			</tr>
-		</thead>
-		<tbody>
-		%for comic in comics:
-                        <%
-                                if comic['Status'] == 'Paused':
-                                        grade = 'X'
-                                elif comic['Status'] == 'Loading':
-                                        grade = 'L'
-                                elif comic['Status'] == 'Error':
-                                        grade = 'X'
-                                else:
-                                        grade = 'A'
-                        %>
-			<tr>
-				<td id="select"><input type="checkbox" name="${comic['ComicName']}[${comic['ComicYear']}]" value="${comic['ComicID']}" class="checkbox" /></td>
-				<td id="albumart"><div><img src="${comic['ComicImage']}" height="75" width="50"></div></td>
-				<td id="name"><span title="${comic['ComicSortName']}"></span><a href="comicDetails?ComicID=${comic['ComicID']}">${comic['ComicName']} (${comic['ComicYear']})</a></td>
-				<td id="status">${comic['recentstatus']}</td>
-                                <td id="stat_icon">
-                                %if comic['Status'] == 'Paused':
-                                    <img src="interfaces/default/images/pause-icon.png" alt="Paused" width="16" height="16" />
-                                %elif comic['Status'] == 'Loading':
-                                    <img src="interfaces/default/images/hourglass.png" alt="Loading" width="16" height="16" />
-                                %elif comic['Status'] == 'Error':
-                                    <img src="interfaces/default/images/cross.png" alt="Error" width="16" height="16" />
-                                %else:
-                                    <img src="interfaces/default/images/checkmark.png" alt="Active" width="16" height="16" />
-                                %endif
-                                </td>
-				<td id="latest">${comic['LatestIssue']} (${comic['LatestDate']})</td>
-                                <td id="publisher">${comic['ComicPublisher']}</td>
-                                <td id="have" valign="center"><span title="${comic['percent']}"></span><div class="progress-container"><div style="width:${comic['percent']}%"><div style="width:${comic['percent']}%"><div class="havetracks">${comic['haveissues']}/${comic['totalissues']}</div></div></div></td>
-				<td id="lastupdated">${comic['DateAdded']}</td>
-			</tr>
-		%endfor
-		</tbody>
-	</table>
-	</div>
 	</form>
 </%def>
 
 <%def name="headIncludes()">
-	<link rel="stylesheet" href="interfaces/default/css/data_table.css">
+	<!--<link rel="stylesheet" href="interfaces/default/css/data_table.css">-->
 </%def>
 
 <%def name="javascriptIncludes()">
-	<script src="js/libs/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="interfaces/bootstrap/js/views/managecomics.js"></script>
+	<!--<script src="js/libs/jquery.dataTables.min.js"></script><-->
 	<script>
-        function initThisPage() {
+        /*function initThisPage() {
                 $('#manage_comic').dataTable(
                         {
                                 "bDestroy": true,
@@ -121,7 +155,7 @@
         });
         $(window).load(function(){
                 initFancybox();
-        });
+        });*/
         </script>
 
 </%def>

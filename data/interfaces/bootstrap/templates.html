@@ -1,0 +1,101 @@
+<!-- Templates Go Here -->
+<script type="text/x-handlebars-template" id="cover-gallery-container">
+	<div id="cover-gallery-carousel">
+		<div class="row">
+			<div class="col-xs-12">
+				<center>
+					<ul class="pagination pagination-sm"></ul>	
+				</center>
+			</div>
+		</div>
+		<div class="row covers">
+			
+		</div>
+		<div class="row">
+			<div class="col-xs-12">
+				<center>
+					<ul class="pagination pagination-sm"></ul>	
+				</center>
+			</div>
+		</div>
+	</div>
+</script>
+<script type="text/x-handlebars-template" id="cover-gallery-single-cover">
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h3 class="panel-title">
+				<span class="pull-right">
+					<span class="badge">{{ComicYear}}</span>
+				</span>
+				{{ComicName}}
+			</h3>
+		</div>
+		<div class="panel-body">
+			<img class="img-responsive" src="{{ComicImage}}" alt="{{ComicName}}" />
+		</div>
+	</div>
+</script>
+<script type="text/x-handlebars-template" id="comics-table-row-template">
+        <tr>
+            <td id="select">
+                <input type="checkbox" name="{{comic.ComicName}}[{{comic.ComicYear}}]" value="{{comic.ComicID}}" class="checkbox" />
+            </td>
+            <td id="albumart">
+                <div>
+                    <img src="{{comic.ComicImage}}" height="75" width="50">
+                </div>
+            </td>
+            <td id="name">
+                <span title="{{comic.ComicSortName}}"></span>
+                <a href="comicDetails?ComicID={{comic.ComicID}}">{{comic.ComicName}} ({{comic.ComicYear}})</a>
+            </td>
+            <td id="status">
+                {{comic.recentstatus}}
+            </td>
+            <td id="stat_icon">
+                {{#if comic.isPaused}}
+                <img src="interfaces/default/images/pause-icon.png" alt="Paused" width="16" height="16" />
+                {{/if}}
+                {{#if comic.isLoading}}
+                <img src="interfaces/default/images/hourglass.png" alt="Loading" width="16" height="16" />
+                {{/if}}
+                {{#if comic.isError}}
+                <img src="interfaces/default/images/cross.png" alt="Error" width="16" height="16" />
+                {{/if}}
+                {{#if comic.isNormal}}
+                <img src="interfaces/default/images/checkmark.png" alt="Active" width="16" height="16" />
+                {{/if}}
+            </td>
+            <td id="latest">
+                {{comic.LatestIssue}} ({{comic.LatestDate}})
+            </td>
+            <td id="publisher">
+                {{comic.ComicPublisher}}
+            </td>
+            <td id="have" valign="center">
+                <span title="{{comic.percent}}"></span>
+                <div class="progress-container">
+                    <div style="width:{{comic.percent}}%">
+                        <div style="width:{{comic.percent}}%">
+                            <div class="havetracks">
+                                {{comic.haveissues}}/{{comic.totalissues.}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td id="lastupdated">
+                {{comic.DateAdded}}
+            </td>
+        </tr>
+    </script>
+    <script type="text/x-handlebars-template" id="comics-panel-template">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                {{comic.ComicName}}
+            </div>
+            <div class="panel-body">
+                Panel content
+            </div>
+        </div>
+    </script>
