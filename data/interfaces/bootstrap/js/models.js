@@ -55,7 +55,10 @@ if( initialData.hasOwnProperty( 'comics' ) ){
 	mylar.comics.reset( initialData.comics );
 }
 mylar.pageableCollections.Comics = Backbone.PageableCollection.extend({
-	model: mylar.models.comic
+	model: mylar.models.comic,
+	state: {
+		sortKey: "ComicSortName"
+	}
 });
 
 

@@ -21,6 +21,8 @@ var mylar = $.extend({},mylar,{
 	
 	debug: true,
 
+	viewport: ResponsiveBootstrapToolkit,
+
 	config: {
 		console: {
 			sendToServer: false
