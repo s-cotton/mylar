@@ -78,16 +78,18 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 	setupPagination: function(){
 		var that = this;
 		this.$el.find('.pagination').twbsPagination("destroy");
-		this.$el.find('.pagination').twbsPagination({
-	        totalPages: this.collection.state.totalPages,
-	        visiblePages: 7,
-	        startPage: this.currentPage,
-	        onPageClick: function(event,page){
-	        	if( that.currentPage != page ){
-	        		that.changePage(page);	
-	        	}
-	        }
-	    });
+		if( this.collection.state.totalPages > 0 ){
+			this.$el.find('.pagination').twbsPagination({
+		        totalPages: this.collection.state.totalPages,
+		        visiblePages: 7,
+		        startPage: this.currentPage,
+		        onPageClick: function(event,page){
+		        	if( that.currentPage != page ){
+		        		that.changePage(page);	
+		        	}
+		        }
+		    });	
+		}		
 	},
 
 	dataObj: function(){
@@ -147,6 +149,7 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 	},
 
 	filterComics: function(){
+		if( this.searchValue.length == 0 ) this.currentPage = 1;
 		this.searchValue = this.$el.find('[name="search"]').val();
 		console.log(this.searchValue);
 		this.setCollection();
