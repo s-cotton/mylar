@@ -17,7 +17,8 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 	events: {
 		"click .change-page-size"	: "changePageSize",
 		"click .change-sort-by"		: "changeSortBy",
-		"keyup [name='search']"		: "filterComics"
+		"keyup [name='search']"		: "filterComics",
+		"click .reset-search"		: "resetSearch"
 	},
 	initialize: function(){
 		this.setCollection();
@@ -37,14 +38,7 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 			});
 		}
 	},
-	filterModels: function(model){
-		var that = this;
-		return _.any(model.attributes, function(val, attr) {
-			console.log(val,attr)
-	        // do your comparison of the value here, whatever you need
-	        return val.indexOf( that.searchValue );
-	    });;
-	},
+
 	render: function(){
 		var that = this;
 
@@ -124,6 +118,7 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 		console.log('Changed Page?',page);
 		this.renderCovers();
 	},
+
 	changePageSize: function(e){
 		$(e.target).parents('ul').eq(0).find('.active').removeClass('active');
 		$(e.target).addClass('active');
@@ -131,6 +126,7 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 		this.renderCovers();
 		this.setupPagination();
 	},
+
 	changeSortBy: function(e){
 		$(e.target).parents('ul').eq(0).find('.active').removeClass('active');
 		$(e.target).addClass('active');
@@ -152,6 +148,18 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 		if( this.searchValue.length == 0 ) this.currentPage = 1;
 		this.searchValue = this.$el.find('[name="search"]').val();
 		console.log(this.searchValue);
+		this.setCollection();
+		this.renderCovers();
+		this.setupPagination();
+	},
+
+	resetSearch: function(){
+		this.$el.find('[name="search"]').val('');
+		this.searchValue = '';
+		this.sortBy = "ComicSortName";
+		this.sortDir = 1;
+		this.currentPage = 1;
+		this.perPage = 16;
 		this.setCollection();
 		this.renderCovers();
 		this.setupPagination();
