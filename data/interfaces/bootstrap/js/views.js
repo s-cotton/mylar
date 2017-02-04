@@ -10,20 +10,40 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 	perPage: 16,
 	sortBy: "ComicSortName",
 	sortDir: 1,
+	searchValue: "",
 
 	currentPage: 1,
 	
 	events: {
 		"click .change-page-size"	: "changePageSize",
-		"click .change-sort-by"		: "changeSortBy"
+		"click .change-sort-by"		: "changeSortBy",
+		"keyup [name='search']"		: "filterComics"
 	},
 	initialize: function(){
-		this.collection = new mylar.pageableCollections.Comics( initialData.comics,{
-			mode: "client",
-			comparator: function (model) { return model.get("ComicID"); },
-		});
-
+		this.setCollection();
 		this.render();
+	},
+
+	setCollection: function(){
+		if( this.searchValue.length ){
+			this.collection = new mylar.pageableCollections.Comics( mylar.comics.filterValues( this.searchValue ),{
+				mode: "client",
+				comparator: function (model) { return model.get("ComicID"); },
+			});
+		} else {
+			this.collection = new mylar.pageableCollections.Comics( initialData.comics,{
+				mode: "client",
+				comparator: function (model) { return model.get("ComicID"); },
+			});
+		}
+	},
+	filterModels: function(model){
+		var that = this;
+		return _.any(model.attributes, function(val, attr) {
+			console.log(val,attr)
+	        // do your comparison of the value here, whatever you need
+	        return val.indexOf( that.searchValue );
+	    });;
 	},
 	render: function(){
 		var that = this;
@@ -41,6 +61,7 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 
 	renderCovers: function(){
 		this.$el.find('.covers').empty();
+		
 		this.collection.setPageSize( this.perPage );
 		if( this.currentPage > this.collection.state.totalPages ) this.currentPage = this.collection.state.totalPages;
 
@@ -123,6 +144,14 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 		}		
 		this.collection.fullCollection.sort();
 		this.renderCovers();
+	},
+
+	filterComics: function(){
+		this.searchValue = this.$el.find('[name="search"]').val();
+		console.log(this.searchValue);
+		this.setCollection();
+		this.renderCovers();
+		this.setupPagination();
 	},
 
 	setClearfix: function(){
