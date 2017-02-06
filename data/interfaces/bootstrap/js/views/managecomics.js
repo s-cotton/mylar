@@ -4,8 +4,8 @@ var screen = screen || {};
 screen.managecomics = {
 
 	thisScreen: this,
-	collection: null,
 	coverBrowser: null,
+	pager: null,
 
 	init: function(){
 		
@@ -13,14 +13,30 @@ screen.managecomics = {
 
 	docReady: function(){
 
-/*		screen.managecomics.collection = new mylar.pageableCollections.Comics( initialData.comics,{
-			mode: "client",
-			comparator: function (model) { return model.get("ComicID"); }
-		});*/
-
+		screen.managecomics.pager = new mylar.views.comicPagerAndFilter();
+		screen.managecomics.pager.setContext("comics");
+		screen.managecomics.pager.setActions([
+				{ key: 'delete',  label: 'Delete Series',  icon: 'trash'    },
+				{ key: 'metatag', label: 'MetaTag Series', icon: 'tags'     },
+				{ key: 'pause',   label: 'Pause Series',   icon: 'pause'    },
+				{ key: 'recheck', label: 'Recheck Files',  icon: 'eye-open' },
+				{ key: 'refresh', label: 'Refresh Series', icon: 'refresh'  },
+				{ key: 'resume',  label: 'Resume Series',  icon: 'play'     },
+		]);
+		screen.managecomics.pager.setSelectable([
+			{ key: 'ended',   label: 'Ended',   icon: 'time'         },
+			{ key: 'loading', label: 'Loading', icon: 'refresh'      },
+			{ key: 'error',   label: 'Error',   icon: 'warning-sign' },
+			{ key: 'active',  label: 'Active',  icon: 'thumbs-up'    },
+		]);
+		screen.managecomics.pager.setViews([
+			{ key: 'grid',    label: 'Grid', icon: 'th-large', default: true },
+			{ key: 'list', 	  label: 'List', icon: 'list', default: false }
+		]);
+		screen.managecomics.pager.render();
 		screen.managecomics.coverBrowser = new mylar.views.comicCoverBrowser();
 
-
+		
 
 		//screen.managecomics.coverBrowser.render();
 		/**

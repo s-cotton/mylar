@@ -8,6 +8,18 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 	template: Handlebars.compile( $('#comic-pager-and-filter').html() ),
 
 	context: "comics",
+	actions: [],
+	selectable: [],
+	views: [],
+
+	defaults: {
+		comics: {
+			sortBy: "ComicSortName"
+		},
+		issues: {
+			sortBy: ""
+		}
+	},
 
 	totalPages: 0,
 	perPage: 16,
@@ -21,17 +33,34 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 		"click .change-page-size"	: "changePageSize",
 		"click .change-sort-by"		: "changeSortBy",
 		"keyup [name='search']"		: "filterComics",
-		"click .reset-search"		: "resetSearch"
+		"click .reset-search"		: "resetSearch",
+		"click .change-layout"		: "changeView"
 	},
 	initialize: function(){
-		this.render();
-		mylar.pubsub.on('pager:updateState', this.updateState,this );
+		
 	},
 
 	render: function(){
 		var templateData = this.dataObj();
 		this.$el.html( this.template( templateData ) );
 		this.setupPagination();
+		mylar.pubsub.on('pager:updateState', this.updateState,this );
+	},
+
+	setContext: function(context){
+		this.context = context;
+	},
+
+	setActions: function(actions){
+		this.actions = actions;
+	},
+
+	setSelectable: function(selectable){
+		this.selectable = selectable;
+	},
+
+	setViews: function(views){
+		this.views = views;
 	},
 
 	updateState: function(data){
@@ -44,7 +73,10 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 	
 	dataObj: function(){
 		return {
-			perpage: this.getPerPage()
+			perpage: this.getPerPage(),
+			views: this.views,
+			selectable: this.selectable,
+			actions: this.actions
 		}
 	},
 
@@ -65,14 +97,16 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 				{ count: 8 },
 				{ count: 16, default: true },
 				{ count: 32 },
-				{ count: 64 }
+				{ count: 64 },
+				{ count: "All" }
 			];
 		} else if ( mylar.viewport.is('sm') || mylar.viewport.is('xs') ){
 			sizes = [
 				{ count: 10 },
 				{ count: 20, default: true },
 				{ count: 40 },
-				{ count: 80 }
+				{ count: 80 },
+				{ count: "All" }
 			];
 		}
 		return sizes;
@@ -84,7 +118,7 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 		if( this.totalPages > 0 ){
 			this.$el.find('.pagination').twbsPagination({
 		        totalPages: this.totalPages,
-		        visiblePages: 7,
+		        visiblePages: 15,
 		        startPage: this.currentPage,
 		        onPageClick: function(event,page){
 		        	if( that.currentPage != page ){
@@ -141,6 +175,14 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 		this.setupPagination();
 	},
 
+	changeView: function(e){
+		this.layout = $(e.target).attr('value');
+		console.log(e.target);
+		$(e.target).parents('.btn-group').eq(0).find('.active').removeClass('active');
+		$(e.target).addClass('active');
+		mylar.pubsub.trigger( 'pager:changeView', this.stateObj() );
+	}
+
 });
 
 mylar.views.comicCoverBrowser = Backbone.View.extend({
@@ -182,27 +224,28 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 			this.sortBy     	= pagerData.sortBy;
 			this.sortDir    	= pagerData.sortDir;
 			this.collection.setSorting( this.sortBy, this.sortDir, {full: true} );
-			this.collection.comparator = function(model){ return model.get( that.sortBy ); };
+			this.collection.comparator = function(model){ return model.get( that.sortBy ).toLowerCase(); };
 			this.collection.sort();
 		}
 		
 		this.currentPage	= pagerData.currentPage;
 		if( pagerData.perPage != this.perPage ){
-			this.collection.setPageSize( pagerData.perPage );
+			this.perPage    	= pagerData.perPage;
 		}
-		this.perPage    	= pagerData.perPage;
+		
 	},
 
 	setCollection: function(){
+		var that = this;
 		if( this.searchValue.length ){
-			this.collection = new mylar.pageableCollections.Comics( mylar.comics.filterValues( this.searchValue ),{
+			this.collection = new mylar.pageableCollections.Comics( mylar.comics.filterValues( this.searchValue.toLowerCase() ),{
 				mode: "client",
-				comparator: function (model) { return model.get("ComicID"); },
+				comparator: function (model) { return model.get( that.sortBy ).toLowerCase(); },
 			});
 		} else {
 			this.collection = new mylar.pageableCollections.Comics( initialData.comics,{
 				mode: "client",
-				comparator: function (model) { return model.get("ComicID"); },
+				comparator: function (model) { return model.get( that.sortBy ).toLowerCase(); },
 			});
 		}
 		this.collection.setPageSize( this.perPage );
@@ -214,17 +257,22 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 		this.renderCovers();
 	},
 
+	setPageSize: function(pageSize){
+		if( pageSize == "All" ){
+			this.collection.setPageSize( this.collection.fullCollection.length );
+		} else {
+			this.collection.setPageSize( pageSize );	
+		}	
+	},
+
 	render: function(){
 		var that = this;
 
 		var templateData = this.dataObj();
-		console.log( this.collection.state.totalPages );
 		this.$el.html( this.template( templateData ) );
 
 		this.renderCovers();
-		this.pager = new mylar.views.comicPagerAndFilter();
 		mylar.pubsub.trigger('pager:updateState', { currentPage: this.currentPage, totalPages: this.collection.state.totalPages });
-		//this.setupPagination();
 		
 		return this;
 	},
@@ -232,7 +280,7 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 	renderCovers: function(){
 		this.$el.find('.covers').empty();
 		
-		this.collection.setPageSize( this.perPage );
+		this.setPageSize(this.perPage);
 		if( this.currentPage > this.collection.state.totalPages ){
 			this.currentPage = this.collection.state.totalPages;
 		}
@@ -249,101 +297,11 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 		
 	},
 
-	/*setupPagination: function(){
-		var that = this;
-		this.$el.find('.pagination').twbsPagination("destroy");
-		if( this.collection.state.totalPages > 0 ){
-			this.$el.find('.pagination').twbsPagination({
-		        totalPages: this.collection.state.totalPages,
-		        visiblePages: 7,
-		        startPage: this.currentPage,
-		        onPageClick: function(event,page){
-		        	if( that.currentPage != page ){
-		        		that.changePage(page);	
-		        	}
-		        }
-		    });	
-		}		
-	},*/
-
 	dataObj: function(){
 		return {
-			//perpage: this.getPerPage()
+			
 		}
 	},
-
-	/*getPerPage: function(){
-		var sizes = [];
-		if( mylar.viewport.is('lg') || mylar.viewport.is('md') ){
-			sizes = [
-				{ count: 8 },
-				{ count: 16, default: true },
-				{ count: 32 },
-				{ count: 64 }
-			];
-		} else if ( mylar.viewport.is('sm') || mylar.viewport.is('xs') ){
-			sizes = [
-				{ count: 10 },
-				{ count: 20, default: true },
-				{ count: 40 },
-				{ count: 80 }
-			];
-		}
-		return sizes;
-	},*/
-
-	/*changePage: function(page){
-		this.currentPage = page;
-		console.log(event,page);
-		console.log('Changed Page?',page);
-		this.renderCovers();
-	},*/
-
-	/*changePageSize: function(e){
-		$(e.target).parents('ul').eq(0).find('.active').removeClass('active');
-		$(e.target).addClass('active');
-		this.perPage = $(e.target).data('perpage');
-		this.renderCovers();
-		this.setupPagination();
-	},*/
-
-	/*changeSortBy: function(e){
-		$(e.target).parents('ul').eq(0).find('.active').removeClass('active');
-		$(e.target).addClass('active');
-		var sortBy = $(e.target).data('sortby');
-		//console.log('new',sortBy,'old',this.sortBy,'dir',this.sortDir);
-		if( sortBy != this.sortBy ){
-			this.sortBy = sortBy;
-			this.sortDir = 1;
-			this.collection.setSorting( this.sortBy, 1, {full: true} );
-		} else {
-			this.sortDir = (this.sortDir == 1) ? -1 : 1;
-			this.collection.setSorting( this.sortBy, this.sortDir, {full: true} );
-		}		
-		this.collection.fullCollection.sort();
-		this.renderCovers();
-	},
-
-	filterComics: function(){
-		if( this.searchValue.length == 0 ) this.currentPage = 1;
-		this.searchValue = this.$el.find('[name="search"]').val();
-		console.log(this.searchValue);
-		this.setCollection();
-		this.renderCovers();
-		this.setupPagination();
-	},
-
-	resetSearch: function(){
-		this.$el.find('[name="search"]').val('');
-		this.searchValue = '';
-		this.sortBy = "ComicSortName";
-		this.sortDir = 1;
-		this.currentPage = 1;
-		this.perPage = 16;
-		this.setCollection();
-		this.renderCovers();
-		this.setupPagination();
-	},*/
 
 	setClearfix: function(){
 		this.$el.find('.row > .cover:nth-of-type(4n)').after('<div class="clearfix visible-md-block visible-lg-block"></div>');
