@@ -5,7 +5,7 @@ mylar.utils.filterCollection = function(collection, filterValue) {
     return collection.filter(function(data) {
         return _.some(_.values(data.toJSON()), function(value) {
            if (_.isNumber(value)) value = value.toString();
-           if (_.isString(value)) return value.indexOf(filterValue) != -1;
+           if (_.isString(value)) return value.toLowerCase().indexOf(filterValue) != -1;
            return false;
         });
     });
