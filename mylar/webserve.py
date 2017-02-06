@@ -2275,6 +2275,7 @@ class WebInterface(object):
     def markComics(self, action=None, **args):
         myDB = db.DBConnection()
         comicsToAdd = []
+        clist = []
         for k,v in args.items():
             if k == 'manage_comic_length':
                 continue
@@ -2283,30 +2284,41 @@ class WebInterface(object):
             comyr = k.find('[')
             ComicYear = re.sub('[\[\]]', '', k[comyr:]).strip()
             ComicName = k[:comyr].strip()
-            ComicID = v
-            #cid = ComicName.decode('utf-8', 'replace')
+            if isinstance(v, list):
+                #because multiple items can have the same comicname & year, we need to make sure they're all unique entries
+                for x in v:
+                    clist.append({'ComicName':  ComicName,
+                                  'ComicYear':  ComicYear,
+                                  'ComicID':    x})
+            else:
+                clist.append({'ComicName':  ComicName,
+                              'ComicYear':  ComicYear,
+                              'ComicID':    v})
 
+        for cl in clist:
             if action == 'delete':
-                logger.info('[MANAGE COMICS][DELETION] Now deleting ' + ComicName + ' (' + str(ComicYear) + ') [' + str(ComicID) + '] form the DB.')
-                myDB.action('DELETE from comics WHERE ComicID=?', [ComicID])
-                myDB.action('DELETE from issues WHERE ComicID=?', [ComicID])
-                logger.info('[MANAGE COMICS][DELETION] Successfully deleted ' + ComicName + '(' + str(ComicYear) + ')')
+                logger.info('[MANAGE COMICS][DELETION] Now deleting ' + cl['ComicName'] + ' (' + str(cl['ComicYear']) + ') [' + str(cl['ComicID']) + '] form the DB.')
+                myDB.action('DELETE from comics WHERE ComicID=?', [cl['ComicID']])
+                myDB.action('DELETE from issues WHERE ComicID=?', [cl['ComicID']])
+                if mylar.ANNUALS_ON:
+                    myDB.action('DELETE from annuals WHERE ComicID=?', [cl['ComicID']])
+                logger.info('[MANAGE COMICS][DELETION] Successfully deleted ' + cl['ComicName'] + '(' + str(cl['ComicYear']) + ')')
             elif action == 'pause':
-                controlValueDict = {'ComicID': ComicID}
+                controlValueDict = {'ComicID': cl['ComicID']}
                 newValueDict = {'Status': 'Paused'}
                 myDB.upsert("comics", newValueDict, controlValueDict)
-                logger.info('[MANAGE COMICS][PAUSE] ' + ComicName + ' has now been put into a Paused State.')
+                logger.info('[MANAGE COMICS][PAUSE] ' + cl['ComicName'] + ' has now been put into a Paused State.')
             elif action == 'resume':
-                controlValueDict = {'ComicID': ComicID}
+                controlValueDict = {'ComicID': cl['ComicID']}
                 newValueDict = {'Status': 'Active'}
                 myDB.upsert("comics", newValueDict, controlValueDict)
-                logger.info('[MANAGE COMICS][RESUME] ' + ComicName + ' has now been put into a Resumed State.')
+                logger.info('[MANAGE COMICS][RESUME] ' + cl['ComicName'] + ' has now been put into a Resumed State.')
             elif action == 'recheck' or action == 'metatag':
-                comicsToAdd.append({'ComicID':   ComicID,
-                                    'ComicName': ComicName,
-                                    'ComicYear': ComicYear})
+                comicsToAdd.append({'ComicID':   cl['ComicID'],
+                                    'ComicName': cl['ComicName'],
+                                    'ComicYear': cl['ComicYear']})
             else:
-                comicsToAdd.append(ComicID)
+                comicsToAdd.append(cl['ComicID'])
 
         if len(comicsToAdd) > 0:
             if action == 'recheck':
@@ -4724,12 +4736,9 @@ class WebInterface(object):
                 return 'Unable to reach SABnzbd'
 
             try:
-                if dom.getElementsByTagName('status')[0].firstChild.wholeText == 'True':
-                    q_sabhost = dom.getElementsByTagName('host')[0].firstChild.wholeText
-                    q_nzbkey = dom.getElementsByTagName('nzb_key')[0].firstChild.wholeText
-                    q_apikey = dom.getElementsByTagName('api_key')[0].firstChild.wholeText
-                else:
-                    raise ValueError
+                q_sabhost = dom.getElementsByTagName('host')[0].firstChild.wholeText
+                q_nzbkey = dom.getElementsByTagName('nzb_key')[0].firstChild.wholeText
+                q_apikey = dom.getElementsByTagName('api_key')[0].firstChild.wholeText
             except:
                 errorm = dom.getElementsByTagName('error')[0].firstChild.wholeText
                 logger.error(u"Error detected attempting to retrieve SAB data using FULL APIKey: " + errorm)
