@@ -1,7 +1,61 @@
 <!-- Templates Go Here -->
+<script type="text/x-handlebars-template" id="comic-pager-and-filter">
+	<div class="row">
+		<div class="col-xs-12 col-md-3">
+			<div class="per-page-dropdown">
+				<div class="input-group input-group-sm">
+					<input type="text" class="form-control" placeholder="Filter" aria-describedby="basic-addon2" name="search" />
+					<span class="input-group-addon" id="basic-addon2">
+						<span class="glyphicon glyphicon-search"></span>
+					</span>
+				</div>
+			</div>
+		</div>
+		<div class="col-xs-12 col-md-6">
+			<center>
+				<ul class="pagination pagination-sm"></ul>	
+			</center>
+		</div>
+		<div class="col-xs-12 col-md-3">
+			<div class="btn-group pull-right per-page-dropdown">
+				<a href="#" class="btn btn-sm btn-default reset-search">
+					<span class="glyphicon glyphicon-refresh"></span>
+					Reset
+				</a>
+				<div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    	<span class="glyphicon glyphicon-sort-by-attributes-alt"></span>
+                        Sort By
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+						<li><a href="#" class="change-sort-by active" data-sortby="ComicSortName">Name</a></li>
+						<li><a href="#" class="change-sort-by" data-sortby="ComicYear">Year</a></li>
+						<li><a href="#" class="change-sort-by" data-sortby="Status">Status</a></li>
+						<li><a href="#" class="change-sort-by" data-sortby="totalissues">Issue Count</a></li>
+                    </ul>
+                </div>
+                <div class="btn-group pull-right" role="group">
+                    <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    	<span class="glyphicon glyphicon-th"></span>
+                        Per Page
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        {{#each perpage}}
+						<li><a href="#" class="change-page-size {{#if default}}active{{/if}}" data-perpage="{{count}}">{{count}}</a></li>
+                        {{/each}}
+                    </ul>
+                </div>
+            </div>
+		</div>
+	</div>
+</script>
+
 <script type="text/x-handlebars-template" id="cover-gallery-container">
 	<div id="cover-gallery-carousel">
-		<div class="row">
+		<div class="comic-pager"></div>
+		<!-- <div class="row">
 			<div class="col-xs-12 col-md-3">
 				<div class="per-page-dropdown">
 					<div class="input-group input-group-sm">
@@ -24,43 +78,37 @@
 						Reset
 					</a>
 					<div class="btn-group" role="group">
-	                    <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-	                    	<span class="glyphicon glyphicon-sort-by-attributes-alt"></span>
-	                        Sort By
-	                        <span class="caret"></span>
-	                    </button>
-	                    <ul class="dropdown-menu">
+			                    <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			                    	<span class="glyphicon glyphicon-sort-by-attributes-alt"></span>
+			                        Sort By
+			                        <span class="caret"></span>
+			                    </button>
+			                    <ul class="dropdown-menu">
 							<li><a href="#" class="change-sort-by active" data-sortby="ComicSortName">Name</a></li>
 							<li><a href="#" class="change-sort-by" data-sortby="ComicYear">Year</a></li>
 							<li><a href="#" class="change-sort-by" data-sortby="Status">Status</a></li>
 							<li><a href="#" class="change-sort-by" data-sortby="totalissues">Issue Count</a></li>
-	                    </ul>
-	                </div>
-	                <div class="btn-group pull-right" role="group">
-	                    <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-	                    	<span class="glyphicon glyphicon-th"></span>
-	                        Per Page
-	                        <span class="caret"></span>
-	                    </button>
-	                    <ul class="dropdown-menu">
-	                        {{#each perpage}}
+			                    </ul>
+			                </div>
+			                <div class="btn-group pull-right" role="group">
+			                    <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			                    	<span class="glyphicon glyphicon-th"></span>
+			                        Per Page
+			                        <span class="caret"></span>
+			                    </button>
+			                    <ul class="dropdown-menu">
+			                        {{#each perpage}}
 							<li><a href="#" class="change-page-size {{#if default}}active{{/if}}" data-perpage="{{count}}">{{count}}</a></li>
-	                        {{/each}}
-	                    </ul>
-	                </div>
-                </div>
+			                        {{/each}}
+			                    </ul>
+			                </div>
+		                </div>
 			</div>
-		</div>
+		</div> -->
 		<div class="row covers">
 			
 		</div>
-		<div class="row">
-			<div class="col-xs-12">
-				<center>
-					<ul class="pagination pagination-sm"></ul>	
-				</center>
-			</div>
-		</div>
+		<div class="comic-pager"></div>
 	</div>
 </script>
 <script type="text/x-handlebars-template" id="cover-gallery-single-cover">

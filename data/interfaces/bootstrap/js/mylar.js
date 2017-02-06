@@ -115,7 +115,7 @@ var mylar = $.extend({},mylar,{
 		}
 	},
 
-	pubsub: {},
+	pubsub: _.extend({},Backbone.Events),
 	screens: [],
 	urlData: [],
 	configData: [],
@@ -126,6 +126,7 @@ var mylar = $.extend({},mylar,{
 		$(window).on( 'resize', mylar.windowResize );
 		$(window).on( 'unload', mylar.windowUnload );
 	},
+
 	docReady: function(){
 		mylar.console.log('Into main app docReady');
 		$('[data-toggle="popover"]').popover();
@@ -141,6 +142,8 @@ var mylar = $.extend({},mylar,{
 		      var button = $(this);
 		      button.on('click', function(){
 		        hidden.val($(this).val());
+		        $('button',group).removeClass('active');
+		        $(this).addClass('active');
 		      });
 		      if(button.val() == hidden.val()) {
 		        button.addClass('active');
@@ -393,50 +396,3 @@ var mylar = $.extend({},mylar,{
 });
 
 mylar.init();
-
-/* https://gist.github.com/fatihacet/1290216 */
-mylar.pubsub = {};
-(function(q) {
-    var topics = {}, subUid = -1;
-    q.subscribe = function(topic, func) {
-        if (!topics[topic]) {
-            topics[topic] = [];
-        }
-        var token = (++subUid).toString();
-        topics[topic].push({
-            token: token,
-            func: func
-        });
-        return token;
-    };
-
-    q.publish = function(topic, args) {
-        if (!topics[topic]) {
-            return false;
-        }
-        setTimeout(function() {
-            var subscribers = topics[topic],
-                len = subscribers ? subscribers.length : 0;
-
-            while (len--) {
-                subscribers[len].func(topic, args);
-            }
-        }, 0);
-        return true;
-
-    };
-
-    q.unsubscribe = function(token) {
-        for (var m in topics) {
-            if (topics[m]) {
-                for (var i = 0, j = topics[m].length; i < j; i++) {
-                    if (topics[m][i].token === token) {
-                        topics[m].splice(i, 1);
-                        return token;
-                    }
-                }
-            }
-        }
-        return false;
-    };
-}(mylar.pubsub));
