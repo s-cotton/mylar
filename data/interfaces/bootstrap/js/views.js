@@ -34,7 +34,7 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 		"click .change-sort-by"		: "changeSortBy",
 		"keyup [name='search']"		: "filterComics",
 		"click .reset-search"		: "resetSearch",
-		"click .change-layout"		: "changeView"
+		"click .change-layout"		: "changeLayout"
 	},
 	initialize: function(){
 		
@@ -87,6 +87,7 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 			sortDir    : this.sortDir,
 			currentPage: this.currentPage > 0 ? this.currentPage : 1,
 			perPage    : this.perPage,
+			layout 	   : this.layout
 		}
 	},
 
@@ -175,26 +176,36 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 		this.setupPagination();
 	},
 
-	changeView: function(e){
+	changeLayout: function(e){
 		this.layout = $(e.target).attr('value');
 		console.log(e.target);
 		$(e.target).parents('.btn-group').eq(0).find('.active').removeClass('active');
 		$(e.target).addClass('active');
-		mylar.pubsub.trigger( 'pager:changeView', this.stateObj() );
+		mylar.pubsub.trigger( 'pager:changeLayout', this.stateObj() );
+	},
+
+	setInitialLayout: function(){
+		for( var i in this.views ){
+			if( this.views[i].default ){
+				this.layout = this.views[i].key;
+				mylar.pubsub.trigger( 'pager:changeLayout', this.stateObj() );
+			}
+		}
 	}
 
 });
 
-mylar.views.comicCoverBrowser = Backbone.View.extend({
-	el: '.cover-browser',
-	template: Handlebars.compile( $('#cover-gallery-container').html() ),
+mylar.views.comicBrowser = Backbone.View.extend({
+	
 	collection: null,
-	pager: null,
+	layout: false,
 	covers: [],
+
 	perPage: 16,
 	sortBy: "ComicSortName",
 	sortDir: 1,
 	searchValue: "",
+
 
 	currentPage: 1,
 	
@@ -208,8 +219,7 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 		this.setCollection();
 		this.render();
 
-		mylar.pubsub.on('pager:resetView pager:changeSearch pager:sortBy pager:changePage pager:changePerPage', this.updateView, this );
-		
+		mylar.pubsub.on('pager:resetView pager:changeSearch pager:sortBy pager:changePage pager:changePerPage pager:changeLayout', this.updateView, this );
 	},
 
 	updateState: function(pagerData){
@@ -231,6 +241,12 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 		this.currentPage	= pagerData.currentPage;
 		if( pagerData.perPage != this.perPage ){
 			this.perPage    	= pagerData.perPage;
+		}
+
+		if( pagerData.layout == this.layout ){
+			this.$el.removeClass('hidden');
+		} else {
+			this.$el.addClass('hidden');
 		}
 		
 	},
@@ -254,7 +270,7 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 
 	updateView: function(pagerData){
 		this.updateState(pagerData);
-		this.renderCovers();
+		this.renderItems();
 	},
 
 	setPageSize: function(pageSize){
@@ -271,13 +287,30 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 		var templateData = this.dataObj();
 		this.$el.html( this.template( templateData ) );
 
-		this.renderCovers();
+		this.renderItems();
 		mylar.pubsub.trigger('pager:updateState', { currentPage: this.currentPage, totalPages: this.collection.state.totalPages });
 		
 		return this;
 	},
 
-	renderCovers: function(){
+	renderItems: function(){
+		
+	},
+
+	dataObj: function(){
+		return {
+			
+		}
+	}
+});
+
+mylar.views.comicCoverBrowser = mylar.views.comicBrowser.extend({
+	el: '.cover-browser',
+	template: Handlebars.compile( $('#cover-gallery-container').html() ),
+	
+	layout: 'grid',
+
+	renderItems: function(){
 		this.$el.find('.covers').empty();
 		
 		this.setPageSize(this.perPage);
@@ -309,11 +342,72 @@ mylar.views.comicCoverBrowser = Backbone.View.extend({
 	}
 });
 
+mylar.views.comicTableBrowser = mylar.views.comicBrowser.extend({
+	el: '.table-browser',
+	template: Handlebars.compile( $('#table-browser-container').html() ),
+
+	layout: 'list',
+	
+	renderItems: function(){
+		console.log('Rendering Comic Rows');
+		this.$el.find('tbody').empty();
+		
+		this.setPageSize(this.perPage);
+		if( this.currentPage > this.collection.state.totalPages ){
+			this.currentPage = this.collection.state.totalPages;
+		}
+
+		this.collection.getPage( this.currentPage );
+
+		for( var single_model in this.collection.models ){
+			var thisRow = new mylar.views.comicRow({ model: this.collection.models[ single_model ] });
+			this.$el.find('tbody').append( thisRow.render() );
+		}
+
+		mylar.pubsub.trigger('pager:updateState', { currentPage: this.currentPage, totalPages: this.collection.state.totalPages });
+		
+	},
+
+	dataObj: function(){
+		return {
+			
+		}
+	},
+
+});
+
 mylar.views.comicCover = Backbone.View.extend({
 	tagName: 'div',
 	className: 'col-xs-12 col-sm-6 col-md-3 cover',
 	model: mylar.models.comic,
 	template: Handlebars.compile( $('#cover-gallery-single-cover').html() ),
+	events: {
+		'click .checked-issue' : 'checkIssue'
+	},
+	initialize: function(){
+		//this.render()
+	},
+	render: function(){
+		this.$el.html( this.template( this.model.toJSON() ) );
+		return this.$el;
+	},
+	checkIssue: function(){
+		if( this.$el.find('.checked-issue .glyphicon').hasClass('glyphicon-unchecked') ){
+			this.$el.find('input[type="checkbox"]').attr('checked','checked');
+			this.$el.find('.checked-issue .glyphicon').removeClass('glyphicon-unchecked')
+			this.$el.find('.checked-issue .glyphicon').addClass('glyphicon-check')
+		} else {
+			this.$el.find('input[type="checkbox"]').removeAttr('checked');
+			this.$el.find('.checked-issue .glyphicon').addClass('glyphicon-unchecked')
+			this.$el.find('.checked-issue .glyphicon').removeClass('glyphicon-check')
+		}
+	}
+});
+
+mylar.views.comicRow = Backbone.View.extend({
+	tagName: 'tr',
+	model: mylar.models.comic,
+	template: Handlebars.compile( $('#comics-table-single-row').html() ),
 	events: {
 		'click .checked-issue' : 'checkIssue'
 	},

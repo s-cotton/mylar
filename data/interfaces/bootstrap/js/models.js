@@ -19,6 +19,18 @@ mylar.models.comic = Backbone.Model.extend({
 		percent       :0,
 		recentstatus  :"",
 		totalissues   :0,
+		
+		isPaused      : false,
+		isLoading     : false,
+		isError       : false,
+		isActive      : false
+	},
+	constructor: function(){
+		if( this.Status == 'Paused' ) this.isPaused = true;
+		else if ( this.Status == 'Loading' ) this.isLoading = true;
+		else if ( this.Status == 'Error' ) this.isError = true;
+		else this.isActive = true;
+		Backbone.Model.apply(this, arguments);
 	}
 });
 
