@@ -110,6 +110,7 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 				{ count: "All" }
 			];
 		}
+		console.log(sizes);
 		return sizes;
 	},
 

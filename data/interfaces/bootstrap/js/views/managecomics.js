@@ -36,4 +36,6 @@ mylar.views.managecomics = Backbone.View.extend({
 	}
 });
 
-var thisPage = new mylar.views.managecomics();
+$(document).ready(function(){
+	var thisPage = new mylar.views.managecomics();
+});
