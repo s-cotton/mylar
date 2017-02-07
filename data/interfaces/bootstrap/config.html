@@ -1406,6 +1406,29 @@
                       %endfor
                       </select>
                     </div>
+                    %if mylar.INTERFACE == 'bootstrap':
+                    <div class="form-group">
+                      <label for="swatch">Bootswatch</label>
+                      <select name="swatch" class="form-control">
+                        <option value="cerulean" <% if mylar.SWATCH == 'cerulean': print 'selected="selected"'; %>>Cerulean</option>
+                        <option value="cosmo" <% if mylar.SWATCH == 'cosmo': print 'selected="selected"'; %>>Cosmo</option>
+                        <option value="cyborg" <% if mylar.SWATCH == 'cyborg': print 'selected="selected"'; %>>Cyborg</option>
+                        <option value="darkly" <% if mylar.SWATCH == 'darkly': print 'selected="selected"'; %>>Darkly</option>
+                        <option value="flatly" <% if mylar.SWATCH == 'flatly': print 'selected="selected"'; %>>Flatly</option>
+                        <option value="journal" <% if mylar.SWATCH == 'journal': print 'selected="selected"'; %>>Journal</option>
+                        <option value="lumen" <% if mylar.SWATCH == 'lumen': print 'selected="selected"'; %>>Lumen</option>
+                        <option value="paper" <% if mylar.SWATCH == 'paper': print 'selected="selected"'; %>>Paper</option>
+                        <option value="readable" <% if mylar.SWATCH == 'readable': print 'selected="selected"'; %>>Readable</option>
+                        <option value="sandstone" <% if mylar.SWATCH == 'sandstone': print 'selected="selected"'; %>>Sandstone</option>
+                        <option value="simplex" <% if mylar.SWATCH == 'simplex': print 'selected="selected"'; %>>Simplex</option>
+                        <option value="slate" <% if mylar.SWATCH == 'slate': print 'selected="selected"'; %>>Slate</option>
+                        <option value="spacelab" <% if mylar.SWATCH == 'spacelab': print 'selected="selected"'; %>>Spacelab</option>
+                        <option value="superhero" <% if mylar.SWATCH == 'superhero': print 'selected="selected"'; %>>Superhero</option>
+                        <option value="united" <% if mylar.SWATCH == 'united': print 'selected="selected"'; %>>United</option>
+                        <option value="yeti" <% if mylar.SWATCH == 'yeti': print 'selected="selected"'; %>>Yeti</option>
+                      </select>
+                    </div>
+                    %endif
                     <div class="form-group">
                       <label for="log_dir">Log Directory</label>
                       <input type="text" name="log_dir" value="${config['log_dir']}" class="form-control" />
