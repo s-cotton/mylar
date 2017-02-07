@@ -120,11 +120,17 @@ var mylar = $.extend({},mylar,{
 	urlData: [],
 	configData: [],
 
+	selectedComics: null,
+	selectedIssues: null,
+
 	init: function(){
 		$(document).ready( mylar.docReady );
 		$(window).on( 'load', mylar.windowLoad );
 		$(window).on( 'resize', mylar.windowResize );
 		$(window).on( 'unload', mylar.windowUnload );
+
+		this.selectedComics = new mylar.collections.selectedComics();
+		this.selectedIssues = new mylar.collections.selectedIssues();
 	},
 
 	docReady: function(){
@@ -150,7 +156,9 @@ var mylar = $.extend({},mylar,{
 		      }
 		    });
 		  });
-		
+		mylar.pubsub.on("all", function(eventName){
+		    console.log(eventName + ' was triggered!', arguments);
+		});
 	},
 	windowLoad: function(){},
 	windowResize: function(){},

@@ -57,28 +57,3 @@ mylar.models.issue = Backbone.Model.extend({
 		inCacheDIR     :null,
 	}
 });
-
-mylar.collections = {};
-mylar.pageableCollections = {};
-
-mylar.collections.Comics = Backbone.Collection.extend({ model: mylar.models.comic });
-mylar.comics = new mylar.collections.Comics();
-if( initialData.hasOwnProperty( 'comics' ) ){
-	mylar.comics.reset( initialData.comics );
-}
-mylar.pageableCollections.Comics = Backbone.PageableCollection.extend({
-	model: mylar.models.comic,
-	state: {
-		sortKey: "ComicSortName"
-	}
-});
-
-
-mylar.collections.Issues = Backbone.Collection.extend({ model: mylar.models.issue });
-mylar.issues = new mylar.collections.Issues();
-if( initialData.hasOwnProperty( 'issues' ) ){
-	mylar.issues.reset( initialData.issues );
-}
-
-
-

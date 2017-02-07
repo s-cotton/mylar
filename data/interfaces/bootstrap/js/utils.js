@@ -14,3 +14,11 @@ mylar.utils.filterCollection = function(collection, filterValue) {
 Backbone.Collection.prototype.filterValues = function(filterValues) {
     return mylar.utils.filterCollection(this, filterValues);
 }
+
+Handlebars.registerHelper('if', function(conditional, options) {
+  if(conditional) {
+    return options.fn(this);
+  } else {
+    return options.inverse(this);
+  }
+});
