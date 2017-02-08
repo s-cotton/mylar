@@ -105,7 +105,7 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 			currentPage: this.currentPage > 0 ? this.currentPage : 1,
 			perPage    : this.perPage,
 			layout 	   : this.layout,
-			selected   : this.selected
+			selected   : this.getSelectable()
 		}
 	},
 
@@ -129,6 +129,16 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 			];
 		}
 		return sizes;
+	},
+
+	getSelectable: function(){
+		var selectable = [];
+		for( var i in this.selectable ){
+			if( this.selected.indexOf( this.selectable[i].key) >= 0 ){
+				selectable.push( this.selectable[i].target );
+			}
+		}
+		return selectable;
 	},
 
 	setupPagination: function(){
@@ -227,6 +237,7 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 				this.selected.push( $(e.target).data('selectable') );
 			}	
 		}		
+		console.log('Before Mark Selected Event');
 		mylar.pubsub.trigger( 'pager:changeSelected', this.stateObj() );
 	},
 
@@ -261,7 +272,7 @@ mylar.views.comicBrowser = Backbone.View.extend({
 	},
 
 	updateState: function(pagerData){
-		console.log(pagerData);
+		//console.log(pagerData);
 		var that = this;
 		
 		if( this.searchValue.length > 0 || this.searchValue != pagerData.searchValue ){
@@ -269,12 +280,17 @@ mylar.views.comicBrowser = Backbone.View.extend({
 			this.setCollection();
 		}
 		if( pagerData.sortBy != this.sortBy || pagerData.sortDir != this.sortDir ){
-			console.log('Updating Sort',pagerData.sortBy,pagerData.sortDir);
+			//console.log('Updating Sort',pagerData.sortBy,pagerData.sortDir);
 			this.sortBy     	= pagerData.sortBy;
 			this.sortDir    	= pagerData.sortDir;
-			this.collection.setSorting( this.sortBy, this.sortDir, {full: true} );
+			if( this.sortDir > 0 ){
+				this.collection.setSorting( this.sortBy, this.sortDir, {full: true} );	
+			} else {
+				this.collection.setSorting( this.sortBy, {full: true} );
+			}
+			
 			this.collection.comparator = function(model){ return model.get( that.sortBy ); };
-			this.collection.sort();
+			this.collection.fullCollection.sort();
 		}
 		
 		this.currentPage	= pagerData.currentPage;
@@ -417,12 +433,12 @@ mylar.views.comicCover = Backbone.View.extend({
 	},
 	initialize: function(){
 		//this.render()
-		mylar.pubsub.on('selection:issue:added selection:issue:removed', this.maybeRender, this)
+		mylar.pubsub.on('selection:update', this.maybeRender, this)
 	},
-	maybeRender: function( model ){
-		if( this.model.attributes.ComicID == model.attributes.ComicID ){
+	maybeRender: function( models ){
+		
 			this.render();
-		}
+		
 	},
 	render: function(){
 		var templateData = _.extend(this.model.toJSON(), {

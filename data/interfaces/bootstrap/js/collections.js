@@ -35,14 +35,22 @@ mylar.collections.selectedComics = Backbone.Collection.extend({
 		//console.log(model,{ ComicID: model.attributes.ComicID },this.where({ ComicID: model.attributes.ComicID }).length);
 		return ( this.where({ ComicID: model.attributes.ComicID }).length > 0 ) ? true : false;
 	},
-	clearSelected: function(){
-		this.reset();
+	clearSelected: function(broadcast){
+		/*var that = this;
+		this.each(function(model){
+			that.remove( model, {silent: true} );
+		});*/
+		this.reset({silent: true});
+		if( broadcast !== false ) this.broadcastSelection();
 	},
 	broadcastAdd: function(){
-		mylar.pubsub.trigger( "selection:comic:added", arguments );
+		this.broadcastSelection();
 	},
 	broadcastRemove: function(){
-		mylar.pubsub.trigger( "selection:comic:removed", arguments );
+		this.broadcastSelection();
+	},
+	broadcastSelection: function(){
+		mylar.pubsub.trigger( "selection:update", this.pluck("ComicID") );	
 	}
 });
 

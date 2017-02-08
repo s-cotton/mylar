@@ -24,10 +24,10 @@ mylar.views.managecomics = Backbone.View.extend({
 				{ key: 'resume',  label: 'Resume Series',  icon: 'play'     },
 		]);
 		this.pager.setSelectable([
-			{ key: 'ended',   label: 'Ended',   icon: 'time'         },
-			{ key: 'loading', label: 'Loading', icon: 'refresh'      },
-			{ key: 'error',   label: 'Error',   icon: 'warning-sign' },
-			{ key: 'active',  label: 'Active',  icon: 'thumbs-up'    },
+			{ key: 'ended',   label: 'Ended',   icon: 'time',         target: 'Ended'   },
+			{ key: 'loading', label: 'Loading', icon: 'refresh',      target: 'Loading' },
+			{ key: 'error',   label: 'Error',   icon: 'warning-sign', target: 'Error'   },
+			{ key: 'active',  label: 'Active',  icon: 'thumbs-up',    target: 'Active'  },
 		]);
 		this.pager.setViews([
 			{ key: 'grid',    label: 'Grid', icon: 'th-large', default: true  },
@@ -55,7 +55,13 @@ mylar.views.managecomics = Backbone.View.extend({
 	},
 
 	changeSelected: function( dataObj ){
-		console.log(dataObj);
+		mylar.selectedComics.clearSelected(false);
+		for( var i in dataObj.selected ){
+			var filterObj = { Status: dataObj.selected[i] };
+			var relevantComics = this.collection.filter(filterObj);
+			mylar.selectedComics.add(relevantComics,{silent:true});
+		}
+		mylar.selectedComics.broadcastSelection();
 	}
 });
 
