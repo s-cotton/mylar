@@ -23,6 +23,7 @@
     "backbone-relational": "^0.10.0",
     "backbone.paginator": "^2.0.5",
     "twbs-pagination": "^1.4.1",
-    "responsive-bootstrap-toolkit": "responsive-toolkit#^2.6.3"
+    "responsive-bootstrap-toolkit": "responsive-toolkit#^2.6.3",
+    "jquery-flipster": "^1.1.2",
   }
 }
