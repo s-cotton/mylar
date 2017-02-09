@@ -56,3 +56,38 @@ body {
   max-height: 450px;
   max-width: 250px;
 }
+.single-cover .panel-heading .panel-title {
+  overflow: hidden;
+}
+.single-cover .panel-heading .panel-title > .pull-right .badge {
+  cursor: default;
+}
+.single-cover .panel-body h4 {
+  margin-top: 0px;
+  text-align: center;
+  max-width: 250px;
+  white-space: pre-wrap;
+  /* css-3 */
+  white-space: -moz-pre-wrap;
+  /* Mozilla, since 1999 */
+  white-space: -pre-wrap;
+  /* Opera 4-6 */
+  white-space: -o-pre-wrap;
+  /* Opera 7 */
+  word-wrap: break-word;
+  /* Internet Explorer 5.5+ */
+}
+.single-cover .panel-body .img-block {
+  position: relative;
+  overflow: hidden;
+}
+.single-cover .panel-body .img-block .overlay {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.75);
+  top: 100%;
+  right: 0;
+}
+.single-cover .panel-body .img-block:hover .overlay {
+  top: auto;
+  bottom: 0;
+}

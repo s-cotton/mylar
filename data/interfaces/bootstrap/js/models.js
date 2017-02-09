@@ -26,11 +26,13 @@ mylar.models.comic = Backbone.Model.extend({
 		isActive      : false
 	},
 	constructor: function(){
-		if( this.Status == 'Paused' ) this.isPaused = true;
-		else if ( this.Status == 'Loading' ) this.isLoading = true;
-		else if ( this.Status == 'Error' ) this.isError = true;
-		else this.isActive = true;
 		Backbone.Model.apply(this, arguments);
+		//console.log(this);
+		if( this.Status == 'Paused' ) this.set("isPaused", true);
+		else if ( this.Status == 'Loading' ) this.set("isLoading", true);
+		else if ( this.Status == 'Error' ) this.set("isError", true);
+		else this.set("isActive", true);
+		this.set("publisherImage",mylar.utils.getPublisherImage( this.get("ComicPublisher") ));
 	}
 });
 

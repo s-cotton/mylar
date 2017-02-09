@@ -490,6 +490,7 @@ mylar.views.comicFlowCover = Backbone.View.extend({
 		});
 		console.log(templateData);
 		this.$el.html( this.template( templateData ) );
+		this.$el.find('.panel-title a').css('width', this.$el.find('.panel-body > img').width() )
 		return this.$el;
 	},
 	checkIssue: function(){
@@ -526,6 +527,7 @@ mylar.views.comicCover = Backbone.View.extend({
 		});
 		console.log(templateData);
 		this.$el.html( this.template( templateData ) );
+		this.$el.find('.panel-title a').css('width', this.$el.find('.panel-body > img').width() )
 		return this.$el;
 	},
 	checkIssue: function(){

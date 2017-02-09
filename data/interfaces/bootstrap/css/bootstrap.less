@@ -56,3 +56,46 @@ body {
 }
 
 .cover-flow > ul > li img { max-height: 450px; max-width: 250px; }
+
+.single-cover {
+	.panel-heading {
+		.panel-title {
+			overflow: hidden;
+			> .pull-left {}
+			> .pull-right {
+				.badge {
+					cursor: default;
+				}
+			}
+			
+		}
+	}
+	.panel-body {
+		h4 {
+			margin-top: 0px;
+			text-align: center;
+			max-width: 250px;
+			white-space: pre-wrap; /* css-3 */    
+			white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+			white-space: -pre-wrap; /* Opera 4-6 */    
+			white-space: -o-pre-wrap; /* Opera 7 */    
+			word-wrap: break-word; /* Internet Explorer 5.5+ */
+			
+		}
+		.img-block {
+			position: relative;
+			overflow: hidden;
+			img {}
+			.overlay {
+				position: absolute;
+				background-color: rgba(0, 0, 0, 0.75);
+				top: 100%;
+				right: 0;
+			}
+			&:hover .overlay {
+				top: auto;
+				bottom: 0;
+			}
+		}
+	}
+}

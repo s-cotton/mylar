@@ -123,7 +123,7 @@
 </script>
 
 <script type="text/x-handlebars-template" id="cover-gallery-single-cover">
-	<div class="panel panel-default">
+	<div class="panel panel-default single-cover">
 		<div class="panel-heading">
 			<h3 class="panel-title">
 				<span class="pull-left checked-issue">
@@ -134,13 +134,43 @@
 					{{/if}}
 				</span>
 				<span class="pull-right">
+					<span class="badge" title="LatestIssue">#{{LatestIssue}}</span>
+					{{#if isPaused}}
+		            <span class="badge" title="Paused"><span class="glyphicon glyphicon-pause"></span></span>
+		            {{/if}}
+		            {{#if isLoading}}
+		            <span class="badge" title="Loading"><span class="glyphicon glyphicon-hourglass"></span></span>
+		            {{/if}}
+		            {{#if isError}}
+		            <span class="badge" title="Error"><span class="glyphicon glyphicon-alert"></span></span>
+		            {{/if}}
+		            {{#if isActive}}
+		            <span class="badge" title="Active"><span class="glyphicon glyphicon-thumbs-up"></span></span>
+		            {{/if}}
+					<span class="badge" title="{{percent}}%">{{haveissues}}/{{totalissues}}</span>
 					<span class="badge">{{ComicYear}}</span>
 				</span>
-				<a href="/comicDetails?ComicID={{ComicID}}">{{ComicName}}</a>
+				<span class="clearfix"></span>
 			</h3>
 		</div>
 		<div class="panel-body">
-			<img class="img-responsive" src="{{ComicImage}}" alt="{{ComicName}}" />
+			<h4><a href="/comicDetails?ComicID={{ComicID}}">{{ComicName}}</a></h4>
+			<div class="img-block">
+				<img class="img-responsive" src="{{ComicImage}}" alt="{{ComicName}}" />
+				<div class="overlay row">
+					<div class="{{#if publisherImage}}col-xs-12 col-md-8{{else}}col-xs-12{{/if}}">
+						content
+					</div>
+				{{#if publisherImage}}
+					<div class="col-xs-12 col-sm-4 pull-right">
+						{{#with publisherImage}}
+						<img src="{{image}}" class="img-responsive" />
+						{{/with}}
+					</div>
+				{{/if}}
+				</div>	
+			</div>
+			
 		</div>
 	</div>
 </script>
@@ -192,7 +222,7 @@
             {{#if isError}}
             <img src="interfaces/default/images/cross.png" alt="Error" width="16" height="16" />
             {{/if}}
-            {{#if isNormal}}
+            {{#if isActive}}
             <img src="interfaces/default/images/checkmark.png" alt="Active" width="16" height="16" />
             {{/if}}
         </td>
