@@ -503,7 +503,7 @@ mylar.views.comicFlowCover = Backbone.View.extend({
 			'selected': mylar.selectedComics.isSelected( this.model ),
 			actions: this.actions
 		});
-		console.log(templateData);
+		//console.log(templateData);
 		this.$el.html( this.template( templateData ) );
 		this.$el.find('.panel-title a').css('width', this.$el.find('.panel-body > img').width() )
 		return this.$el;
@@ -549,7 +549,7 @@ mylar.views.comicCover = Backbone.View.extend({
 			'selected': mylar.selectedComics.isSelected( this.model ),
 			actions: this.actions
 		});
-		console.log(templateData);
+		//console.log(templateData);
 		this.$el.html( this.template( templateData ) );
 		this.$el.find('.panel-title a').css('width', this.$el.find('.panel-body > img').width() )
 		return this.$el;

@@ -12,12 +12,12 @@ mylar.views.managecomics = Backbone.View.extend({
 
 	context: "comics",
 	actions: [
-			{ key: 'delete',  label: 'Delete Series',  icon: 'trash'    },
-			{ key: 'metatag', label: 'MetaTag Series', icon: 'tags'     },
-			{ key: 'pause',   label: 'Pause Series',   icon: 'pause'    },
-			{ key: 'recheck', label: 'Recheck Files',  icon: 'eye-open' },
-			{ key: 'refresh', label: 'Refresh Series', icon: 'refresh'  },
-			{ key: 'resume',  label: 'Resume Series',  icon: 'play'     },
+		{ key: 'delete',  label: 'Delete Series',  icon: 'trash'    },
+		{ key: 'metatag', label: 'MetaTag Series', icon: 'tags'     },
+		{ key: 'pause',   label: 'Pause Series',   icon: 'pause'    },
+		{ key: 'recheck', label: 'Recheck Files',  icon: 'eye-open' },
+		{ key: 'refresh', label: 'Refresh Series', icon: 'refresh'  },
+		{ key: 'resume',  label: 'Resume Series',  icon: 'play'     },
 	],
 	selectables: [
 		{ key: 'ended',   label: 'Ended',   icon: 'time',         target: 'Ended'   },
@@ -73,11 +73,73 @@ mylar.views.managecomics = Backbone.View.extend({
 	},
 
 	markSelected: function( action ){
-		console.log("Processing Mark Selected",action);
+		switch( action ){
+			case 'delete':  
+				this.markDelete( mylar.selectedComics.pluck("ComicID") );  
+				break;
+			case 'metatag': 
+				this.markMetatag( mylar.selectedComics.pluck("ComicID") ); 
+				break;
+			case 'pause':   
+				this.markPause( mylar.selectedComics.pluck("ComicID") );   
+				break;
+			case 'recheck': 
+				this.markRecheck( mylar.selectedComics.pluck("ComicID") ); 
+				break;
+			case 'refresh': 
+				this.markRefresh( mylar.selectedComics.pluck("ComicID") ); 
+				break;
+			case 'resume':  
+				this.markResume([ model.attributes.ComicID ]);  
+				break;
+		}
 	},
 
 	markSingle: function( action, model ){
-		console.log("Processing Mark Single",action, model);
+		switch( action ){
+			case 'delete':  
+				this.markDelete([ model.attributes.ComicID ]);  
+				break;
+			case 'metatag': 
+				this.markMetatag([ model.attributes.ComicID ]); 
+				break;
+			case 'pause':   
+				this.markPause([ model.attributes.ComicID ]);   
+				break;
+			case 'recheck': 
+				this.markRecheck([ model.attributes.ComicID ]); 
+				break;
+			case 'refresh': 
+				this.markRefresh([ model.attributes.ComicID ]); 
+				break;
+			case 'resume':  
+				this.markResume([ model.attributes.ComicID ]);  
+				break;
+		}
+	},
+
+	markDelete:  function( ids ) {
+		console.log('Marking: Delete',ids);
+	},
+
+	markMetatag: function( ids ) {
+		console.log('Marking: Metatag',ids);
+	},
+
+	markPause:   function( ids ) {
+		console.log('Marking: Pause',ids);
+	},
+
+	markRecheck: function( ids ) {
+		console.log('Marking: Recheck',ids);
+	},
+
+	markRefresh: function( ids ) {
+		console.log('Marking: Refresh',ids);
+	},
+
+	markResume:  function( ids ) {
+		console.log('Marking: Resume',ids);
 	},
 
 	changeSelected: function( dataObj ){
@@ -89,6 +151,7 @@ mylar.views.managecomics = Backbone.View.extend({
 		}
 		mylar.selectedComics.broadcastSelection();
 	}
+	
 });
 
 $(document).ready(function(){
