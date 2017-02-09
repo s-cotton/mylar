@@ -82,10 +82,28 @@ body {
   overflow: hidden;
 }
 .single-cover .panel-body .img-block .overlay {
+  width: 100%;
+  color: white;
   position: absolute;
   background-color: rgba(0, 0, 0, 0.75);
   top: 100%;
   right: 0;
+  padding: 10px;
+  box-sizing: border-box;
+}
+.single-cover .panel-body .img-block .overlay dl {
+  padding: 5px;
+}
+.single-cover .panel-body .img-block .overlay dl dd {
+  padding-left: 10px;
+}
+.single-cover .panel-body .img-block .overlay .pull-right {
+  box-sizing: border-box;
+  padding: 5px;
+}
+.single-cover .panel-body .img-block .overlay .pull-right img {
+  width: 100%;
+  height: auto;
 }
 .single-cover .panel-body .img-block:hover .overlay {
   top: auto;

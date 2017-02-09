@@ -157,17 +157,15 @@
 			<h4><a href="/comicDetails?ComicID={{ComicID}}">{{ComicName}}</a></h4>
 			<div class="img-block">
 				<img class="img-responsive" src="{{ComicImage}}" alt="{{ComicName}}" />
-				<div class="overlay row">
-					<div class="{{#if publisherImage}}col-xs-12 col-md-8{{else}}col-xs-12{{/if}}">
-						content
-					</div>
-				{{#if publisherImage}}
-					<div class="col-xs-12 col-sm-4 pull-right">
-						{{#with publisherImage}}
-						<img src="{{image}}" class="img-responsive" />
-						{{/with}}
-					</div>
-				{{/if}}
+				<div class="overlay">
+					<dl>
+						<dt>Publisher</dt>
+						<dd>{{ComicPublisher}}</dd>
+						<dt>Recent Status</dt>
+						<dd>{{recentstatus}}</dd>
+						<dt>Latest Issue</dt>
+						<dd>#{{LatestIssue}} ({{LatestDate}})</dd>
+					</dl>
 				</div>	
 			</div>
 			

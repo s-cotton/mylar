@@ -87,10 +87,29 @@ body {
 			overflow: hidden;
 			img {}
 			.overlay {
+				width: 100%;
+				color: white;
 				position: absolute;
 				background-color: rgba(0, 0, 0, 0.75);
 				top: 100%;
 				right: 0;
+				padding: 10px;
+				box-sizing: border-box;
+
+				dl {
+					padding: 5px;
+					dd { padding-left: 10px; }
+
+				}
+				.pull-right {
+					box-sizing: border-box;
+					padding: 5px;
+
+					img {
+						width: 100%;
+						height: auto;
+					}
+				}
 			}
 			&:hover .overlay {
 				top: auto;
