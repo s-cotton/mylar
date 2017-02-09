@@ -4,6 +4,7 @@ var screen = screen || {};
 mylar.views.managecomics = Backbone.View.extend({
 	el: '.managecomics',
 	collection: null,
+	gridBrowser: null,
 	coverBrowser: null,
 	tableBrowser: null,
 	pager: null,
@@ -50,19 +51,33 @@ mylar.views.managecomics = Backbone.View.extend({
 		this.pager.setSortable( this.sortables );
 		this.pager.render();
 
-		this.tableBrowser = new mylar.views.comicTableBrowser();
-		this.coverBrowser = new mylar.views.comicGridBrowser();
-		this.coverBrowser = new mylar.views.comicCoverBrowser();
+		this.tableBrowser = new mylar.views.comicTableBrowser({actions: this.actions});
+		this.tableBrowser.setActions( this.actions );
+		this.tableBrowser.render();
+
+		this.gridBrowser = new mylar.views.comicGridBrowser({actions: this.actions});
+		this.gridBrowser.setActions( this.actions );
+		this.gridBrowser.render();
+		
+		this.coverBrowser = new mylar.views.comicCoverBrowser({actions: this.actions});
+		this.coverBrowser.setActions( this.actions );
+		this.coverBrowser.render();
+		
 
 		this.pager.setInitialLayout();
 
-		mylar.pubsub.on( "pager:markSelected", this.markSelected, this );
+		mylar.pubsub.on( "mark:selected", this.markSelected, this );
+		mylar.pubsub.on( "mark:single", this.markSingle, this );
 		mylar.pubsub.on( "pager:changeSelected", this.changeSelected, this );
 
 	},
 
-	markSelected: function( dataObj ){
-		console.log(dataObj);
+	markSelected: function( action ){
+		console.log("Processing Mark Selected",action);
+	},
+
+	markSingle: function( action, model ){
+		console.log("Processing Mark Single",action, model);
 	},
 
 	changeSelected: function( dataObj ){

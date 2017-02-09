@@ -126,7 +126,7 @@
 	<div class="panel panel-default single-cover">
 		<div class="panel-heading">
 			<h3 class="panel-title">
-				<span class="pull-left checked-issue">
+				<span class="pull-left checked-comic">
 					{{#if selected}}
 					<span class="glyphicon glyphicon-check"></span>&nbsp;
 					{{else}}
@@ -134,7 +134,7 @@
 					{{/if}}
 				</span>
 				<span class="pull-right">
-					<span class="badge" title="LatestIssue">#{{LatestIssue}}</span>
+					<span class="badge" title="Latest Issue">#{{LatestIssue}}</span>
 					{{#if isPaused}}
 		            <span class="badge" title="Paused"><span class="glyphicon glyphicon-pause"></span></span>
 		            {{/if}}
@@ -156,7 +156,9 @@
 		<div class="panel-body">
 			<h4><a href="/comicDetails?ComicID={{ComicID}}">{{ComicName}}</a></h4>
 			<div class="img-block">
-				<img class="img-responsive" src="{{ComicImage}}" alt="{{ComicName}}" />
+				<a href="/comicDetails?ComicID={{ComicID}}">
+					<img class="img-responsive" src="{{ComicImage}}" alt="{{ComicName}}" />	
+				</a>				
 				<div class="overlay">
 					<dl>
 						<dt>Publisher</dt>
@@ -168,7 +170,15 @@
 					</dl>
 				</div>	
 			</div>
-			
+			{{#if actions}}
+			<div class="btn-group btn-group-justified" role="group">
+				{{#each actions}}
+					<a role="button" class="mark-comic btn btn-default btn-sm" data-action="{{key}}" title="{{label}}">
+						{{#if icon}}<span class="glyphicon glyphicon-{{icon}}"></span>&nbsp;{{/if}}
+					</a>
+                {{/each}}                
+            </div>
+			{{/if}}
 		</div>
 	</div>
 </script>
@@ -196,7 +206,7 @@
 
 <script type="text/x-handlebars-template" id="comics-table-single-row">
         <td id="select">
-            <input type="checkbox" name="{{ComicName}}[{{ComicYear}}]" value="{{ComicID}}" class="checkbox checked-issue" {{#if selected}}checked="checked"{{/if}} />
+            <input type="checkbox" name="{{ComicName}}[{{ComicYear}}]" value="{{ComicID}}" class="checkbox checked-comic" {{#if selected}}checked="checked"{{/if}} />
         </td>
         <td id="albumart">
             <div>

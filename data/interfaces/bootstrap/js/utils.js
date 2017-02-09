@@ -17,183 +17,139 @@ Backbone.Collection.prototype.filterValues = function(filterValues) {
 
 mylar.utils.getPublisherImage = function(publisher){
 	switch( publisher ){
-		case 'DC Comics':
-			return {
+		case 'DC Comics': return {
 				image : "interfaces/default/images/publisherlogos/logo-dccomics.png",
 				name  : "DC",
 				height: "50",
 				width : "50",
-			};
-			break;
-		case 'Marvel':
-			return {
+			}; break;
+		case 'Marvel': return {
 				image : "interfaces/default/images/publisherlogos/logo-marvel.jpg",
 				name  : "Marvel",
 				height: "50",
 				width : "100",
-			};
-			break;
-		case 'Image':
-			return {
+			}; break;
+		case 'Image': return {
 				image : "interfaces/default/images/publisherlogos/logo-imagecomics.png",
 				name  : "Image",
 				height: "100",
 				width : "50",
-			};
-			break;
+			}; break;
 		case 'Dark Horse Comics':
-		case 'Dark Horse':
-			return {
+		case 'Dark Horse': return {
 				image : "interfaces/default/images/publisherlogos/logo-darkhorse.png",
 				name  : "Darkhorse",
 				height: "100",
 				width : "75",
-			};
-			break;
-		case 'IDW Publishing':
-			return {
+			}; break;
+		case 'IDW Publishing': return {
 				image: "interfaces/default/images/publisherlogos/logo-idwpublish.png",
 				name: "IDW",
 				height: "50",
 				width: "100",
-			};
-			break;
-		case 'Icon':
-			return {
+			}; break;
+		case 'Icon': return {
 				image : "interfaces/default/images/publisherlogos/logo-iconcomics.png",
 				name  : "Icon",
 				height: "50",
 				width : "100",
-			};
-			break;
-		case 'Red5':
-			return {
+			}; break;
+		case 'Red5': return {
 				image: "interfaces/default/images/publisherlogos/logo-red5comics.png",
 				name  : "Red5",
 				height: "50",
 				width : "100",
-			};
-			break;
-		case 'Vertigo':
-			return {
+			}; break;
+		case 'Vertigo': return {
 				image : "interfaces/default/images/publisherlogos/logo-vertigo.jpg",
 				name  : "Vertigo",
 				height: "50",
 				width : "100",
-			};
-			break;
-		case 'ShadowLine':
-			return {
+			}; break;
+		case 'ShadowLine': return {
 				image : "interfaces/default/images/publisherlogos/logo-shadowline.png",
 				name  : "Shadowline",
 				height: "75",
 				width : "100",
-			};
-			break;
-		case 'Archie Comics':
-			return {
+			}; break;
+		case 'Archie Comics': return {
 				image : "interfaces/default/images/publisherlogos/logo-archiecomics.jpg",
 				name  : "Archie",
 				height: "75",
 				width : "75",
-			};
-			break;
-		case 'Oni Press':
-			return {
+			}; break;
+		case 'Oni Press': return {
 				image : "interfaces/default/images/publisherlogos/logo-onipress.png",
 				name  : "Oni Press",
 				height: "50",
 				width : "100",
-			};
-			break;
-		case 'Tokyopop':
-			return {
+			}; break;
+		case 'Tokyopop': return {
 				image : "interfaces/default/images/publisherlogos/logo-tokyopop.jpg",
 				name  : "Tokyopop",
 				height: "50",
 				width : "100",
-			};
-			break;
-		case 'Midtown Comics':
-			return {
+			}; break;
+		case 'Midtown Comics': return {
 				image : "interfaces/default/images/publisherlogos/logo-midtowncomics.jpg",
 				name  : "Midtown",
 				height: "50",
 				width : "100",
-			};
-			break;
-		case 'Boom! Studios':
-			return {
+			}; break;
+		case 'Boom! Studios': return {
 				image : "interfaces/default/images/publisherlogos/logo-boom.jpg",
 				name  : "Boom! Studios",
 				height: "50",
 				width : "100",
-			};
-			break;
-		case 'Skybound':
-			return {
+			}; break;
+		case 'Skybound': return {
 				image : "interfaces/default/images/publisherlogos/logo-skybound.jpg",
 				name  : "Skybound",
 				height: "50",
 				width : "100",
-			};
-			break;
-		case 'Vertigo':
-			return {
+			}; break;
+		case 'Vertigo': return {
 				image : "interfaces/default/images/publisherlogos/logo-dynamite.jpg",
 				name  : "Dynamite",
 				height: "50",
 				width : "100",
-			};
-			break;
-		case 'Top Cow':
-			return {
+			}; break;
+		case 'Top Cow': return {
 				image : "interfaces/default/images/publisherlogos/logo-topcow.gif",
 				name  : "Top Cow",
 				height: "75",
 				width : "100",
-			};
-			break;
-		case 'Dynamite Entertainment':
-			return {
+			}; break;
+		case 'Dynamite Entertainment': return {
 				image : "interfaces/default/images/publisherlogos/logo-dynamite.png",
 				name  : "Dynamite",
 				height: "50",
 				width : "100",
-			};
-			break;
-		case 'Cartoon Books':
-			return {
+			}; break;
+		case 'Cartoon Books': return {
 				image : "interfaces/default/images/publisherlogos/logo-cartoonbooks.jpg",
 				name  : "Cartoon Books",
 				height: "75",
 				width : "90",
-			};
-			break;
-		case 'Valiant':
-			return {
+			}; break;
+		case 'Valiant': return {
 				image : "interfaces/default/images/publisherlogos/logo-valiant.png",
 				name  : "Valiant",
 				height: "100",
 				width : "100",
-			};
-			break;
-		case 'Action Lab':
-			return {
+			}; break;
+		case 'Action Lab': return {
 				image : "interfaces/default/images/publisherlogos/logo-actionlabs.png",
 				name  : "Action Lab",
 				height: "100",
 				width : "100",
-			};
-			break;
-		case 'Zenescope Entertainment':
-			return {
+			}; break;
+		case 'Zenescope Entertainment': return {
 				image : "interfaces/default/images/publisherlogos/logo-zenescope.png",
 				name  : "Zenescope",
 				height: "100",
 				width : "160",
-			};
-			break;
+			}; break;
 		default:
 			return false;
 	}
