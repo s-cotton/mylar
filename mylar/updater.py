@@ -295,7 +295,7 @@ def dbUpdate(ComicIDList=None, calledfrom=None):
 
 def latest_update(ComicID, LatestIssue, LatestDate):
     # here we add to comics.latest
-    #logger.info(str(ComicID) + ' - updating latest_date to : ' + str(LatestDate))
+    logger.fdebug(str(ComicID) + ' - updating latest_date to : ' + str(LatestDate))
     myDB = db.DBConnection()
     latestCTRLValueDict = {"ComicID":      ComicID}
     newlatestDict = {"LatestIssue":      str(LatestIssue),
@@ -545,12 +545,12 @@ def weekly_update(ComicName, IssueNumber, CStatus, CID, weeknumber, year, altiss
     # added Issue to stop false hits on series' that have multiple releases in a week
     # added CStatus to update status flags on Pullist screen
     myDB = db.DBConnection()
-    issuecheck = myDB.selectone("SELECT * FROM weekly WHERE COMIC=? AND ISSUE=? and WEEKNUMBER=? AND YEAR=?", [ComicName, IssueNumber, weeknumber, year]).fetchone()
+    issuecheck = myDB.selectone("SELECT * FROM weekly WHERE COMIC=? AND ISSUE=? and WEEKNUMBER=? AND YEAR=?", [ComicName, IssueNumber, int(weeknumber), year]).fetchone()
 
     if issuecheck is not None:
         controlValue = {"COMIC":         str(ComicName),
                         "ISSUE":         str(IssueNumber),
-                        "WEEKNUMBER":    weeknumber,
+                        "WEEKNUMBER":    int(weeknumber),
                         "YEAR":          year}
 
         logger.info('controlValue:' + str(controlValue))
@@ -612,12 +612,13 @@ def nzblog(IssueID, NZBName, ComicName, SARC=None, IssueArcID=None, id=None, pro
     if IssueID is None or IssueID == 'None':
        #if IssueID is None, it's a one-off download from the pull-list.
        #give it a generic ID above the last one so it doesn't throw an error later.
-       if mylar.HIGHCOUNT == 0:
+       if any([mylar.HIGHCOUNT == 0, mylar.HIGHCOUNT is None]):
            mylar.HIGHCOUNT = 900000
-           IssueID = mylar.HIGHCOUNT
-           mylar.config_write()
        else:
-           IssueID = int(mylar.HIGHCOUNT) + 1
+           mylar.HIGHCOUNT+=1
+
+       IssueID = mylar.HIGHCOUNT
+       mylar.config_write()
 
     controlValue = {"IssueID":  IssueID,
                     "Provider": prov}
@@ -643,7 +644,7 @@ def nzblog(IssueID, NZBName, ComicName, SARC=None, IssueArcID=None, id=None, pro
     myDB.upsert("nzblog", newValue, controlValue)
 
 
-def foundsearch(ComicID, IssueID, mode=None, down=None, provider=None, SARC=None, IssueArcID=None, module=None):
+def foundsearch(ComicID, IssueID, mode=None, down=None, provider=None, SARC=None, IssueArcID=None, module=None, hash=None):
     # When doing a Force Search (Wanted tab), the resulting search calls this to update.
 
     # this is all redudant code that forceRescan already does.
@@ -681,6 +682,8 @@ def foundsearch(ComicID, IssueID, mode=None, down=None, provider=None, SARC=None
         # update the status to Snatched (so it won't keep on re-downloading!)
         logger.info(module + ' Updating status to snatched')
         logger.fdebug(module + ' Provider is ' + provider)
+        if hash:
+            logger.fdebug(module + ' Hash set to : ' + hash)
         newValue = {"Status":    "Snatched"}
         if mode == 'story_arc':
             cValue = {"IssueArcID": IssueArcID}
@@ -712,7 +715,8 @@ def foundsearch(ComicID, IssueID, mode=None, down=None, provider=None, SARC=None
                                "ComicID":         'None',
                                "Issue_Number":    IssueNum,
                                "DateAdded":       helpers.now(),
-                               "Status":          "Snatched"
+                               "Status":          "Snatched",
+                               "Hash":            hash
                                }
         else:
             if modcomicname:
@@ -727,7 +731,8 @@ def foundsearch(ComicID, IssueID, mode=None, down=None, provider=None, SARC=None
                                "ComicID":         ComicID,
                                "Issue_Number":    IssueNum,
                                "DateAdded":       helpers.now(),
-                               "Status":          "Snatched"
+                               "Status":          "Snatched",
+                               "Hash":            hash
                                }
         myDB.upsert("snatched", newsnatchValues, snatchedupdate)
 

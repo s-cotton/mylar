@@ -162,7 +162,7 @@ def human2bytes(s):
     """
     symbols = ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
     letter = s[-1:].strip().upper()
-    num = s[:-1]
+    num = re.sub(',', '', s[:-1])
     #assert num.isdigit() and letter in symbols
     #use below assert statement to handle sizes with decimal places
     assert float(num) and letter in symbols
@@ -360,6 +360,7 @@ def rename_param(comicid, comicname, issue, ofilename, comicyear=None, issueid=N
                                 'INH',
                                 'NOW',
                                 'AI',
+                                'MU',
                                 'A',
                                 'B',
                                 'C',
@@ -922,6 +923,12 @@ def issuedigits(issnum):
                     int_issnum = (int(issnum[:-3]) * 1000) + ord('n') + ord('o') + ord('w')
                 else:
                     int_issnum = (int(issnum[:-4]) * 1000) + ord('n') + ord('o') + ord('w')
+            elif 'mu' in issnum.lower():
+                remdec = issnum.find('.')
+                if remdec == -1:
+                    int_issnum = (int(issnum[:-2]) * 1000) + ord('m') + ord('u')
+                else:
+                    int_issnum = (int(issnum[:-3]) * 1000) + ord('m') + ord('u')
 
         except ValueError as e:
             logger.error('[' + issnum + '] Unable to properly determine the issue number. Error: %s', e)
@@ -1253,34 +1260,31 @@ def havetotals(refreshit=None):
         myDB = db.DBConnection()
 
         if refreshit is None:
-            comiclist = myDB.select('SELECT * from comics order by ComicSortName COLLATE NOCASE')
+            if mylar.ANNUALS_ON:
+                comiclist = myDB.select('SELECT comics.*, COUNT(totalAnnuals.IssueID) AS TotalAnnuals FROM comics LEFT JOIN annuals as totalAnnuals on totalAnnuals.ComicID = comics.ComicID GROUP BY comics.ComicID order by comics.ComicSortName COLLATE NOCASE')
+            else:
+                comiclist = myDB.select('SELECT * FROM comics GROUP BY ComicID order by ComicSortName COLLATE NOCASE')
         else:
             comiclist = []
-            comicref = myDB.selectone("SELECT * from comics WHERE ComicID=?", [refreshit]).fetchone()
+            comicref = myDB.selectone('SELECT comics.ComicID, comics.Have, comics.Total, COUNT(totalAnnuals.IssueID) AS TotalAnnuals FROM comics LEFT JOIN annuals as totalAnnuals on totalAnnuals.ComicID = comics.ComicID WHERE comics.ComicID=? GROUP BY comics.ComicID', [refreshit]).fetchone()
             #refreshit is the ComicID passed from the Refresh Series to force/check numerical have totals
-            comiclist.append({"ComicID":  comicref[0],
-                              "Have":     comicref[7],
-                              "Total":   comicref[8]})
+            comiclist.append({"ComicID":      comicref['ComicID'],
+                              "Have":         comicref['Have'],
+                              "Total":        comicref['Total'],
+                              "TotalAnnuals": comicref['TotalAnnuals']})
+
         for comic in comiclist:
-            issue = myDB.selectone("SELECT COUNT(*) as count FROM issues WHERE ComicID=?", [comic['ComicID']]).fetchone()
-            if issue is None:
-                if refreshit is not None:
-                    logger.fdebug(str(comic['ComicID']) + ' has no issuedata available. Forcing complete Refresh/Rescan')
-                    return True
-                else:
-                    continue
-            if mylar.ANNUALS_ON:
-                annuals_on = True
-                annual = myDB.selectone("SELECT COUNT(*) as count FROM annuals WHERE ComicID=?", [comic['ComicID']]).fetchone()
-                annualcount = annual[0]
-                if not annualcount:
-                    annualcount = 0
-            else:
-                annuals_on = False
-                annual = None
-                annualcount = 0
+            #--not sure about this part
+            #if comic['Total'] is None:
+            #    if refreshit is not None:
+            #        logger.fdebug(str(comic['ComicID']) + ' has no issuedata available. Forcing complete Refresh/Rescan')
+            #        return True
+            #    else:
+            #        continue
             try:
-                totalissues = comic['Total'] + annualcount
+                totalissues = comic['Total']
+                if mylar.ANNUALS_ON:
+                    totalissues += comic['TotalAnnuals']
                 haveissues = comic['Have']
             except TypeError:
                 logger.warning('[Warning] ComicID: ' + str(comic['ComicID']) + ' is incomplete - Removing from DB. You should try to re-add the series.')
@@ -1389,7 +1393,7 @@ def IssueDetails(filelocation, IssueID=None):
 
     try:
         with zipfile.ZipFile(dstlocation, 'r') as inzipfile:
-            for infile in inzipfile.namelist():
+            for infile in sorted(inzipfile.namelist()):
                 tmp_infile = re.sub("[^0-9]","", infile).strip()
                 if tmp_infile == '':
                     pass
@@ -1767,7 +1771,7 @@ def listIssues(weeknumber, year):
     library = []
     myDB = db.DBConnection()
     # Get individual issues
-    list = myDB.select("SELECT issues.Status, issues.ComicID, issues.IssueID, issues.ComicName, weekly.publisher, issues.Issue_Number from weekly, issues where weekly.IssueID = issues.IssueID and weeknumber = ? and year = ?", [weeknumber, year])
+    list = myDB.select("SELECT issues.Status, issues.ComicID, issues.IssueID, issues.ComicName, weekly.publisher, issues.Issue_Number from weekly, issues where weekly.IssueID = issues.IssueID and weeknumber = ? and year = ?", [int(weeknumber), year])
     for row in list:
         library.append({'ComicID': row['ComicID'],
                        'Status':  row['Status'],
@@ -1777,7 +1781,7 @@ def listIssues(weeknumber, year):
                        'Issue_Number': row['Issue_Number']})
     # Add the annuals
     if mylar.ANNUALS_ON:
-        list = myDB.select("SELECT annuals.Status, annuals.ComicID, annuals.ReleaseComicID, annuals.IssueID, annuals.ComicName, weekly.publisher, annuals.Issue_Number from weekly, annuals where weekly.IssueID = annuals.IssueID and weeknumber = ? and year = ?", [weeknumber, year])
+        list = myDB.select("SELECT annuals.Status, annuals.ComicID, annuals.ReleaseComicID, annuals.IssueID, annuals.ComicName, weekly.publisher, annuals.Issue_Number from weekly, annuals where weekly.IssueID = annuals.IssueID and weeknumber = ? and year = ?", [int(weeknumber), year])
         for row in list:
             library.append({'ComicID': row['ComicID'],
                             'Status':  row['Status'],
@@ -1974,7 +1978,7 @@ def torrent_create(site, linkid, alt=None):
         else:
             url = 'http://torrentproject.se/torrent/' + str(linkid) + '.torrent'
     elif site == 'DEM':
-        url = 'https://www.demonoid.cc/files/download/' + str(linkid) + '/'
+        url = 'https://www.dnoid.me/files/download/' + str(linkid) + '/'
     elif site == 'WWT':
         url = 'https://worldwidetorrents.eu/download.php'
 
@@ -2369,11 +2373,33 @@ def arcformat(arc, spanyears, publisher):
         dstloc = os.path.join(mylar.DESTINATION_DIR, 'StoryArcs', arcpath)
     elif mylar.COPY2ARCDIR:
         logger.warn('Story arc directory is not configured. Defaulting to grabbag directory: ' + mylar.GRABBAG_DIR)
-        dstloc = mylar.GRABBAG_DIR
+        dstloc = os.path.join(mylar.GRABBAG_DIR, arcpath)
     else:
         dstloc = None
 
     return dstloc
+
+def latestdate_update():
+    import db
+    myDB = db.DBConnection()
+    ccheck = myDB.select('SELECT a.ComicID, b.IssueID, a.LatestDate, b.ReleaseDate, b.Issue_Number from comics as a left join issues as b on a.comicid=b.comicid where a.LatestDate < b.ReleaseDate or a.LatestDate like "%Unknown%" group by a.ComicID')
+    if ccheck is None or len(ccheck) == 0:
+        return
+    logger.info('Now preparing to update ' + str(len(ccheck)) + ' series that have out-of-date latest date information.')
+    ablist = []
+    for cc in ccheck:
+        ablist.append({'ComicID':     cc['ComicID'],
+                       'LatestDate':  cc['ReleaseDate'],
+                       'LatestIssue': cc['Issue_Number']})
+
+    #forcibly set the latest date and issue number to the most recent.
+    for a in ablist:
+        logger.info(a)
+        newVal = {'LatestDate':         a['LatestDate'],
+                  'LatestIssue':        a['LatestIssue']}
+        ctrlVal = {'ComicID':           a['ComicID']}
+        logger.info('updating latest date for : ' + a['ComicID'] + ' to ' + a['LatestDate'] + ' #' + a['LatestIssue'])
+        myDB.upsert("comics", newVal, ctrlVal)
 
 def file_ops(path,dst,arc=False,one_off=False):
 #    # path = source path + filename
