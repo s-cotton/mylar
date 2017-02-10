@@ -23,6 +23,22 @@ var mylar = $.extend({},mylar,{
 
 	viewport: ResponsiveBootstrapToolkit,
 
+	store: {
+		set: function(key, value, exp){
+			store.set(key, { val:val, exp:exp, time:new Date().getTime() })
+		},
+		get: function(key, default){
+			var info = store.get(key)
+			if ( ! info ) { 
+				return typeof default == "undefined" ? null : default; 
+			}
+			if ( info.exp > 0 && new Date().getTime() - info.time > info.exp) { 
+				return typeof default == "undefined" ? null : default; 
+			}
+			return info.val;
+		}
+	},
+
 	config: {
 		console: {
 			sendToServer: false
