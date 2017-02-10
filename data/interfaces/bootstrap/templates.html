@@ -58,6 +58,14 @@
 						</li>
 	                    {{/each}}
 						<li role="separator" class="divider"></li>
+						<li>
+							<a href="#" class="change-selected" data-selectable="all">
+								<span class="text-success">
+									<span class="glyphicon glyphicon-ok"></span>&nbsp;All
+								</span>								
+							</a>
+						</li>
+						<li role="separator" class="divider"></li>
 	                    <li>
 							<a href="#" class="change-selected" data-selectable="clear">
 								<span class="text-danger">
@@ -171,13 +179,15 @@
 				</div>	
 			</div>
 			{{#if actions}}
-			<div class="btn-group btn-group-justified" role="group">
-				{{#each actions}}
-					<a role="button" class="mark-comic btn btn-default btn-sm" data-action="{{key}}" title="{{label}}">
-						{{#if icon}}<span class="glyphicon glyphicon-{{icon}}"></span>&nbsp;{{/if}}
-					</a>
-                {{/each}}                
-            </div>
+			<div class="text-center">
+				<div class="btn-group" role="group">
+					{{#each actions}}
+						<a role="button" class="mark-comic btn btn-default btn-sm" data-action="{{key}}" title="{{label}}">
+							{{#if icon}}<span class="glyphicon glyphicon-{{icon}}"></span>&nbsp;{{/if}}
+						</a>
+	                {{/each}}                
+	            </div>
+			</div>
 			{{/if}}
 		</div>
 	</div>

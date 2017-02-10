@@ -119,6 +119,7 @@ mylar.views.managecomics = Backbone.View.extend({
 	},
 
 	markDelete:  function( ids ) {
+
 		console.log('Marking: Delete',ids);
 	},
 
@@ -136,6 +137,20 @@ mylar.views.managecomics = Backbone.View.extend({
 
 	markRefresh: function( ids ) {
 		console.log('Marking: Refresh',ids);
+		var startMsg = mylar.notify.info( 'Initiating refresh of ' + ids.length + ' Comics' );
+		mylar.ajax({
+			cmd: 'refreshSeries',
+			IssueID: ids
+		}).fail(function(){
+			mylar.notify.error( 'Could not refresh Comics' );
+			startMsg.close();
+		}).done(function(){
+			mylar.notify.success( ids.length + ' Comics are being refreshed.' );
+			startMsg.close();
+		});
+		if( screen.comicdetails.debug ){
+			//doAjaxCall('refreshSeries?ComicID=' + screen.comicdetails.comicID, $(this), 'table' );	
+		}	
 	},
 
 	markResume:  function( ids ) {
@@ -144,11 +159,19 @@ mylar.views.managecomics = Backbone.View.extend({
 
 	changeSelected: function( dataObj ){
 		mylar.selectedComics.clearSelected(false);
-		for( var i in dataObj.selected ){
-			var filterObj = { Status: dataObj.selected[i] };
-			var relevantComics = this.collection.filter(filterObj);
+		if( dataObj.selected.length == 1 && dataObj.selected[0] == 'all' ){
+			console.log('attempting all', this.tableBrowser.collection.fullCollection.length );
+			var relevantComics = this.tableBrowser.fullCollection;
 			mylar.selectedComics.add(relevantComics,{silent:true});
-		}
+		} else {
+			for( var i in dataObj.selected ){
+				var relevantSelectable = _.find(this.selectables,function(selectable){ return selectable.key == dataObj.selected[i]; });
+				console.log(relevantSelectable);
+				var filterObj = { Status: relevantSelectable.target };
+				var relevantComics = this.tableBrowser.collection.fullCollection.filter(filterObj);
+				mylar.selectedComics.add(relevantComics,{silent:true});
+			}	
+		}		
 		mylar.selectedComics.broadcastSelection();
 	}
 	

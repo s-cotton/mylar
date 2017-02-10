@@ -108,7 +108,7 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 			currentPage: this.currentPage > 0 ? this.currentPage : 1,
 			perPage    : this.perPage,
 			layout 	   : this.layout,
-			selected   : this.getSelectable()
+			selected   : this.selected //this.getSelectable()
 		}
 	},
 
@@ -135,13 +135,18 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 	},
 
 	getSelectable: function(){
-		var selectable = [];
-		for( var i in this.selectable ){
-			if( this.selected.indexOf( this.selectable[i].key) >= 0 ){
-				selectable.push( this.selectable[i].target );
+		if( this.selected.indexOf('all') >= 0 ){
+			return [ 'all' ];
+		} else {
+			var selectable = [];
+			for( var i in this.selectable ){
+				if( this.selected.indexOf( this.selectable[i].key) >= 0 ){
+					selectable.push( this.selectable[i].target );
+				}
 			}
+			return selectable;
 		}
-		return selectable;
+		
 	},
 
 	setupPagination: function(){
@@ -185,7 +190,6 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 				sortBy = this.sortable[i].target;
 			}
 		}
-		console.log(sortBy);
 		if( sortBy !== false ){
 			if( sortBy != this.sortBy ){
 				this.sortBy = sortBy;
@@ -221,7 +225,6 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 
 	changeLayout: function(e){
 		this.layout = $(e.target).attr('value');
-		console.log(e.target);
 		$(e.target).parents('.btn-group').eq(0).find('.active').removeClass('active');
 		$(e.target).addClass('active');
 		mylar.pubsub.trigger( 'pager:changeLayout', this.stateObj() );
@@ -232,9 +235,15 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 	},
 
 	changeSelected: function(e){
-		if( $(e.target).data('selectable') == 'clear' ){
+		if( $(e.currentTarget).data('selectable') == 'clear' ){
 			this.selected = [];	
+		} else if ( $(e.currentTarget).data('selectable') == 'all' ){
+			this.selected = [];
+			this.selected.push( 'all' );
 		} else {
+			if( this.selected.indexOf('all') >= 0 ){
+				this.selected.splice( this.selected.indexOf( 'all' ), 1);
+			}
 			if( $(e.target).hasClass('active') ){
 				$(e.target).removeClass('active');
 				this.selected.splice( this.selected.indexOf( $(e.target).data('selectable') ), 1);
@@ -243,7 +252,6 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 				this.selected.push( $(e.target).data('selectable') );
 			}	
 		}		
-		console.log('Before Mark Selected Event');
 		mylar.pubsub.trigger( 'pager:changeSelected', this.stateObj() );
 	},
 

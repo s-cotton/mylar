@@ -24,6 +24,8 @@
     "backbone.paginator": "^2.0.5",
     "twbs-pagination": "^1.4.1",
     "responsive-bootstrap-toolkit": "responsive-toolkit#^2.6.3",
-    "jquery-flipster": "^1.1.2"
+    "jquery-flipster": "^1.1.2",
+    "js-cookie": "^2.1.3",
+    "store-js": "store.js#^1.3.20"
   }
 }

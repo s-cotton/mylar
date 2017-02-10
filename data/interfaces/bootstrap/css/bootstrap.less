@@ -44,10 +44,18 @@ body {
 .checked-issue { cursor: pointer; }
 
 .per-page-dropdown { 
-	margin: 20px 0px; 
+	margin: 5px 0px; 
 
 	.active { color: blue; }
 
+}
+.pagination { margin: 5px 0px; }
+
+.comic-pager:first-child {
+	margin-bottom: 20px;
+}
+.comic-pager:last-child {
+	margin-top: 20px;
 }
 
 #cover-flow-container {
@@ -58,6 +66,7 @@ body {
 .cover-flow > ul > li img { max-height: 450px; max-width: 250px; }
 
 .single-cover {
+
 	.panel-heading {
 		.panel-title {
 			overflow: hidden;
@@ -71,6 +80,8 @@ body {
 		}
 	}
 	.panel-body {
+		padding: 10px 0px 0px;
+
 		h4 {
 			margin-top: 0px;
 			text-align: center;
