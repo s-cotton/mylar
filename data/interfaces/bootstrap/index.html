@@ -5,77 +5,34 @@
 %>
 
 <%def name="body()">
-        <div class="table_wrapper">
-
-	<table class="display" id="series_table">
-		<thead>
-			<tr>
-				<th id="publisher">Publisher</th>
-				<th id="name">Comic</th>
-                                <th id="year">Year</th>
-				<th id="issue">Last Issue</th>
-                                <th id="published">Published</th>
-                                <th class="hidden" id="have_percent">Have %</th>
-				<th id="have">Have</th>
-                                <th id="status">Status</th>
-                                <th id="active">Active</th>
-                                <th class="hidden" id="active_state">ActiveSt</th>
-			</tr>
-		</thead>
-		<tbody>
-		%for comic in comics:
-			<%
-                                if comic['percent'] == 101:
-                                        css = '<div class=\"progress-container warning\">'
-                                if comic['percent'] == 100:
-                                        css = '<div class=\"progress-container complete\">'
-                                if comic['percent'] < 100:
-                                        css = '<div class=\"progress-container missing\">'
-
-				if comic['Status'] == 'Paused':
-					grade = 'X'
-				elif comic['Status'] == 'Loading':
-			        	grade = 'L'
-                                elif comic['Status'] == 'Error':
-                                        grade = 'X'
-                                else:
-                                        grade = 'A'
-
-			%>
-			<tr class="grade${grade}">
-				<td id="publisher">${comic['ComicPublisher']}</td>
-                                <td id="name"><span title="${comic['ComicSortName']}"></span><a href="comicDetails?ComicID=${comic['ComicID']}">${comic['ComicName']}</a></td>
-                                <td id="year"><span title="${comic['ComicYear']}"></span>${comic['ComicYear']}</td>
-				<td id="issue"><span title="${comic['LatestIssue']}"></span># ${comic['LatestIssue']}</td>
-                                <td id="published">${comic['LatestDate']}</td>
-                                <td class="hidden" id="have_percent">${comic['percent']}</td>
-				<td id="have"><span title="${comic['percent']}"></span>${css}<div style="width:${comic['percent']}%"><span class="progressbar-front-text">${comic['haveissues']}/${comic['totalissues']}</span></div></td>
-				<td id="status">${comic['recentstatus']}</td>
-                                <td id="active" align="center">
-                                %if comic['Status'] == "Active":
-                                    <img src="interfaces/default/images/checkmark.png" alt="Y" width="16" height="16" />
-                                %elif comic['Status'] == 'Paused':
-                                    <img src="interfaces/default/images/pause-icon.png" alt="Paused" width="16" height="16" />
-                                %elif comic['Status'] == 'Loading':
-                                    <img src="interfaces/default/images/hourglass.png" alt="Loading" width="16" height="16" />
-                                %else:
-                                    <img src="interfaces/default/images/cross.png" alt="N" width="16" height="16" />
-                                %endif
-                                </td>
-                                <td class="hidden" id="active_state">${comic['Status']}</td>
-                         </tr>
-		%endfor
-		</tbody>
-	</table>
-      </div>
+    <% 
+    import simplejson as json
+    json_output = json.dumps( comics ) 
+    %>
+    <script type="text/javascript">
+        var initialData = initialData || {};
+        initialData.comics = ${json_output}
+    </script>
+    
+    <div class="container-fluid index">        
+        <div class="row">
+            <div class="comic-pager col-xs-12"></div>
+            <div class="grid-browser col-xs-12"></div>
+            <div class="table-browser col-xs-12"></div>
+            <div class="cover-browser col-xs-12"></div>
+            <div class="comic-pager col-xs-12"></div>
+        </div>
+    </div>
 </%def>
 
 <%def name="headIncludes()">
-	<link rel="stylesheet" href="interfaces/default/css/data_table.css">
+	
 </%def>
 
 <%def name="javascriptIncludes()">
-	<script src="js/libs/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="interfaces/bootstrap/js/views/index.js"></script>
+
+    <script src="js/libs/jquery.dataTables.min.js"></script>
 	<script>
 
 	function initThisPage() {

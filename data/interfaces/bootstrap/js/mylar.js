@@ -25,15 +25,15 @@ var mylar = $.extend({},mylar,{
 
 	store: {
 		set: function(key, value, exp){
-			store.set(key, { val:val, exp:exp, time:new Date().getTime() })
+			store.set(key, { val:val, exp:exp, time:new Date().getTime() });
 		},
-		get: function(key, default){
+		get: function(key, defaultVal){
 			var info = store.get(key)
 			if ( ! info ) { 
-				return typeof default == "undefined" ? null : default; 
+				return typeof defaultVal == "undefined" ? null : defaultVal; 
 			}
 			if ( info.exp > 0 && new Date().getTime() - info.time > info.exp) { 
-				return typeof default == "undefined" ? null : default; 
+				return typeof defaultVal == "undefined" ? null : defaultVal; 
 			}
 			return info.val;
 		}

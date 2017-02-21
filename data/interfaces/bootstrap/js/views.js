@@ -12,6 +12,7 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 	selectable: [],
 	views: [],
 	sortable: [],
+	searchable: [],
 
 	defaults: {
 		comics: {
@@ -55,6 +56,7 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 		this.$el.html( this.template( templateData ) );
 		this.setupPagination();
 		mylar.pubsub.on('pager:updateState', this.updateState,this );
+		this.$el.find('[data-toggle="popover"]').popover();
 	},
 
 	setContext: function(context){
@@ -82,6 +84,10 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 		this.sortable = sortable;
 	},
 
+	setSearchable: function(searchable){
+		this.searchable = searchable;
+	},
+
 	updateState: function(data){
 		var updatePager = false;
 		if( this.totalPages != data.totalPages || this.currentPage != data.currentPage ) updatePager = true;
@@ -96,7 +102,8 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 			views: this.views,
 			selectable: this.selectable,
 			actions: this.actions,
-			sortable: this.sortable
+			sortable: this.sortable,
+			searchable: this.searchable
 		}
 	},
 
@@ -208,8 +215,31 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 		}
 		this.searchValue = this.$el.find('[name="search"]').val();
 		this.searchTimeout = setTimeout(function(){
-			mylar.pubsub.trigger( 'pager:changeSearch', that.stateObj() );	
+			that.parseSearchValue();
 		},this.searchTimeoutDelay);
+	},
+
+	parseSearchValue: function(){
+		var split = this.searchValue.reduceWhiteSpace().explode(" ");
+		console.log(split);
+		var searchAttributes = {
+			any: []
+		};
+		for( var split_i in split ){
+			var thisSearchValue = split[ split_i ];
+			if( thisSearchValue.indexOf("::") >= 0 ){
+				thisSearchValueSplit = thisSearchValue.split("::");
+				if( ! searchAttributes.hasOwnProperty(thisSearchValueSplit[0]) ){
+					searchAttributes[ thisSearchValueSplit[0] ] = [];
+				}
+				searchAttributes[ thisSearchValueSplit[0] ].push( thisSearchValueSplit[1] );
+			} else {
+				searchAttributes.any.push( thisSearchValue );
+			}
+		}
+		console.log(searchAttributes);
+
+		//mylar.pubsub.trigger( 'pager:changeSearch', this.stateObj() );	
 	},
 
 	resetSearch: function(){
@@ -404,8 +434,11 @@ mylar.views.comicGridBrowser = mylar.views.comicBrowser.extend({
 	},
 
 	setClearfix: function(){
-		this.$el.find('.row > .cover:nth-of-type(4n)').after('<div class="clearfix visible-md-block visible-lg-block"></div>');
-		this.$el.find('.row > .cover:nth-of-type(2n)').after('<div class="clearfix visible-sm-block"></div>');
+		this.$el.find('.row > .cover:nth-of-type(12n)').after('<div class="clearfix visible-xl-block"></div>');
+		this.$el.find('.row > .cover:nth-of-type(6n)').after('<div class="clearfix visible-lg-block"></div>');
+		this.$el.find('.row > .cover:nth-of-type(4n)').after('<div class="clearfix visible-md-block"></div>');
+		this.$el.find('.row > .cover:nth-of-type(3n)').after('<div class="clearfix visible-sm-block"></div>');
+		this.$el.find('.row > .cover:nth-of-type(2n)').after('<div class="clearfix visible-xs-block"></div>');
 	}
 });
 
@@ -534,7 +567,7 @@ mylar.views.comicFlowCover = Backbone.View.extend({
 
 mylar.views.comicCover = Backbone.View.extend({
 	tagName: 'div',
-	className: 'col-xs-12 col-sm-6 col-md-3 cover',
+	className: 'col-xs-6 col-sm-4 col-md-3 col-lg-2 col-xl-1 cover',
 	model: mylar.models.comic,
 	template: Handlebars.compile( $('#cover-gallery-single-cover').html() ),
 	actions: [],

@@ -162,3 +162,18 @@ Handlebars.registerHelper('if', function(conditional, options) {
     return options.inverse(this);
   }
 });
+
+String.prototype.killWhiteSpace = function() {
+    return this.replace(/\s/g, '');
+};
+
+String.prototype.reduceWhiteSpace = function() {
+    return this.replace(/\s+/g, ' ');
+};
+
+String.prototype.explode = function(separator, limit)
+{
+    var arr = this.split(separator);
+    if (limit) arr.push( arr.splice(limit-1).join(separator) );
+    return arr;
+}
