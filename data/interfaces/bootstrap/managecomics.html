@@ -1,0 +1,48 @@
+<%inherit file="base.html" />
+<%!
+        from mylar import db
+        import mylar
+%>
+
+<%def name="headerIncludes()">
+    <div class="btn-group" role="group" aria-label="Manage Actions">
+        <a class="btn btn-default" href="manage">
+            <span class="glyphicon glyphicon-menu-left"></span>&nbsp;Back to Manage Overview
+        </a>
+    </div>
+</%def>
+
+
+<%def name="body()">
+    <% 
+    import simplejson as json
+    json_output = json.dumps( comics ) 
+    %>
+    
+    <script type="text/javascript">
+        var initialData = initialData || {};
+        initialData.comics = ${json_output}
+    </script>
+    
+    <div class="container-fluid managecomics">
+        <div class="row">
+            <div class="col-xs-12">
+                <h1>Manage Comics</h1>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="comic-pager col-xs-12"></div>
+            <div class="grid-browser col-xs-12"></div>
+            <div class="table-browser col-xs-12"></div>
+            <div class="cover-browser col-xs-12"></div>
+            <div class="comic-pager col-xs-12"></div>
+        </div>
+    </div>
+    
+</%def>
+
+
+<%def name="javascriptIncludes()">
+    <script type="text/javascript" src="interfaces/bootstrap/js/views/managecomics.js"></script>
+</%def>

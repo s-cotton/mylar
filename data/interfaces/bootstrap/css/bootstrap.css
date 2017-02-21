@@ -1,0 +1,126 @@
+/**
+ * Theme Style Tweaks
+ */
+html {
+  margin-left: calc(0vw);
+}
+body {
+  padding-top: 70px;
+  padding-bottom: 70px;
+}
+.navbar-brand {
+  padding: 0px;
+}
+.navbar-brand img {
+  max-height: 48px;
+  width: auto;
+}
+.checkbox > .help-block {
+  padding-left: 30px;
+}
+.publisher-logo {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+.btn-group .checkbox-inline [type="checkbox"] {
+  margin-left: 0px;
+  padding-right: 20px;
+  position: relative;
+  margin-top: 3px;
+  float: left;
+}
+[data-notify="container"] {
+  width: 300px;
+}
+#int_issuenumber {
+  display: none;
+}
+#bsIssuesTable #options {
+  width: 100px;
+}
+.checked-issue {
+  cursor: pointer;
+}
+.per-page-dropdown {
+  margin: 5px 0px;
+}
+.per-page-dropdown .active {
+  color: blue;
+}
+.pagination {
+  margin: 5px 0px;
+}
+.comic-pager:first-child {
+  margin-bottom: 20px;
+}
+.comic-pager:last-child {
+  margin-top: 20px;
+}
+#cover-flow-container {
+  width: 100%;
+  min-height: 650px;
+}
+.cover-flow > ul > li img {
+  max-height: 450px;
+  max-width: 250px;
+}
+.single-cover .panel-heading .panel-title {
+  overflow: hidden;
+}
+.single-cover .panel-heading .panel-title > .pull-right .badge {
+  cursor: default;
+}
+.single-cover .panel-body {
+  padding: 10px 0px 0px;
+}
+.single-cover .panel-body h4 {
+  margin-top: 0px;
+  text-align: center;
+  max-width: 250px;
+  white-space: pre-wrap;
+  /* css-3 */
+  white-space: -moz-pre-wrap;
+  /* Mozilla, since 1999 */
+  white-space: -pre-wrap;
+  /* Opera 4-6 */
+  white-space: -o-pre-wrap;
+  /* Opera 7 */
+  word-wrap: break-word;
+  /* Internet Explorer 5.5+ */
+}
+.single-cover .panel-body .btn-group {
+  margin-top: 10px;
+}
+.single-cover .panel-body .img-block {
+  position: relative;
+  overflow: hidden;
+}
+.single-cover .panel-body .img-block .overlay {
+  width: 100%;
+  color: white;
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.75);
+  top: 100%;
+  right: 0;
+  padding: 10px;
+  box-sizing: border-box;
+}
+.single-cover .panel-body .img-block .overlay dl {
+  padding: 5px;
+}
+.single-cover .panel-body .img-block .overlay dl dd {
+  padding-left: 10px;
+}
+.single-cover .panel-body .img-block .overlay .pull-right {
+  box-sizing: border-box;
+  padding: 5px;
+}
+.single-cover .panel-body .img-block .overlay .pull-right img {
+  width: 100%;
+  height: auto;
+}
+.single-cover .panel-body .img-block:hover .overlay {
+  top: auto;
+  bottom: 0;
+}

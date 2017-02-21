@@ -1,0 +1,73 @@
+<%inherit file="base.html"/>
+<%!
+	from mylar import helpers, db
+        import datetime
+%>
+
+<%def name="body()">
+    <% 
+    import simplejson as json
+    json_output = json.dumps( comics ) 
+    %>
+    <script type="text/javascript">
+        var initialData = initialData || {};
+        initialData.comics = ${json_output}
+    </script>
+    
+    <div class="container-fluid index">        
+        <div class="row">
+            <div class="comic-pager col-xs-12"></div>
+            <div class="grid-browser col-xs-12"></div>
+            <div class="table-browser col-xs-12"></div>
+            <div class="cover-browser col-xs-12"></div>
+            <div class="comic-pager col-xs-12"></div>
+        </div>
+    </div>
+</%def>
+
+<%def name="headIncludes()">
+	
+</%def>
+
+<%def name="javascriptIncludes()">
+    <script type="text/javascript" src="interfaces/bootstrap/js/views/index.js"></script>
+
+    <script src="js/libs/jquery.dataTables.min.js"></script>
+	<script>
+
+	function initThisPage() {
+		$('#series_table').dataTable(
+                        {
+			        "bDestroy": true,
+                                "aoColumnDefs": [
+                                     { 'bSortable': false, 'aTargets': [5, 9] },
+                                     { 'bVisible': false, 'aTargets': [5, 9] },
+                                     { 'sType': 'numeric', 'aTargets': [5] },
+                                     { 'iDataSort': [5], 'aTargets': [6] },
+                                     { 'iDataSort': [9], 'aTargets': [8] }
+                                ],
+                                "aLengthMenu": [[10, 15, 25, 50, -1], [10, 15, 25, 50, 'All' ]],
+			        "oLanguage": {
+                                        "sLengthMenu":"Show _MENU_ results per page",
+                                        "sEmptyTable": "No results",
+                                        "sInfo":"Showing _START_ to _END_ of _TOTAL_ results",
+                                        "sInfoEmpty":"Showing 0 to 0 of 0 results",
+                                        "sInfoFiltered":"(filtered from _MAX_ total results)",
+                                        "sSearch" : ""},
+                                "bStateSave": true,
+                                "iDisplayLength": 25,
+                                "sPaginationType": "full_numbers",
+                                "aaSorting": [[7,'asc'],[1,'asc']]
+		        });
+		        resetFilters("comic");
+	}
+	
+	$(document).ready(function(){
+		        initThisPage();
+	});
+	$(window).load(function(){
+		initFancybox();
+	});
+	</script>
+	
+</%def>

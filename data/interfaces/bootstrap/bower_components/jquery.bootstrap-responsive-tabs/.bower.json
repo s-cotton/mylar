@@ -1,0 +1,33 @@
+{
+  "name": "jquery.bootstrap-responsive-tabs",
+  "homepage": "http://vtimbuc.github.io/bootstrap-responsive-tabs/",
+  "license": "WTFPL",
+  "version": "2.0.1",
+  "main": [
+    "dist/js/jquery.bootstrap-responsive-tabs.min.js",
+    "dist/css/bootstrap-responsive-tabs.css"
+  ],
+  "dependencies": {
+    "jquery": ">=1.8"
+  },
+  "ignore": [
+    "test",
+    ".*",
+    "*.json",
+    "*.md",
+    "*.txt",
+    "Gruntfile.js",
+    "src",
+    "less"
+  ],
+  "_release": "2.0.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "2.0.1",
+    "commit": "c89f48d11f2a9b5dd2645cf98483314ee4cc05aa"
+  },
+  "_source": "https://github.com/vtimbuc/bootstrap-responsive-tabs.git",
+  "_target": "^2.0.1",
+  "_originalSource": "jquery.bootstrap-responsive-tabs",
+  "_direct": true
+}

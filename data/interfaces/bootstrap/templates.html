@@ -1,0 +1,271 @@
+<!-- Templates Go Here -->
+<script type="text/x-handlebars-template" id="comic-pager-and-filter">
+	<div class="row">
+		
+		<div class="col-xs-12 col-md-6">
+			<div class="per-page-dropdown">
+				<div class="input-group input-group-sm">
+					<span class="input-group-addon" id="basic-addon1">
+						<span class="glyphicon glyphicon-question-sign" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?" data-container="body"></span>
+					</span>
+					<input type="text" class="form-control" placeholder="Filter" aria-describedby="basic-addon2" name="search" />
+					<span class="input-group-addon" id="basic-addon2">
+						<span class="glyphicon glyphicon-search"></span>
+					</span>					
+				</div>
+			</div>
+		</div>
+		<div class="col-xs-12 col-md-6">
+			<div class="btn-group pull-right per-page-dropdown">
+				<a href="#" class="btn btn-sm btn-default reset-search">
+					<span class="glyphicon glyphicon-refresh"></span>
+					Reset
+				</a>
+				<div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    	<span class="glyphicon glyphicon-sort-by-attributes-alt"></span>
+                        Sort
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                    	{{#each sortable}}
+						<li><a href="#" class="change-sort-by {{#if default}}active{{/if}}" data-sortby="{{key}}">{{label}}</a></li>
+                        {{/each}}
+                    </ul>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    	<span class="glyphicon glyphicon-th"></span>
+                        Show
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        {{#each perpage}}
+						<li><a href="#" class="change-page-size {{#if default}}active{{/if}}" data-perpage="{{count}}">{{count}}</a></li>
+                        {{/each}}
+                    </ul>
+                </div>
+                <div class="btn-group" role="group">
+	                <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	                	<span class="glyphicon glyphicon-unchecked"></span>
+	                    Select
+	                    <span class="caret"></span>
+	                </button>
+	                <ul class="dropdown-menu">
+	                    {{#each selectable}}
+						<li>
+							<a href="#" class="change-selected" data-selectable="{{key}}">
+								{{#if icon}}<span class="glyphicon glyphicon-{{icon}}"></span>&nbsp;{{/if}}
+								{{label}}
+							</a>
+						</li>
+	                    {{/each}}
+						<li role="separator" class="divider"></li>
+						<li>
+							<a href="#" class="change-selected" data-selectable="all">
+								<span class="text-success">
+									<span class="glyphicon glyphicon-ok"></span>&nbsp;All
+								</span>								
+							</a>
+						</li>
+						<li role="separator" class="divider"></li>
+	                    <li>
+							<a href="#" class="change-selected" data-selectable="clear">
+								<span class="text-danger">
+									<span class="glyphicon glyphicon-remove"></span>&nbsp;Clear Selected	
+								</span>								
+							</a>
+						</li>
+	                </ul>
+	            </div>
+	            <div class="btn-group" role="group">
+	                <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	                	<span class="glyphicon glyphicon-pencil"></span>
+	                    Mark
+	                    <span class="caret"></span>
+	                </button>
+	                <ul class="dropdown-menu pull-right">
+	                    {{#each actions}}
+						<li>
+							<a href="#" class="mark-selected" data-action="{{key}}">
+								{{#if icon}}<span class="glyphicon glyphicon-{{icon}}"></span>&nbsp;{{/if}}
+								{{label}}
+							</a>
+						</li>
+	                    {{/each}}
+	                </ul>
+	            </div>
+            </div>
+		</div>
+		<div class="col-xs-12 col-md-8">
+			<ul class="pagination pagination-sm"></ul>	
+		</div>
+		<div class="col-xs-12 col-md-4">
+            <div class="btn-group pull-right per-page-dropdown">
+            	<button type="button" value="{{key}}" class="btn btn-sm" disabled="disabled">
+            		Set View: 
+            	</button>
+            	{{#each views}}
+                <button type="button" value="{{key}}" class="btn btn-sm change-layout {{#if default}}active{{/if}}">
+                    <span class="glyphicon glyphicon-{{icon}}"></span>&nbsp;{{label}}
+                </button>
+                {{/each}}
+            </div>
+        </div>
+	</div>
+</script>
+
+<script type="text/x-handlebars-template" id="cover-grid-container">
+	<div id="cover-grid-container">
+		<div class="row covers">
+			
+		</div>
+	</div>
+</script>
+
+<script type="text/x-handlebars-template" id="cover-flow-container">
+	<div id="cover-flow-container">
+		<div class="cover-flow">
+			<ul>
+				
+			</ul>	
+		</div>
+	</div>
+</script>
+
+<script type="text/x-handlebars-template" id="cover-gallery-single-cover">
+	<div class="panel panel-default single-cover">
+		<div class="panel-heading">
+			<h3 class="panel-title">
+				<span class="pull-left checked-comic">
+					{{#if selected}}
+					<span class="glyphicon glyphicon-check"></span>&nbsp;
+					{{else}}
+					<span class="glyphicon glyphicon-unchecked"></span>&nbsp;
+					{{/if}}
+				</span>
+				<span class="pull-right">
+					<span class="badge" title="Latest Issue">#{{LatestIssue}}</span>
+					{{#if isPaused}}
+		            <span class="badge" title="Paused"><span class="glyphicon glyphicon-pause"></span></span>
+		            {{/if}}
+		            {{#if isLoading}}
+		            <span class="badge" title="Loading"><span class="glyphicon glyphicon-hourglass"></span></span>
+		            {{/if}}
+		            {{#if isError}}
+		            <span class="badge" title="Error"><span class="glyphicon glyphicon-alert"></span></span>
+		            {{/if}}
+		            {{#if isActive}}
+		            <span class="badge" title="Active"><span class="glyphicon glyphicon-thumbs-up"></span></span>
+		            {{/if}}
+					<span class="badge" title="{{percent}}%">{{haveissues}}/{{totalissues}}</span>
+					<span class="badge">{{ComicYear}}</span>
+				</span>
+				<span class="clearfix"></span>
+			</h3>
+		</div>
+		<div class="panel-body">
+			<h4><a href="/comicDetails?ComicID={{ComicID}}">{{ComicName}}</a></h4>
+			<div class="img-block">
+				<a href="/comicDetails?ComicID={{ComicID}}">
+					<img class="img-responsive" src="{{ComicImage}}" alt="{{ComicName}}" />	
+				</a>				
+				<div class="overlay">
+					<dl>
+						<dt>Publisher</dt>
+						<dd>{{ComicPublisher}}</dd>
+						<dt>Recent Status</dt>
+						<dd>{{recentstatus}}</dd>
+						<dt>Latest Issue</dt>
+						<dd>#{{LatestIssue}} ({{LatestDate}})</dd>
+					</dl>
+				</div>	
+			</div>
+			{{#if actions}}
+			<div class="text-center">
+				<div class="btn-group" role="group">
+					{{#each actions}}
+						<a role="button" class="mark-comic btn btn-default btn-xs" data-action="{{key}}" title="{{label}}">
+							{{#if icon}}<span class="glyphicon glyphicon-{{icon}}"></span>&nbsp;{{/if}}
+						</a>
+	                {{/each}}                
+	            </div>
+			</div>
+			{{/if}}
+		</div>
+	</div>
+</script>
+
+<script type="text/x-handlebars-template" id="table-browser-container">
+	<div class="table-responsive">
+		<table class="table table-striped table-bordered table-sorted">
+			<thead>
+				<th id="select"><input type="checkbox" onClick="toggle(this)" /></th>
+				<th id="albumart"></th>
+				<th id="name">Comic Name</th>
+				<th id="status">Status</th>
+                <th id="stat_icon"></th>
+                <th id="latest">Latest Issue</th>
+                <th id="publisher">Publisher</th>
+                <th id="have">Have</th>
+				<th id="lastupdated">Updated</th>		
+			</thead>
+			<tbody>
+				
+			</tbody>
+		</table>
+	</div>
+</script>
+
+<script type="text/x-handlebars-template" id="comics-table-single-row">
+        <td id="select">
+            <input type="checkbox" name="{{ComicName}}[{{ComicYear}}]" value="{{ComicID}}" class="checkbox checked-comic" {{#if selected}}checked="checked"{{/if}} />
+        </td>
+        <td id="albumart">
+            <div>
+                <img src="{{ComicImage}}" height="75" width="50">
+            </div>
+        </td>
+        <td id="name">
+            <span title="{{ComicSortName}}"></span>
+            <a href="comicDetails?ComicID={{ComicID}}">{{ComicName}} ({{ComicYear}})</a>
+        </td>
+        <td id="status">
+            {{recentstatus}}
+        </td>
+        <td id="stat_icon">
+            {{#if isPaused}}
+            <img src="interfaces/default/images/pause-icon.png" alt="Paused" width="16" height="16" />
+            {{/if}}
+            {{#if isLoading}}
+            <img src="interfaces/default/images/hourglass.png" alt="Loading" width="16" height="16" />
+            {{/if}}
+            {{#if isError}}
+            <img src="interfaces/default/images/cross.png" alt="Error" width="16" height="16" />
+            {{/if}}
+            {{#if isActive}}
+            <img src="interfaces/default/images/checkmark.png" alt="Active" width="16" height="16" />
+            {{/if}}
+        </td>
+        <td id="latest">
+            {{LatestIssue}} ({{LatestDate}})
+        </td>
+        <td id="publisher">
+            {{ComicPublisher}}
+        </td>
+        <td id="have" valign="center">
+            <span title="{{comic.percent}}"></span>
+            <div class="progress-container">
+                <div style="width:{{percent}}%">
+                    <div style="width:{{percent}}%">
+                        <div class="havetracks">
+                            {{haveissues}}/{{totalissues}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </td>
+        <td id="lastupdated">
+            {{DateAdded}}
+        </td>
+</script>
