@@ -17,7 +17,7 @@
 #  along with Mylar.  If not, see <http://www.gnu.org/licenses/>.
 
 import mylar
-from mylar import db, mb, importer, search, PostProcessor, versioncheck, logger
+from mylar import db, mb, importer, search, PostProcessor, versioncheck, logger, helpers
 import simplejson as simplejson
 import cherrypy
 import os
@@ -31,7 +31,7 @@ cmd_list = [
     # Reading List Screen
     'readslist','markreads','removefromreadlist','markasRead','syncfiles','removefromreadlist','forcenewcheck','clearfilecache',
     # Comic Details Screen
-    'refreshSeries','manualRename','forceRescan','group_metatag','resumeSeries','pauseSeries','addtoreadlist','queueit','unqueueissue',
+    'refreshSeries','manualRename','forceRescan','group_metatag','resumeSeries','pauseSeries','addtoreadlist','queueit','unqueueissue','coverComposition',
     # Config
     'generateAPI','force_rss','clearLogs'
     ]
@@ -52,7 +52,7 @@ class Ajax(object):
         self.apitype = None
 
     def checkParams(self, *args, **kwargs):
-
+        #@cherrypy.tools.json_in()
         if 'apikey' not in kwargs:
             self.data = self._error_with_message('Missing api key')
             return
@@ -113,16 +113,20 @@ class Ajax(object):
             return self.data
 
     def _error_with_message(self, message):
+        #@cherrypy.tools.json_out()
         error = {'error': {'message': message} }
         cherrypy.response.headers['Content-Type'] = "application/json"
         cherrypy.response.status = 500
-        return simplejson.dumps(error)
+        cherrypy.response.body = simplejson.dumps(error)
+        return error
 
     def _success_with_message(self, **message):
+        #@cherrypy.tools.json_out()
         success = {'success': {'message': message} }
         cherrypy.response.headers['Content-Type'] = "application/json"
         cherrypy.response.status = 200
-        return simplejson.dumps(success)
+        cherrypy.response.body = simplejson.dumps(success)
+        return success
 
     #
     # Reading List AJAX Actions
@@ -225,6 +229,12 @@ class Ajax(object):
 
     def _clearLogs(self, **kwargs):
         # TODO
+        self.data = self._success_with_message(**kwargs)
+        return;
+
+    def _coverComposition(self, **kwargs):
+        # TODO
+        helpers.IssueCovers(kwargs['comicID'])
         self.data = self._success_with_message(**kwargs)
         return;
 

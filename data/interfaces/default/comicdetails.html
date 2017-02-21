@@ -38,6 +38,9 @@
                         %endif
 
                         <a id="menu_link_addalltoRL" href="#" class="menu_link_addalltoRL">Add All to Readinglist</a>
+                        %if mylar.ENABLE_COVER_COMPOSITION:
+                        <a id="menu_link_covercomposition" href="#" class="menu_link_covercomposition" data-comicid="${comic['ComicID']}">Generate Issue Covers</a>
+                        %endif
 		</div>
 	</div>
 </%def>
@@ -818,6 +821,27 @@
           $('#issue_table tbody tr').each(function(){
             $(this).find('a[title="Add to Reading List"]').click();            
           });
+        });
+
+        $('#menu_link_covercomposition').click(function(){
+          if( $(this).attr('disabled') != 'disabled' ){
+            var that = this;
+            $(this).attr('disabled','disabled');
+            $.ajax({
+              url: 'ajax',
+              method: 'GET',
+              dataType: 'json',
+              data: {
+                apikey: '${mylar.API_KEY}',
+                cmd: 'coverComposition',
+                comicID: $(this).data('comicid')
+              },
+              success: function(data){
+                $(that).removeAttr('disabled');
+              }
+            })  
+          }
+          
         });
 
         $.fn.showHideRows = function(whichClass){

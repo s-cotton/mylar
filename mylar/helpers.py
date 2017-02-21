@@ -1379,7 +1379,8 @@ def filesafe(comic):
 
 def IssueCovers(ComicID=None):
     if mylar.ENABLE_COVER_COMPOSITION:
-        import logger
+        import db, logger
+        myDB = db.DBConnection()
         import zipfile
         if mylar.ENABLE_RAR:
             import rarfile
@@ -1393,6 +1394,8 @@ def IssueCovers(ComicID=None):
         altcheck = re.compile('0{2,3}[A-Z]?[. ]', re.I)
         merged_quality='web_medium'
 
+        logger.fdebug("Attempting to generate Covers for Comic ID " + str(ComicID) )
+
         if ComicID is None:
             logger.fdebug('No Comic provided for Issue Cover Extraction')
             return
@@ -1402,11 +1405,11 @@ def IssueCovers(ComicID=None):
                 logger.fdebug('Invalid Comic passed for Issue Cover Extraction');
                 return
             else :
-                ComicPath = comic.ComicLocation
+                ComicPath = comic['ComicLocation']
                 coverfiles = []
                 issues = myDB.select('SELECT * FROM issues WHERE ComicID=? order by Int_IssueNumber DESC', [ComicID])
                 for issue in issues:
-                    rawfilename = issue.Location
+                    rawfilename = issue['Location']
                     logger.fdebug("Processing " + rawfilename + '...')
                     # locate the file in the filesystem
                     srclocation = os.path.join( ComicPath, rawfilename )
@@ -1510,7 +1513,7 @@ def IssueCovers(ComicID=None):
                         if len(final_cover_filenames) > 0:
 
                             # Final merged image created as a new image wide enough for all of the found covers
-                            final_image_path = os.path.join(mylar['CACHE_DIR'],'issue-' + issue.IssueID + '.jpg')
+                            final_image_path = os.path.join(mylar.CACHE_DIR,'issue-' + issue['IssueID'] + '.jpg')
                             merged_image = Image.new('RGB', (len(final_cover_filenames) * 600,922));
                             logger.fdebug("Merging " + str(len(final_cover_filenames)) + " covers: " + str(len(final_cover_filenames) * 600) + "x" + str(922) + "...")
 
@@ -1531,7 +1534,8 @@ def IssueCovers(ComicID=None):
                         
                             try:
                                 merged_image.save(final_image_path, "JPEG", quality=merged_quality)
-                                logger.fdebug('Issue Cover Composite for Issue #' + issue.IssueID + ' successfully saved to ' + final_image_path )
+                                logger.fdebug('Issue Cover Composite for Issue #' + issue['IssueID'] + ' successfully saved to ' + final_image_path )
+                                os.chmod( final_image_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH )
                             except:
                                 logger.fdebug('Could not save merged image' + str(sys.exc_info()))
 

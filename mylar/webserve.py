@@ -4889,7 +4889,7 @@ class WebInterface(object):
         a.checkParams(*args, **kwargs)
 
         data = a.fetchData()
-
+        
         return data
 
     ajax.exposed = True

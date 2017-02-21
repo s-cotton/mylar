@@ -157,6 +157,7 @@ function initActions() {
     $("#subhead_menu #menu_link_shutdown").button({ icons: { primary: "ui-icon-power"} });
     $("#subhead_menu #menu_link_scan").button({ icons: { primary: "ui-icon-search"} });
     $("#subhead_menu #menu_link_addalltoRL").button({ icons: { primary: "ui-icon-plus"} });
+    $("#subhead_menu #menu_link_covercomposition").button({ icons: { primary: "ui-icon-image"} });
 }
 
 function refreshSubmenu() {
