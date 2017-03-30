@@ -24,6 +24,7 @@ import os, errno
 import mylar
 import logger
 import sys
+import stat
 from PIL import Image
 import StringIO
 
@@ -1377,8 +1378,9 @@ def filesafe(comic):
     return comicname_filesafe
 
 
-def IssueCovers(ComicID=None):
+def IssueCovers(ComicID=None,IssueID=None):
     if mylar.ENABLE_COVER_COMPOSITION:
+        status = False
         import db, logger
         myDB = db.DBConnection()
         import zipfile
@@ -1395,6 +1397,8 @@ def IssueCovers(ComicID=None):
         merged_quality='web_medium'
 
         logger.fdebug("Attempting to generate Covers for Comic ID " + str(ComicID) )
+        if IssueID is not None:
+            logger.fdebug("Only Issue ID " + str(IssueID) + " will be generated" )
 
         if ComicID is None:
             logger.fdebug('No Comic provided for Issue Cover Extraction')
@@ -1403,12 +1407,16 @@ def IssueCovers(ComicID=None):
             comic = myDB.selectone('SELECT * FROM comics WHERE ComicID=?', [ComicID]).fetchone()
             if comic is None:
                 logger.fdebug('Invalid Comic passed for Issue Cover Extraction');
-                return
+                return status
             else :
                 ComicPath = comic['ComicLocation']
                 coverfiles = []
                 issues = myDB.select('SELECT * FROM issues WHERE ComicID=? order by Int_IssueNumber DESC', [ComicID])
                 for issue in issues:
+                    if IssueID is not None:
+                        if str(IssueID) != str(issue['IssueID']):
+                            continue
+
                     rawfilename = issue['Location']
                     logger.fdebug("Processing " + rawfilename + '...')
                     # locate the file in the filesystem
@@ -1536,9 +1544,14 @@ def IssueCovers(ComicID=None):
                                 merged_image.save(final_image_path, "JPEG", quality=merged_quality)
                                 logger.fdebug('Issue Cover Composite for Issue #' + issue['IssueID'] + ' successfully saved to ' + final_image_path )
                                 os.chmod( final_image_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH )
+                                if IssueID is not None:
+                                    status = True
                             except:
                                 logger.fdebug('Could not save merged image' + str(sys.exc_info()))
 
+                if IssueID is None:
+                    status = True
+                return status
 
     else:
         logger.fdebug("Well, you didn't enable Cover Composition...")
