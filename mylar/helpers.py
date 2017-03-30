@@ -16,6 +16,7 @@
 import time
 from operator import itemgetter
 import datetime
+from datetime import timedelta, date
 import re
 import platform
 import itertools
@@ -254,7 +255,7 @@ def rename_param(comicid, comicname, issue, ofilename, comicyear=None, issueid=N
             import db, logger
             myDB = db.DBConnection()
             logger.fdebug('comicid: ' + str(comicid))
-            logger.fdebug('issue#: ' + str(issue))
+            logger.fdebug('issue#: ' + issue)
             # the issue here is a non-decimalized version, we need to see if it's got a decimal and if not, add '.00'
 #            iss_find = issue.find('.')
 #            if iss_find < 0:
@@ -377,7 +378,9 @@ def rename_param(comicid, comicname, issue, ofilename, comicyear=None, issueid=N
             for issexcept in issue_exceptions:
                 if issexcept.lower() in issuenum.lower():
                     logger.fdebug('ALPHANUMERIC EXCEPTION : [' + issexcept + ']')
-                    if any(v in issuenum for v in valid_spaces):
+                    v_chk = [v in issuenum for v in valid_spaces]
+                    if v_chk:
+                        iss_space = v_chk[0]
                         logger.fdebug('character space denoted as : ' + iss_space)
                     else:
                         logger.fdebug('character space not denoted.')
@@ -429,7 +432,7 @@ def rename_param(comicid, comicname, issue, ofilename, comicyear=None, issueid=N
             else:
                 iss = issuenum
                 issueno = str(iss)
-            logger.fdebug('iss:' + str(iss))
+            logger.fdebug('iss:' + iss)
             logger.fdebug('issueno:' + str(issueno))
             # issue zero-suppression here
             if mylar.ZERO_LEVEL == "0":
@@ -514,10 +517,10 @@ def rename_param(comicid, comicname, issue, ofilename, comicyear=None, issueid=N
             if month_name is None:
                 month_name = 'None'
             logger.fdebug('Issue Year : ' + str(issueyear))
-            logger.fdebug('Publisher: ' + str(publisher))
-            logger.fdebug('Series: ' + str(series))
+            logger.fdebug('Publisher: ' + publisher)
+            logger.fdebug('Series: ' + series)
             logger.fdebug('Year: '  + str(seriesyear))
-            logger.fdebug('Comic Location: ' + str(comlocation))
+            logger.fdebug('Comic Location: ' + comlocation)
             if comversion is None:
                 comversion = 'None'
             #if comversion is None, remove it so it doesn't populate with 'None'
@@ -633,15 +636,15 @@ def rename_param(comicid, comicname, issue, ofilename, comicyear=None, issueid=N
                     nfilename = nfilename.replace(' ', mylar.REPLACE_CHAR)
 
             nfilename = re.sub('[\,\:]', '', nfilename) + ext.lower()
-            logger.fdebug('New Filename: ' + str(nfilename))
+            logger.fdebug('New Filename: ' + nfilename)
 
             if mylar.LOWERCASE_FILENAMES:
                 dst = os.path.join(comlocation, nfilename.lower())
             else:
                 dst = os.path.join(comlocation, nfilename)
 
-            logger.fdebug('Source: ' + str(ofilename))
-            logger.fdebug('Destination: ' + str(dst))
+            logger.fdebug('Source: ' + ofilename)
+            logger.fdebug('Destination: ' + dst)
 
             rename_this = {"destination_dir": dst,
                             "nfilename": nfilename,
@@ -1557,94 +1560,114 @@ def IssueCovers(ComicID=None,IssueID=None):
         logger.fdebug("Well, you didn't enable Cover Composition...")
 
 
-
-def IssueDetails(filelocation, IssueID=None):
+def IssueDetails(filelocation, IssueID=None, justinfo=False):
     import zipfile, logger
     from xml.dom.minidom import parseString
 
-    dstlocation = os.path.join(mylar.CACHE_DIR, 'temp.zip')
-
     issuedetails = []
-
-    if filelocation.endswith('.cbz'):
-        logger.fdebug('CBZ file detected. Checking for .xml within file')
-        shutil.copy(filelocation, dstlocation)
-    else:
-        logger.fdebug('filename is not a cbz : ' + filelocation)
-        return
-
-    cover = "notfound"
     issuetag = None
-    pic_extensions = ('.jpg','.png','.webp')
-    modtime = os.path.getmtime(dstlocation)
-    low_infile = 999999
 
-    try:
-        with zipfile.ZipFile(dstlocation, 'r') as inzipfile:
-            for infile in sorted(inzipfile.namelist()):
-                tmp_infile = re.sub("[^0-9]","", infile).strip()
-                if tmp_infile == '':
-                    pass
-                elif int(tmp_infile) < int(low_infile):
-                    low_infile = tmp_infile
-                    low_infile_name = infile
-                if infile == 'ComicInfo.xml':
-                    logger.fdebug('Extracting ComicInfo.xml to display.')
-                    dst = os.path.join(mylar.CACHE_DIR, 'ComicInfo.xml')
-                    data = inzipfile.read(infile)
-                    #print str(data)
-                    issuetag = 'xml'
-                #looks for the first page and assumes it's the cover. (Alternate covers handled later on)
-                elif any(['000.' in infile, '00.' in infile]) and infile.endswith(pic_extensions) and cover == "notfound":
-                    logger.fdebug('Extracting primary image ' + infile + ' as coverfile for display.')
+    if justinfo is False:
+        dstlocation = os.path.join(mylar.CACHE_DIR, 'temp.zip')
+
+
+        if filelocation.endswith('.cbz'):
+            logger.fdebug('CBZ file detected. Checking for .xml within file')
+            shutil.copy(filelocation, dstlocation)
+        else:
+            logger.fdebug('filename is not a cbz : ' + filelocation)
+            return
+
+        cover = "notfound"
+        pic_extensions = ('.jpg','.png','.webp')
+        modtime = os.path.getmtime(dstlocation)
+        low_infile = 999999
+
+        try:
+            with zipfile.ZipFile(dstlocation, 'r') as inzipfile:
+                for infile in sorted(inzipfile.namelist()):
+                    tmp_infile = re.sub("[^0-9]","", infile).strip()
+                    if tmp_infile == '':
+                        pass
+                    elif int(tmp_infile) < int(low_infile):
+                        low_infile = tmp_infile
+                        low_infile_name = infile
+                    if infile == 'ComicInfo.xml':
+                        logger.fdebug('Extracting ComicInfo.xml to display.')
+                        dst = os.path.join(mylar.CACHE_DIR, 'ComicInfo.xml')
+                        data = inzipfile.read(infile)
+                        #print str(data)
+                        issuetag = 'xml'
+                    #looks for the first page and assumes it's the cover. (Alternate covers handled later on)
+                    elif any(['000.' in infile, '00.' in infile]) and infile.endswith(pic_extensions) and cover == "notfound":
+                        logger.fdebug('Extracting primary image ' + infile + ' as coverfile for display.')
+                        local_file = open(os.path.join(mylar.CACHE_DIR, 'temp.jpg'), "wb")
+                        local_file.write(inzipfile.read(infile))
+                        local_file.close
+                        cover = "found"
+                    elif any(['00a' in infile, '00b' in infile, '00c' in infile, '00d' in infile, '00e' in infile]) and infile.endswith(pic_extensions) and cover == "notfound":
+                        logger.fdebug('Found Alternate cover - ' + infile + ' . Extracting.')
+                        altlist = ('00a', '00b', '00c', '00d', '00e')
+                        for alt in altlist:
+                            if alt in infile:
+                                local_file = open(os.path.join(mylar.CACHE_DIR, 'temp.jpg'), "wb")
+                                local_file.write(inzipfile.read(infile))
+                                local_file.close
+                                cover = "found"
+                                break
+
+                    elif any(['001.jpg' in infile, '001.png' in infile, '001.webp' in infile, '01.jpg' in infile, '01.png' in infile, '01.webp' in infile]) and cover == "notfound":
+                        logger.fdebug('Extracting primary image ' + infile + ' as coverfile for display.')
+                        local_file = open(os.path.join(mylar.CACHE_DIR, 'temp.jpg'), "wb")
+                        local_file.write(inzipfile.read(infile))
+                        local_file.close
+                        cover = "found"
+
+                if cover != "found":
+                    logger.fdebug('Invalid naming sequence for jpgs discovered. Attempting to find the lowest sequence and will use as cover (it might not work). Currently : ' + str(low_infile))
                     local_file = open(os.path.join(mylar.CACHE_DIR, 'temp.jpg'), "wb")
-                    local_file.write(inzipfile.read(infile))
+                    local_file.write(inzipfile.read(low_infile_name))
                     local_file.close
-                    cover = "found"
-                elif any(['00a' in infile, '00b' in infile, '00c' in infile, '00d' in infile, '00e' in infile]) and infile.endswith(pic_extensions) and cover == "notfound":
-                    logger.fdebug('Found Alternate cover - ' + infile + ' . Extracting.')
-                    altlist = ('00a', '00b', '00c', '00d', '00e')
-                    for alt in altlist:
-                        if alt in infile:
-                            local_file = open(os.path.join(mylar.CACHE_DIR, 'temp.jpg'), "wb")
-                            local_file.write(inzipfile.read(infile))
-                            local_file.close
-                            cover = "found"
-                            break
+                    cover = "found"                
 
-                elif any(['001.jpg' in infile, '001.png' in infile, '001.webp' in infile, '01.jpg' in infile, '01.png' in infile, '01.webp' in infile]) and cover == "notfound":
-                    logger.fdebug('Extracting primary image ' + infile + ' as coverfile for display.')
-                    local_file = open(os.path.join(mylar.CACHE_DIR, 'temp.jpg'), "wb")
-                    local_file.write(inzipfile.read(infile))
-                    local_file.close
-                    cover = "found"
+        except:
+            logger.info('ERROR. Unable to properly retrieve the cover for displaying. It\'s probably best to re-tag this file.')
+            return
 
-            if cover != "found":
-                logger.fdebug('Invalid naming sequence for jpgs discovered. Attempting to find the lowest sequence and will use as cover (it might not work). Currently : ' + str(low_infile))
-                local_file = open(os.path.join(mylar.CACHE_DIR, 'temp.jpg'), "wb")
-                local_file.write(inzipfile.read(low_infile_name))
-                local_file.close
-                cover = "found"                
+        ComicImage = os.path.join('cache', 'temp.jpg?' +str(modtime))
+        IssueImage = replacetheslash(ComicImage)
 
-    except:
-        logger.info('ERROR. Unable to properly retrieve the cover for displaying. It\'s probably best to re-tag this file.')
-        return
-
-    ComicImage = os.path.join('cache', 'temp.jpg?' +str(modtime))
-    IssueImage = replacetheslash(ComicImage)
+    else:
+        IssueImage = "None"
+        try:
+            with zipfile.ZipFile(filelocation, 'r') as inzipfile:
+                for infile in sorted(inzipfile.namelist()):
+                    if infile == 'ComicInfo.xml':
+                        logger.fdebug('Found ComicInfo.xml - now retrieving information.')
+                        data = inzipfile.read(infile)
+                        issuetag = 'xml'
+                        break
+        except:
+            logger.info('ERROR. Unable to properly retrieve the cover for displaying. It\'s probably best to re-tag this file.')
+            return
 
 
     if issuetag is None:
-        import subprocess
-        from subprocess import CalledProcessError, check_output
-        unzip_cmd = "/usr/bin/unzip"
+        data = None
         try:
-            #unzip -z will extract the zip comment field.
-            data = subprocess.check_output([unzip_cmd, '-z', dstlocation])
-            # return data is encoded in bytes, not unicode. Need to figure out how to run check_output returning utf-8
-            issuetag = 'comment'
-        except CalledProcessError as e:
+            dz = zipfile.ZipFile(filelocation, 'r')
+            data = dz.comment
+        except:
             logger.warn('Unable to extract comment field from zipfile.')
+            return
+        else:
+            if data:
+                issuetag = 'comment'
+            else:
+                logger.warn('No metadata available in zipfile comment field.')
+                return   
+
+    logger.info('Tag returned as being: ' + str(issuetag))
 
     #logger.info('data:' + str(data))
 
@@ -1737,28 +1760,30 @@ def IssueDetails(filelocation, IssueID=None):
             except:
                 pagecount = 0
 
-            i = 0
+            #not used atm.
+            #to validate a front cover if it's tagged as one within the zip (some do this)
+            #i = 0
+            #try:
+            #    pageinfo = result.getElementsByTagName('Page')[0].attributes
+            #    if pageinfo: pageinfo_test == True
+            #except:
+            #    pageinfo_test = False
 
-            try:
-                pageinfo = result.getElementsByTagName('Page')[0].attributes
-                if pageinfo: pageinfo_test == True
-            except:
-                pageinfo_test = False
+            #if pageinfo_test:
+            #    while (i < int(pagecount)):
+            #        pageinfo = result.getElementsByTagName('Page')[i].attributes
+            #        attrib = pageinfo.getNamedItem('Image')
+            #        #logger.fdebug('Frontcover validated as being image #: ' + str(attrib.value))
+            #        att = pageinfo.getNamedItem('Type')
+            #        #logger.fdebug('pageinfo: ' + str(pageinfo))
+            #        if att.value == 'FrontCover':
+            #            #logger.fdebug('FrontCover detected. Extracting.')
+            #            break
+            #        i+=1
 
-            if pageinfo_test:
-                while (i < int(pagecount)):
-                    pageinfo = result.getElementsByTagName('Page')[i].attributes
-                    attrib = pageinfo.getNamedItem('Image')
-                    #logger.fdebug('Frontcover validated as being image #: ' + str(attrib.value))
-                    att = pageinfo.getNamedItem('Type')
-                    logger.fdebug('pageinfo: ' + str(pageinfo))
-                    if att.value == 'FrontCover':
-                        #logger.fdebug('FrontCover detected. Extracting.')
-                        break
-                    i+=1
     elif issuetag == 'comment':
         logger.info('CBL Tagging.')
-        stripline = 'Archive:  ' + dstlocation
+        stripline = 'Archive:  ' + filelocation
         data = re.sub(stripline, '', data.encode("utf-8")).strip()
         if data is None or data == '':
             return
@@ -2508,7 +2533,7 @@ def spantheyears(storyarcid):
     lowyear = 9999
     maxyear = 0
     for la in totalcnt:
-        if la['IssueDate'] is None:
+        if la['IssueDate'] is None or la['IssueDate'] == '0000-00-00':
             continue
         else:
             if int(la['IssueDate'][:4]) > maxyear:
@@ -2566,6 +2591,77 @@ def arcformat(arc, spanyears, publisher):
         dstloc = None
 
     return dstloc
+
+def weekly_info(week=None, year=None):
+    #find the current week and save it as a reference point.
+    todaydate = datetime.datetime.today()
+    current_weeknumber = todaydate.strftime("%U")
+
+
+    if week:
+        weeknumber = int(week)
+        year = int(year)
+        #view specific week (prev_week, next_week)
+        startofyear = date(year,1,1)
+        week0 = startofyear - timedelta(days=startofyear.isoweekday())
+        stweek = datetime.datetime.strptime(week0.strftime('%Y-%m-%d'), '%Y-%m-%d')
+        startweek = stweek + timedelta(weeks = weeknumber)
+        midweek = startweek + timedelta(days = 3)
+        endweek = startweek + timedelta(days = 6)
+    else:
+        #find the given week number for the current day
+        weeknumber = current_weeknumber
+        stweek = datetime.datetime.strptime(todaydate.strftime('%Y-%m-%d'), '%Y-%m-%d')
+        startweek = stweek - timedelta(days = (stweek.weekday() + 1) % 7)
+        midweek = startweek + timedelta(days = 3)
+        endweek = startweek + timedelta(days = 6)
+        year = todaydate.strftime("%Y")
+
+    prev_week = int(weeknumber) - 1
+    prev_year = year
+    if prev_week == 0:
+        prev_week = 52
+        prev_year = int(year) - 1
+
+    next_week = int(weeknumber) + 1
+    next_year = year
+    if next_week == 53:
+        next_week = 1
+        next_year = int(year) + 1
+
+    date_fmt = "%B %d, %Y"
+    try:
+        con_startweek = u"" + startweek.strftime(date_fmt).decode('utf-8')
+        con_endweek = u"" + endweek.strftime(date_fmt).decode('utf-8')
+    except:
+        con_startweek = u"" + startweek.strftime(date_fmt).decode('cp1252')
+        con_endweek = u"" + endweek.strftime(date_fmt).decode('cp1252')
+
+    if mylar.WEEKFOLDER_LOC is not None:
+        weekdst = mylar.WEEKFOLDER_LOC
+    else:
+        weekdst = mylar.DESTINATION_DIR
+
+    weekinfo = {'weeknumber':         weeknumber,
+                'startweek':          con_startweek,
+                'midweek':            midweek.strftime('%Y-%m-%d'),
+                'endweek':            con_endweek,
+                'year':               year,
+                'prev_weeknumber':    prev_week,
+                'prev_year':          prev_year,
+                'next_weeknumber':    next_week,
+                'next_year':          next_year,
+                'current_weeknumber': current_weeknumber,
+                'last_update':        mylar.PULL_REFRESH}
+
+    if mylar.WEEKFOLDER_FORMAT == 0:
+        weekfold = os.path.join(weekdst, str( str(weekinfo['year']) + '-' + str(weeknumber) ))
+    else:
+        weekfold = os.path.join(weekdst, str( str(weekinfo['midweek']) ))
+
+    weekinfo['week_folder'] = weekfold
+
+    return weekinfo
 
 def latestdate_update():
     import db

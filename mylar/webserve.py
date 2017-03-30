@@ -554,7 +554,8 @@ class WebInterface(object):
 
                 myDB.upsert("readinglist", newVals, newCtrl)
 
-        logger.info(newVals)
+                #logger.info(newVals)
+
         #run the Search for Watchlist matches now.
         logger.fdebug(module + ' Now searching your watchlist for matches belonging to this story arc.')
         self.ArcWatchlist(storyarcid)
@@ -1563,95 +1564,31 @@ class WebInterface(object):
         weeklyresults = []
         wantedcount = 0
 
-        #find the current week and save it as a reference point.
-        todaydate = datetime.datetime.today()
-        current_weeknumber = todaydate.strftime("%U")
-
-        if week:
-            weeknumber = int(week)
-            year = int(year)
-            #view specific week (prev_week, next_week)
-            startofyear = date(year,1,1)
-            week0 = startofyear - timedelta(days=startofyear.isoweekday())
-            stweek = datetime.datetime.strptime(week0.strftime('%Y-%m-%d'), '%Y-%m-%d')
-            startweek = stweek + timedelta(weeks = weeknumber)
-            midweek = startweek + timedelta(days = 3)
-            endweek = startweek + timedelta(days = 6)
-        else:
-            #find the given week number for the current day
-            weeknumber = current_weeknumber
-            stweek = datetime.datetime.strptime(todaydate.strftime('%Y-%m-%d'), '%Y-%m-%d')
-            startweek = stweek - timedelta(days = (stweek.weekday() + 1) % 7)
-            midweek = startweek + timedelta(days = 3)
-            endweek = startweek + timedelta(days = 6)
-            year = todaydate.strftime("%Y")
-
-        prev_week = int(weeknumber) - 1
-        prev_year = year
-        if prev_week == 0:
-            prev_week = 52
-            prev_year = int(year) - 1
-
-        next_week = int(weeknumber) + 1
-        next_year = year
-        if next_week == 53:
-            next_week = 1
-            next_year = int(year) + 1
-        
-        date_fmt = "%B %d, %Y"
-
-        try:
-            con_startweek = u"" + startweek.strftime(date_fmt).decode('utf-8')
-            con_endweek = u"" + endweek.strftime(date_fmt).decode('utf-8')
-        except:
-            con_startweek = u"" + startweek.strftime(date_fmt).decode('cp1252')
-            con_endweek = u"" + endweek.strftime(date_fmt).decode('cp1252')
-
-        weekinfo = {'weeknumber':         weeknumber,
-                    'startweek':          con_startweek,
-                    'midweek':            midweek.strftime('%Y-%m-%d'),
-                    'endweek':            con_endweek,
-                    'year':               year,
-                    'prev_weeknumber':    prev_week,
-                    'prev_year':          prev_year,
-                    'next_weeknumber':    next_week,
-                    'next_year':          next_year,
-                    'current_weeknumber': current_weeknumber,
-                    'last_update':        mylar.PULL_REFRESH}
-
-        if mylar.WEEKFOLDER_LOC is not None:
-            weekdst = mylar.WEEKFOLDER_LOC
-        else:
-            weekdst = mylar.DESTINATION_DIR
-
-        if mylar.WEEKFOLDER_FORMAT == 0:
-            weekfold = os.path.join(weekdst, str( str(weekinfo['year']) + '-' + str(weeknumber) ))
-        else:
-            weekfold = os.path.join(weekdst, str( str(weekinfo['midweek']) ))
+        weekinfo = helpers.weekly_info(week, year)
 
         popit = myDB.select("SELECT * FROM sqlite_master WHERE name='weekly' and type='table'")
         if popit:
-            w_results = myDB.select("SELECT * from weekly WHERE weeknumber=? AND year=?", [int(weeknumber),year])
+            w_results = myDB.select("SELECT * from weekly WHERE weeknumber=? AND year=?", [int(weekinfo['weeknumber']),weekinfo['year']])
             if len(w_results) == 0:
-                logger.info('trying to repopulate to week: ' + str(weeknumber) + '-' + str(year))
-                repoll = self.manualpull(weeknumber=weeknumber,year=year)
+                logger.info('trying to repopulate to week: ' + str(weekinfo['weeknumber']) + '-' + str(weekinfo['year']))
+                repoll = self.manualpull(weeknumber=weekinfo['weeknumber'],year=weekinfo['year'])
                 if repoll['status'] == 'success':
-                    w_results = myDB.select("SELECT * from weekly WHERE weeknumber=? AND year=?", [int(weeknumber),year])
+                    w_results = myDB.select("SELECT * from weekly WHERE weeknumber=? AND year=?", [int(weekinfo['weeknumber']),weekinfo['year']])
                 else:
-                    logger.warn('Problem repopulating the pullist for week ' + str(weeknumber) + ', ' + str(year))
+                    logger.warn('Problem repopulating the pullist for week ' + str(weekinfo['weeknumber']) + ', ' + str(weekinfo['year']))
                     if mylar.ALT_PULL == 2:
                         logger.warn('Attempting to repoll against legacy pullist in order to have some kind of updated listing for the week.')
                         repoll = self.manualpull()
                         if repoll['status'] == 'success':
-                            w_results = myDB.select("SELECT * from weekly WHERE weeknumber=? AND year=?", [int(weeknumber),year])
+                            w_results = myDB.select("SELECT * from weekly WHERE weeknumber=? AND year=?", [int(weekinfo['weeknumber']),weekinfo['year']])
                         else:
                             logger.warn('Unable to populate the pull-list. Not continuing at this time (will try again in abit)')
 
             if w_results is None:
-                return serve_template(templatename="weeklypull.html", title="Weekly Pull", weeklyresults=weeklyresults, pullfilter=True, weekfold=weekfold, wantedcount=0, weekinfo=weekinfo)
+                return serve_template(templatename="weeklypull.html", title="Weekly Pull", weeklyresults=weeklyresults, pullfilter=True, weekfold=weekinfo['week_folder'], wantedcount=0, weekinfo=weekinfo)
 
             watchlibrary = helpers.listLibrary()
-            issueLibrary = helpers.listIssues(weeknumber, year)
+            issueLibrary = helpers.listIssues(weekinfo['weeknumber'], weekinfo['year'])
 
             for weekly in w_results:
                 xfound = False
@@ -1659,8 +1596,8 @@ class WebInterface(object):
                 if weekly['ComicID'] in watchlibrary:
                     haveit = watchlibrary[weekly['ComicID']]
 
-                    if weeknumber:
-                        if any([week >= int(weeknumber), week is None]) and all([mylar.AUTOWANT_UPCOMING, tmp_status == 'Skipped']):
+                    if weekinfo['weeknumber']:
+                        if any([week >= int(weekinfo['weeknumber']), week is None]) and all([mylar.AUTOWANT_UPCOMING, tmp_status == 'Skipped']):
                             tmp_status = 'Wanted'
 
                     for x in issueLibrary:
@@ -1730,9 +1667,9 @@ class WebInterface(object):
             self.manualpull()
 
         if week:
-            return serve_template(templatename="weeklypull.html", title="Weekly Pull", weeklyresults=weeklyresults, pullfilter=True, weekfold=weekfold, wantedcount=wantedcount, weekinfo=weekinfo)
+            return serve_template(templatename="weeklypull.html", title="Weekly Pull", weeklyresults=weeklyresults, pullfilter=True, weekfold=weekinfo['week_folder'], wantedcount=wantedcount, weekinfo=weekinfo)
         else:
-            return serve_template(templatename="weeklypull.html", title="Weekly Pull", weeklyresults=weeklyresults, pullfilter=True, weekfold=weekfold, wantedcount=wantedcount, weekinfo=weekinfo)
+            return serve_template(templatename="weeklypull.html", title="Weekly Pull", weeklyresults=weeklyresults, pullfilter=True, weekfold=weekinfo['week_folder'], wantedcount=wantedcount, weekinfo=weekinfo)
     pullist.exposed = True
 
     def removeautowant(self, comicname, release):
@@ -2495,7 +2432,7 @@ class WebInterface(object):
                                    'IssueNumber':     la['IssueNumber'],
                                    'ReadingOrder':    la['ReadingOrder']})
 
-                if la['IssueDate'] is None:
+                if la['IssueDate'] is None or la['IssueDate'] == '0000-00-00':
                     continue
                 else:
                     if int(la['IssueDate'][:4]) > maxyear:
@@ -2813,40 +2750,41 @@ class WebInterface(object):
 
             logger.info('arcpub: ' + arcpub)
             dstloc = helpers.arcformat(arcdir, spanyears, arcpub)
-
-            if not os.path.isdir(dstloc):
-                if mylar.STORYARCDIR:
-                    logger.info('Story Arc Directory [' + dstloc + '] does not exist! - attempting to create now.')
-                else:
-                    logger.info('Story Arc Grab-Bag Directory [' + dstloc + '] does not exist! - attempting to create now.')
-                checkdirectory = filechecker.validateAndCreateDirectory(dstloc, True)
-                if not checkdirectory:
-                    logger.warn('Error trying to validate/create directory. Aborting this process at this time.')
-                    return
-
-            if all([mylar.CVINFO, mylar.STORYARCDIR]):
-                if not os.path.isfile(os.path.join(dstloc, "cvinfo")) or mylar.CV_ONETIMER:
-                    logger.fdebug('Generating cvinfo file for story-arc.')
-                    with open(os.path.join(dstloc, "cvinfo"), "w") as text_file:
-                        if any([ArcWatch[0]['StoryArcID'] == ArcWatch[0]['CV_ArcID'], ArcWatch[0]['CV_ArcID'] is None]):
-                            cvinfo_arcid = ArcWatch[0]['StoryArcID']
-                        else:
-                            cvinfo_arcid = ArcWatch[0]['CV_ArcID']
-
-                        text_file.write('https://comicvine.gamespot.com/storyarc/4045-' + str(cvinfo_arcid))
-                    if mylar.ENFORCE_PERMS:
-                        filechecker.setperms(os.path.join(dstloc, 'cvinfo'))
-
-            #get the list of files within the storyarc directory, if any.
             filelist = None
-            if mylar.STORYARCDIR:
-                fchk = filechecker.FileChecker(dir=dstloc, watchcomic=None, Publisher=None, sarc='true', justparse=True)
-                filechk = fchk.listFiles()
-                fccnt = filechk['comiccount']
-                logger.fdebug('[STORY ARC DIRECTORY] ' + str(fccnt) + ' files exist within this directory.')
-                if fccnt > 0:
-                    filelist = filechk['comiclist']
-                logger.info(filechk)
+
+            if dstloc is not None:
+                if not os.path.isdir(dstloc):
+                    if mylar.STORYARCDIR:
+                        logger.info('Story Arc Directory [' + dstloc + '] does not exist! - attempting to create now.')
+                    else:
+                        logger.info('Story Arc Grab-Bag Directory [' + dstloc + '] does not exist! - attempting to create now.')
+                    checkdirectory = filechecker.validateAndCreateDirectory(dstloc, True)
+                    if not checkdirectory:
+                        logger.warn('Error trying to validate/create directory. Aborting this process at this time.')
+                        return
+
+                if all([mylar.CVINFO, mylar.STORYARCDIR]):
+                    if not os.path.isfile(os.path.join(dstloc, "cvinfo")) or mylar.CV_ONETIMER:
+                        logger.fdebug('Generating cvinfo file for story-arc.')
+                        with open(os.path.join(dstloc, "cvinfo"), "w") as text_file:
+                            if any([ArcWatch[0]['StoryArcID'] == ArcWatch[0]['CV_ArcID'], ArcWatch[0]['CV_ArcID'] is None]):
+                                cvinfo_arcid = ArcWatch[0]['StoryArcID']
+                            else:
+                                cvinfo_arcid = ArcWatch[0]['CV_ArcID']
+
+                            text_file.write('https://comicvine.gamespot.com/storyarc/4045-' + str(cvinfo_arcid))
+                        if mylar.ENFORCE_PERMS:
+                            filechecker.setperms(os.path.join(dstloc, 'cvinfo'))
+
+                #get the list of files within the storyarc directory, if any.
+                if mylar.STORYARCDIR:
+                    fchk = filechecker.FileChecker(dir=dstloc, watchcomic=None, Publisher=None, sarc='true', justparse=True)
+                    filechk = fchk.listFiles()
+                    fccnt = filechk['comiccount']
+                    logger.fdebug('[STORY ARC DIRECTORY] ' + str(fccnt) + ' files exist within this directory.')
+                    if fccnt > 0:
+                        filelist = filechk['comiclist']
+                    logger.info(filechk)
 
             arc_match = []
             wantedlist = []
@@ -2910,18 +2848,19 @@ class WebInterface(object):
                                 matcheroso = "yes"
                                 break
                 if matcheroso == "no":
-                    logger.fdebug("Unable to find a match for " + arc['ComicName'] + " :#" + arc['IssueNumber'])
+                    logger.fdebug("[NO WATCHLIST MATCH] Unable to find a match for " + arc['ComicName'] + " :#" + arc['IssueNumber'])
                     wantedlist.append({
                          "ComicName":      arc['ComicName'],
                          "IssueNumber":    arc['IssueNumber'],
                          "IssueYear":      arc['IssueYear']})
 
                     if filelist is not None and mylar.STORYARCDIR:
+                        logger.fdebug("[NO WATCHLIST MATCH] Checking against lcoal Arc directory for given issue.")
                         fn = 0
                         valids = [x for x in filelist if re.sub('[\|\s]','', x['dynamic_name'].lower()).strip() == re.sub('[\|\s]','', arc['DynamicComicName'].lower()).strip()]
                         logger.info('valids: ' + str(valids))
                         if len(valids) > 0:
-                            for tmpfc in filelist:
+                            for tmpfc in valids: #filelist:
                                 haveissue = "no"
                                 issuedupe = "no"
                                 temploc = tmpfc['issue_number'].replace('_', ' ')
@@ -2930,31 +2869,46 @@ class WebInterface(object):
                                 if int_iss == fcdigit:
                                     logger.fdebug(arc['ComicName'] + ' Issue #' + arc['IssueNumber'] + ' already present in StoryArc directory.')
                                     #update readinglist db to reflect status.
+                                    rr_rename = False
                                     if mylar.READ2FILENAME:
                                         readorder = helpers.renamefile_readingorder(arc['ReadingOrder'])
-                                        dfilename = str(readorder) + "-" + tmpfc['comicfilename']
+                                        if all([tmpfc['reading_order'] is not None, int(readorder) != int(tmpfc['reading_order']['reading_sequence'])]):
+                                            logger.warn('reading order sequence has changed for this issue from ' + str(tmpfc['reading_order']['reading_sequence']) + ' to ' + str(readorder))
+                                            rr_rename = True
+                                            dfilename = str(readorder) + '-' + tmpfc['reading_order']['filename']
+                                        elif tmpfc['reading_order'] is None:
+                                            dfilename = str(readorder) +  '-' + tmpfc['comicfilename']
+                                        else:
+                                            dfilename = str(readorder) + '-' + tmpfc['reading_order']['filename']
                                     else:
                                         dfilename = tmpfc['comicfilename']
 
                                     if all([tmpfc['sub'] is not None, tmpfc['sub'] != 'None']):
-                                        loc_path = os.path.join(tmpfc['ComicLocation'], tmpfc['sub'], dfilename)
+                                        loc_path = os.path.join(tmpfc['comiclocation'], tmpfc['sub'], dfilename)
                                     else:
-                                        loc_path = os.path.join(tmpfc['ComicLocation'], dfilename)
+                                        loc_path = os.path.join(tmpfc['comiclocation'], dfilename)
+
+                                    if rr_rename:
+                                        logger.fdebug('Now re-sequencing file to : ' + dfilename)
+                                        os.rename(os.path.join(tmpfc['comiclocation'],tmpfc['comicfilename']), loc_path)
 
                                     newVal = {"Status":   "Downloaded",
                                               "Location": loc_path}    #dfilename}
                                     ctrlVal = {"IssueArcID":  arc['IssueArcID']}
                                     myDB.upsert("readinglist", newVal, ctrlVal)
                                 fn+=1
-                    else:
-                        newVal = {"Status":   "Skipped"}
-                        ctrlVal = {"IssueArcID":  arc['IssueArcID']}
-                        myDB.upsert("readinglist", newVal, ctrlVal)
+                            continue
 
-            logger.fdebug("we matched on " + str(len(arc_match)) + " issues")
+                    newVal = {"Status":   "Skipped"}
+                    ctrlVal = {"IssueArcID":  arc['IssueArcID']}
+                    myDB.upsert("readinglist", newVal, ctrlVal)
+
+            logger.fdebug(str(len(arc_match)) + " issues currently exist on your watchlist that are within this arc. Analyzing...")
             for m_arc in arc_match:
                 #now we cycle through the issues looking for a match.
-                issue = myDB.selectone("SELECT * FROM issues where ComicID=? and Issue_Number=?", [m_arc['match_id'], m_arc['match_issue']]).fetchone()
+                #issue = myDB.selectone("SELECT * FROM issues where ComicID=? and Issue_Number=?", [m_arc['match_id'], m_arc['match_issue']]).fetchone()
+                issue = myDB.selectone("SELECT a.Issue_Number, a.Status, a.IssueID, a.ComicName, a.IssueDate, a.Location, b.readingorder FROM issues AS a INNER JOIN readinglist AS b ON a.comicid = b.comicid where a.comicid=? and a.issue_number=?", [m_arc['match_id'], m_arc['match_issue']]).fetchone()
+               
                 if issue is None: pass
                 else:
 
@@ -2994,13 +2948,33 @@ class WebInterface(object):
                                     logger.fdebug('Destination location set to  : ' + m_arc['destination_location'])
                                     logger.fdebug('Attempting to copy into StoryArc directory')
                                     #copy into StoryArc directory...
+
+                                 #need to make sure the file being copied over isn't already present in the directory either with a different filename, 
+                                 #or different reading order.
+                                    rr_rename = False
                                     if mylar.READ2FILENAME:
                                         readorder = helpers.renamefile_readingorder(m_arc['match_readingorder'])
-                                        dfilename = str(readorder) + "-" + issue['Location']
+                                        if all([m_arc['match_readingorder'] is not None, int(readorder) != int(m_arc['match_readingorder'])]):
+                                            logger.warn('reading order sequence has changed for this issue from ' + str(m_arc['match_reading_order']) + ' to ' + str(readorder))
+                                            rr_rename = True
+                                            dfilename = str(readorder) + '-' + issue['Location']
+                                        elif m_arc['match_readingorder'] is None:
+                                            dfilename = str(readorder) +  '-' + issue['Location']
+                                        else:
+                                            dfilename = str(readorder) + '-' + issue['Location']
                                     else:
                                         dfilename = issue['Location']
 
+                                        #dfilename = str(readorder) + "-" + issue['Location']
+                                    #else:
+                                        #dfilename = issue['Location']
+
                                     dstloc = os.path.join(m_arc['destination_location'], dfilename)
+
+                                    if rr_rename:
+                                        logger.fdebug('Now re-sequencing COPIED file to : ' + dfilename)
+                                        os.rename(issloc, dstloc)
+
 
                                     if not os.path.isfile(dstloc):
                                         logger.fdebug('Copying ' + issloc + ' to ' + dstloc)
@@ -3027,10 +3001,10 @@ class WebInterface(object):
                         else:
                             logger.fdebug("We don't have " + issue['ComicName'] + " :# " + issue['Issue_Number'])
                             ctrlVal = {"IssueArcID":  m_arc['match_issuearcid']}
-                            newVal = {"Status":  "Wanted",
+                            newVal = {"Status":  issue['Status'], #"Wanted",
                                       "IssueID": issue['IssueID']}
                             myDB.upsert("readinglist", newVal, ctrlVal)
-                            logger.info("Marked " + issue['ComicName'] + " :# " + issue['Issue_Number'] + " as Wanted.")
+                            logger.info("Marked " + issue['ComicName'] + " :# " + issue['Issue_Number'] + " as " + issue['Status'])
 
             return
 
@@ -5120,22 +5094,14 @@ class WebInterface(object):
         return
     orderThis.exposed = True
 
-    def torrentit(self, torrent_hash):
-        import test
-        #import lib.torrent.libs.rtorrent as rTorrent
-        from base64 import b16encode, b32decode
-        #torrent_hash  # Hash of the torrent
-        logger.fdebug("Working on torrent: " + torrent_hash)
-
-        if len(torrent_hash) == 32:
-           torrent_hash = b16encode(b32decode(torrent_hash))
-
-        if not len(torrent_hash) == 40:
-           logger.error("Torrent hash is missing, or an invalid hash value has been passed")
-           return
+    def torrentit(self, issueid=None, torrent_hash=None, download=False):
+        #make sure it's bool'd here.
+        if download == 'True':
+            download = True
         else:
-            rp = test.RTorrent()
-            torrent_info = rp.main(torrent_hash, check=True)
+            download = False
+
+        torrent_info = helpers.torrentinfo(issueid, torrent_hash, download)
 
         if torrent_info:
             torrent_name = torrent_info['name']
@@ -5160,15 +5126,20 @@ class WebInterface(object):
 
             ti = '<table><tr><td>'
             ti += '<center><b>' + torrent_name + '</b></center></br>'
-            ti += '<center>' + torrent_info['hash'] + '</center>'
+            if torrent_info['completed'] and download is True:
+                ti += '<br><center><tr><td>AUTO-SNATCH ENABLED: ' + torrent_info['snatch_status'] + '</center></td></tr>'
+            ti += '<tr><td><center>Hash: ' + torrent_info['hash'] + '</center></td></tr>'
+            ti += '<tr><td><center>Location: ' + os.path.join(torrent_info['folder'], torrent_name) + '</center></td></tr></br>'
             ti += '<tr><td><center>Filesize: ' + torrent_info['filesize'] + '</center></td></tr>'
             ti += '<tr><td><center>' + torrent_info['download'] + ' DOWN / ' + torrent_info['upload'] + ' UP</center></td></tr>'
             ti += '<tr><td><center>Ratio: ' + str(torrent_info['ratio']) + '</center></td></tr>'
             ti += '<tr><td><center>Seedtime: ' + torrent_info['seedtime'] + '</center></td</tr>'
             ti += '</table>'
+
         else:
             torrent_name = 'Not Found'
             ti = 'Torrent not found (' + str(torrent_hash)
+
         return ti
 
     torrentit.exposed = True
