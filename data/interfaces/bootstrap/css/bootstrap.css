@@ -89,6 +89,55 @@ body {
   word-wrap: break-word;
   /* Internet Explorer 5.5+ */
 }
+.single-cover .panel-body .issue-img {
+  width: 100%;
+  height: 0;
+  padding-top: 153.67%;
+  postion: relative;
+  background-position: 0 0;
+  background-image: url(../images/default-cover.png);
+  min-width: 273px;
+}
+.single-cover .panel-body .issue-img img {
+  height: 100%;
+  width: auto;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+.single-cover .panel-body .issue-img.slide-0 img {
+  left: 0px;
+}
+.single-cover .panel-body .issue-img.slide-1 img {
+  left: -600px;
+}
+.single-cover .panel-body .issue-img.slide-2 img {
+  left: -1200px;
+}
+.single-cover .panel-body .issue-img.slide-3 img {
+  left: -1800px;
+}
+.single-cover .panel-body .issue-img.slide-4 img {
+  left: -2400px;
+}
+.single-cover .panel-body .issue-img.slide-5 img {
+  left: -3000px;
+}
+.single-cover .panel-body .issue-img.slide-6 img {
+  left: -3600px;
+}
+.single-cover .panel-body .issue-img.slide-7 img {
+  left: -4200px;
+}
+.single-cover .panel-body .issue-img.slide-8 img {
+  left: -4800px;
+}
+.single-cover .panel-body .issue-img.slide-9 img {
+  left: -5400px;
+}
+.single-cover .panel-body .issue-img.slide-10 img {
+  left: -6000px;
+}
 .single-cover .panel-body .btn-group {
   margin-top: 10px;
 }

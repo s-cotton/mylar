@@ -233,9 +233,15 @@ class Ajax(object):
         return;
 
     def _coverComposition(self, **kwargs):
-        # TODO
-        helpers.IssueCovers(kwargs['comicID'])
-        self.data = self._success_with_message(**kwargs)
+        if kwargs['issueID'] is not None:
+            status = helpers.IssueCovers(kwargs['comicID'],kwargs['issueID'])
+        else:
+            status = helpers.IssueCovers(kwargs['comicID'])
+
+        if status:
+            self.data = self._success_with_message(**kwargs)
+        else:
+            self.data = self._error_with_message(**kwargs)
         return;
 
 

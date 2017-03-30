@@ -1,6 +1,305 @@
 var mylar = mylar || {};
 var screen = screen || {};
 
+
+mylar.views.comicdetails = Backbone.View.extend({
+	el: '.comicdetails',
+	collection: null,
+	gridBrowser: null,
+	coverBrowser: null,
+	tableBrowser: null,
+	pager: null,
+	selected: null,
+
+	context: "issues",
+	issue_actions: [
+		{ 
+			key   : 'markissues',  
+			label : 'Mark Selected',  
+			icon  : 'trash',
+			sub_actions: {
+
+			}
+		},		
+	],
+	comic_actions: [
+		{ 
+			key   : 'refresh',  
+			label : 'Refresh Comic',  
+			icon  : 'trash'    
+		},
+		{ 
+			key   : 'delete', 
+			label : 'Delete Comic', 
+			icon  : 'tags'     
+		},
+		{ 
+			key   : 'pause',   
+			label : 'Pause Comic',   
+			icon  : 'pause'    
+		},
+		{ 
+			key   : 'recheck', 
+			label : 'Recheck Files',  
+			icon  : 'eye-open' 
+		},
+		{ 
+			key   : 'rename',  
+			label : 'Reanem Files',  
+			icon  : 'play'     
+		},
+		{ 
+			key   : 'refresh', 
+			label : 'Refresh Comic', 
+			icon  : 'refresh'  
+		},
+		{ 
+			key   : 'resume',  
+			label : 'Resume Comic',  
+			icon  : 'play'     
+		},
+		
+	],
+	selectables: [
+		{ 
+			key    : 'wanted',   
+			label  : 'Wanted',   
+			icon   : 'time',         
+			target : 'Wanted'   
+		},
+		{ 
+			key    : 'archived',   
+			label  : 'Archived',   
+			icon   : 'time',         
+			target : 'Archived'   
+		},
+		{ 
+			key    : 'downloaded',   
+			label  : 'Downloaded',   
+			icon   : 'time',         
+			target : 'Downloaded'   
+		},
+		{ 
+			key    : 'skipped',   
+			label  : 'Skipped',   
+			icon   : 'time',         
+			target : 'Skipped'   
+		},
+		{ 
+			key    : 'ignored',   
+			label  : 'Ignored',   
+			icon   : 'time',         
+			target : 'ignored'   
+		},
+		{ 
+			key    : 'snatched',   
+			label  : 'Snatched',   
+			icon   : 'time',         
+			target : 'Snatched'   
+		},
+		{ 
+			key    : 'failed',   
+			label  : 'Failed',   
+			icon   : 'time',         
+			target : 'failed'   
+		}
+	],
+
+	views: [
+		{ 
+			key     : 'grid',    
+			label   : 'Grid', 	
+			icon    : 'th-large', 
+			default : true  
+		},
+		{ 
+			key     : 'list', 	  
+			label   : 'List', 	
+			icon    : 'list',     
+			default : false 
+		},
+		{ 
+			key     : 'covers',  
+			label   : 'Covers', 	
+			icon    : 'film',     
+			default : false 
+		}
+	],
+
+	sortables: [
+		{ 
+			key     : 'name',   
+			label   : 'Name',   
+			target  : 'IssueName', 
+			default : true  
+		},
+		{ 
+			key     : 'number',   
+			label   : 'Number',   
+			target  : 'IssueIntNumber',     
+			default : false 
+		},
+		{ 
+			key     : 'date', 
+			label   : 'Date', 
+			target  : 'Date',        
+			default : false 
+		},
+		{ 
+			key     : 'status', 
+			label   : 'Status', 
+			target  : 'status',    
+			default : false 
+		}
+	],
+	searchables: [
+		{ key: 'name', label: 'Name', target: 'ComicName', altName: [ 'ComicName', 'ComicSortName', 'Title' ] },
+		{ key: 'year', label: 'Year', target: 'ComicYear', altName: [ 'ComicYear', 'Started' ] },
+	],
+
+	initialize: function(){
+		this.collection = mylar.issues;
+		
+		this.pager = new mylar.views.mylarPagerAndFilter();
+		this.pager.setContext("issues");
+		this.pager.setActions( this.issue_actions );
+		this.pager.setSelectable( this.selectables );
+		this.pager.setViews( this.views );
+		this.pager.setSortable( this.sortables );
+		this.pager.setSearchable( this.searchables );
+		this.pager.render();
+
+		this.tableBrowser = new mylar.views.issueTableBrowser({actions: this.actions});
+		this.tableBrowser.setActions( this.actions );
+		this.tableBrowser.render();
+
+		this.gridBrowser = new mylar.views.issueGridBrowser({actions: this.actions});
+		this.gridBrowser.setActions( this.actions );
+		this.gridBrowser.render();
+		
+		this.coverBrowser = new mylar.views.issueCoverBrowser({actions: this.actions});
+		this.coverBrowser.setActions( this.actions );
+		this.coverBrowser.render();
+		
+
+		this.pager.setInitialLayout();
+
+		mylar.pubsub.on( "mark:selected", this.markSelected, this );
+		mylar.pubsub.on( "mark:single", this.markSingle, this );
+		mylar.pubsub.on( "pager:changeSelected", this.changeSelected, this );
+
+	},
+
+	markSelected: function( action ){
+		switch( action ){
+			case 'delete':  
+				this.markDelete( mylar.selectedIssues.pluck("IssueID") );  
+				break;
+			case 'metatag': 
+				this.markMetatag( mylar.selectedIssues.pluck("IssueID") ); 
+				break;
+			case 'pause':   
+				this.markPause( mylar.selectedIssues.pluck("IssueID") );   
+				break;
+			case 'recheck': 
+				this.markRecheck( mylar.selectedIssues.pluck("IssueID") ); 
+				break;
+			case 'refresh': 
+				this.markRefresh( mylar.selectedIssues.pluck("IssueID") ); 
+				break;
+			case 'resume':  
+				this.markResume([ model.attributes.IssueID ]);  
+				break;
+		}
+	},
+
+	markSingle: function( action, model ){
+		switch( action ){
+			case 'delete':  
+				this.markDelete([ model.attributes.IssueID ]);  
+				break;
+			case 'metatag': 
+				this.markMetatag([ model.attributes.IssueID ]); 
+				break;
+			case 'pause':   
+				this.markPause([ model.attributes.IssueID ]);   
+				break;
+			case 'recheck': 
+				this.markRecheck([ model.attributes.IssueID ]); 
+				break;
+			case 'refresh': 
+				this.markRefresh([ model.attributes.IssueID ]); 
+				break;
+			case 'resume':  
+				this.markResume([ model.attributes.IssueID ]);  
+				break;
+		}
+	},
+
+	markDelete:  function( ids ) {
+
+		console.log('Marking: Delete',ids);
+	},
+
+	markMetatag: function( ids ) {
+		console.log('Marking: Metatag',ids);
+	},
+
+	markPause:   function( ids ) {
+		console.log('Marking: Pause',ids);
+	},
+
+	markRecheck: function( ids ) {
+		console.log('Marking: Recheck',ids);
+	},
+
+	markRefresh: function( ids ) {
+		console.log('Marking: Refresh',ids);
+		var startMsg = mylar.notify.info( 'Initiating refresh of ' + ids.length + ' Comics' );
+		mylar.ajax({
+			cmd: 'refreshSeries',
+			IssueID: ids
+		}).fail(function(){
+			mylar.notify.error( 'Could not refresh Comics' );
+			startMsg.close();
+		}).done(function(){
+			mylar.notify.success( ids.length + ' Comics are being refreshed.' );
+			startMsg.close();
+		});
+		if( screen.comicdetails.debug ){
+			//doAjaxCall('refreshSeries?ComicID=' + screen.comicdetails.comicID, $(this), 'table' );	
+		}	
+	},
+
+	markResume:  function( ids ) {
+		console.log('Marking: Resume',ids);
+	},
+
+	changeSelected: function( dataObj ){
+		mylar.selectedIssues.clearSelected(false);
+		if( dataObj.selected.length == 1 && dataObj.selected[0] == 'all' ){
+			console.log('attempting all', this.tableBrowser.collection.fullCollection.length );
+			var relevantComics = this.tableBrowser.fullCollection;
+			mylar.selectedIssues.add(relevantComics,{silent:true});
+		} else {
+			for( var i in dataObj.selected ){
+				var relevantSelectable = _.find(this.selectables,function(selectable){ return selectable.key == dataObj.selected[i]; });
+				console.log(relevantSelectable);
+				var filterObj = { Status: relevantSelectable.target };
+				var relevantComics = this.tableBrowser.collection.fullCollection.filter(filterObj);
+				mylar.selectedIssues.add(relevantComics,{silent:true});
+			}	
+		}		
+		mylar.selectedIssues.broadcastSelection();
+	}
+	
+});
+
+$(document).ready(function(){
+	screen.comicdetails = new mylar.views.comicdetails();
+});
+/*
+
 screen.comicdetails = {
 
 	debug: true,
@@ -368,4 +667,4 @@ mylar.registerScreen( screen.comicdetails, [
 	'comicdetails'
 ], {
 	ajax: true
-});
+});*/

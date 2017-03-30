@@ -9,6 +9,40 @@
 	
 </%def>
 <%def name="body()">
+
+	<script type="text/javascript">
+        var initialData = initialData || {};
+	<%
+	import simplejson as json
+	%>
+	% if len(issues) > 0 :
+		<% json_output = json.dumps( [dict(ix) for ix in issues] ) %>
+		initialData.issues = ${json_output}
+	% endif
+	% if len(comic) > 0 :
+		<% comic_json_output = json.dumps( dict(comic) ); %>  
+        initialData.comics = [];
+        initialData.comics.push( ${comic_json_output} );
+    	
+    % endif
+    </script>
+    
+    <div class="container-fluid comicdetails">
+        <%doc><div class="row">
+            <div class="col-xs-12">
+                <h1>Manage Comics</h1>
+            </div>
+        </div></%doc>
+        
+        <div class="row">
+            <div class="comic-pager col-xs-12"></div>
+            <div class="grid-browser col-xs-12"></div>
+            <div class="table-browser col-xs-12"></div>
+            <div class="cover-browser col-xs-12"></div>
+            <div class="comic-pager col-xs-12"></div>
+        </div>
+    </div>
+
 	<%
 	publisher_image = ""
 	publisher_name = "" 
@@ -127,22 +161,7 @@
 		publisher_width="160"
 	endif
 	%>
-	<script type="text/javascript">
-        var initialData = initialData || {};
-	<%
-	import simplejson as json
-	%>
-	% if len(issues) > 0 :
-		<% json_output = json.dumps( [dict(ix) for ix in issues] ) %>
-		initialData.issues = ${json_output}
-	% endif
-	% if len(comic) > 0 :
-		<% comic_json_output = json.dumps( dict(comic) ); %>  
-        initialData.comics = [];
-        initialData.comics.push( ${comic_json_output} );
-    	
-    % endif
-    </script>
+	
 	<input type="hidden" name="ComicID" value="${comic['ComicID']}" />
 	<input type="hidden" name="ComicName" value="${comic['ComicName']}" />
 	<input type="hidden" name="ComicLocation" value="${comic['ComicLocation']}" />

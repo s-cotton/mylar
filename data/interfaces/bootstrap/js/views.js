@@ -2,7 +2,7 @@ var mylar = mylar || {};
 
 mylar.views = mylar.views || {};
 
-mylar.views.comicPagerAndFilter = Backbone.View.extend({
+mylar.views.mylarPagerAndFilter = Backbone.View.extend({
 	el: '.comic-pager',
 
 	template: Handlebars.compile( $('#comic-pager-and-filter').html() ),
@@ -291,11 +291,13 @@ mylar.views.comicPagerAndFilter = Backbone.View.extend({
 
 });
 
-mylar.views.comicBrowser = Backbone.View.extend({
+mylar.views.itemBrowser = Backbone.View.extend({
 	
 	collection: null,
 	layout: false,
 	covers: [],
+	initialPageableCollection: null,
+	initialRawCollection: null,
 
 	perPage: 16,
 	sortBy: "ComicSortName",
@@ -305,6 +307,16 @@ mylar.views.comicBrowser = Backbone.View.extend({
 	actions: [],
 	
 	initialize: function(){
+		if( this.context == "comics" ){ 
+			mylar.console.log('item browser context: ' + this.context );
+			this.initialPageableCollection = mylar.pageableCollections.Comics;
+			this.initialRawCollection = mylar.comics;
+		} else {
+			mylar.console.log('item browser context: ' + this.context );
+			this.initialPageableCollection = mylar.pageableCollections.Issues;
+			this.initialRawCollection = mylar.issues;
+		}
+
 		this.setCollection();
 		//this.render();
 
@@ -358,12 +370,13 @@ mylar.views.comicBrowser = Backbone.View.extend({
 	setCollection: function(){
 		var that = this;
 		if( this.searchValue.length ){
-			this.collection = new mylar.pageableCollections.Comics( mylar.comics.filterValues( this.searchValue.toLowerCase() ),{
+			if( this.context == "comics" )
+			this.collection = new this.initialPageableCollection( this.initialRawCollection.filterValues( this.searchValue.toLowerCase() ),{
 				mode: "client",
 				comparator: function (model) { return model.get( that.sortBy ).toLowerCase(); },
 			});
 		} else {
-			this.collection = new mylar.pageableCollections.Comics( initialData.comics,{
+			this.collection = new this.initialPageableCollection( this.initialRawCollection.models,{
 				mode: "client",
 				comparator: function (model) { return model.get( that.sortBy ).toLowerCase(); },
 			});
@@ -400,11 +413,230 @@ mylar.views.comicBrowser = Backbone.View.extend({
 	}
 });
 
-mylar.views.comicGridBrowser = mylar.views.comicBrowser.extend({
+mylar.views.comicBrowser = mylar.views.itemBrowser.extend({
+	context: "comics",
+	sortBy: "ComicSortName"
+});
+
+mylar.views.issueBrowser = mylar.views.itemBrowser.extend({
+	context: "issues",
+	sortBy: "IssueName"
+});
+
+mylar.views.itemFlowCover = Backbone.View.extend({
+	tagName: 'li',
+	actions: [],
+	events: {
+		'click .checked-comic' : 'checkComic',
+		'click .mark-comic'	   : 'markComic',
+	},
+	initialize: function(){
+		//this.render()
+		mylar.pubsub.on('selection:update', this.maybeRender, this)
+		this.on('rendered', this.postRendered, this);
+	},
+	setActions: function(actions){
+		this.actions = actions;
+	},
+	maybeRender: function( models ){
+		this.render();
+	},
+	render: function(){
+		var templateData = _.extend({},this.model.toJSON(), {
+			'selected': mylar.selectedComics.isSelected( this.model ),
+			actions: this.actions
+		});
+		//console.log(templateData);
+		this.$el.html( this.template( templateData ) );
+		this.$el.find('.panel-title a').css('width', this.$el.find('.panel-body > img').width() )
+		this.trigger('rendered');
+		return this.$el;
+	},
+	checkComic: function(){
+		if( this.$el.find('.checked-comic .glyphicon').hasClass('glyphicon-unchecked') ){
+			this.$el.find('.checked-comic .glyphicon').removeClass('glyphicon-unchecked')
+			this.$el.find('.checked-comic .glyphicon').addClass('glyphicon-check')
+			mylar.pubsub.trigger("selection:comic:add", this.model);
+		} else {
+			this.$el.find('.checked-comic .glyphicon').addClass('glyphicon-unchecked')
+			this.$el.find('.checked-comic .glyphicon').removeClass('glyphicon-check')
+			mylar.pubsub.trigger("selection:comic:remove", this.model);
+		}
+	},
+	markComic: function(e){
+		mylar.pubsub.trigger("mark:single", $(e.currentTarget).data('action'), this.model);
+	},
+	postRendered: function(){}
+});
+
+mylar.views.comicFlowCover = mylar.views.itemFlowCover.extend({
+	model: mylar.models.comic,
+	template: Handlebars.compile( $('#cover-gallery-single-comic').html() ),
+});
+mylar.views.issueFlowCover = mylar.views.itemFlowCover.extend({
+	model: mylar.models.issue,
+	template: Handlebars.compile( $('#cover-gallery-single-issue').html() ),
+	postRendered: function(){
+		mylar.console.log(this.model.toJSON());
+	}
+});
+
+mylar.views.itemCover = Backbone.View.extend({
+	tagName: 'div',
+	className: 'col-xs-6 col-sm-4 col-md-3 col-lg-2 col-xl-1 cover',
+	actions: [],
+	rotateInterval: null,
+	events: {
+		'click .checked-comic' : 'checkComic',
+		'click .mark-comic'	   : 'markComic',
+		//'error .issue-img'
+	},
+	initialize: function(){
+		//this.render()
+		mylar.pubsub.on('selection:update', this.maybeRender, this)
+		this.on('rendered', this.postRendered, this);
+	},
+	setActions: function(actions){
+		this.actions = actions;
+	},
+	maybeRender: function( models ){
+		this.render();
+	},
+	render: function(){
+		var templateData = _.extend(this.model.toJSON(), {
+			'selected': mylar.selectedComics.isSelected( this.model ),
+			actions: this.actions
+		});
+		//console.log(templateData);
+		this.$el.html( this.template( templateData ) );
+		this.$el.find('.panel-title a').css('width', this.$el.find('.panel-body > img').width() )
+		this.trigger('rendered');
+		return this.$el;
+		
+	},
+	checkComic: function(){
+		if( this.$el.find('.checked-comic .glyphicon').hasClass('glyphicon-unchecked') ){
+			this.$el.find('.checked-comic .glyphicon').removeClass('glyphicon-unchecked')
+			this.$el.find('.checked-comic .glyphicon').addClass('glyphicon-check')
+			mylar.pubsub.trigger("selection:comic:add", this.model);
+		} else {
+			this.$el.find('.checked-comic .glyphicon').addClass('glyphicon-unchecked')
+			this.$el.find('.checked-comic .glyphicon').removeClass('glyphicon-check')
+			mylar.pubsub.trigger("selection:comic:remove", this.model);
+		}
+	},
+	markComic: function(e){
+		mylar.pubsub.trigger("mark:single", $(e.currentTarget).data('action'), this.model);
+	},
+	postRendered: function(){
+		if( this.context == "issues" ){
+
+		}
+	}
+});
+
+mylar.views.comicCover = mylar.views.itemCover.extend({
+	model: mylar.models.comic,
+	template: Handlebars.compile( $('#cover-gallery-single-comic').html() ),
+});
+mylar.views.issueCover = mylar.views.itemCover.extend({
+	model: mylar.models.issue,
+	template: Handlebars.compile( $('#cover-gallery-single-issue').html() ),
+	postRendered: function(){
+		var that = this;
+		this.$el.find('.issue-img img').on('error',function(e){
+			$(this).attr('src', that.model.get("ImageURL_ALT"));
+			if( that.model.get("isDownloaded") ){
+				mylar.pubsub.on('issuecover:created', function(data){
+					mylar.console.log('Issue Cover Created Recognized', data);
+					if( data.IssueID == that.model.get("IssueID") ){
+						that.render();
+					}
+				});
+				that.model.generateCover();	
+			}			
+		});
+
+		this.$el.find('.issue-img img').on('load',function(e){
+			if( $(e.currentTarget).attr('src').indexOf('cache/issue-') >= 0 ){
+				$(this).data('slide',0);
+				var total_slides = $(this)[0].naturalWidth / 600;
+				$(this).data('totalSlides', total_slides);
+
+				that.rotateInterval = setInterval(function(){
+					var imgEl = that.$el.find('.issue-img img');
+					if( parseInt($(imgEl).data('slide')) == parseInt($(imgEl).data('totalSlides')) - 1 ){
+						$(imgEl).data('slide', 0);
+					} else {
+						$(imgEl).data('slide', $(imgEl).data('slide') + 1 );
+					}
+					var newLeft = -1 * $(imgEl).parent().width() * $(imgEl).data('slide');
+					$(imgEl).animate({
+						'left': newLeft + 'px'
+					},250);
+				},5000);
+			}			
+		});
+		
+	}
+});
+
+mylar.views.itemRow = Backbone.View.extend({
+	tagName: 'tr',
+	actions: [],
+	events: {
+		'click .checked-comic' : 'checkComic',
+		'click .mark-comic'	   : 'markComic',
+	},
+	initialize: function(){
+		//this.render()
+		mylar.pubsub.on('selection:update', this.maybeRender, this)
+		this.on('rendered', this.postRendered, this);
+	},
+	setActions: function(actions){
+		this.actions = actions;
+	},
+	maybeRender: function( models ){
+		this.render();
+	},
+	render: function(){
+		var templateData = _.extend(this.model.toJSON(), {
+			'selected': mylar.selectedComics.isSelected( this.model ),
+			actions: this.actions
+		});
+		//console.log(templateData);
+		this.$el.html( this.template( templateData ) );
+		this.trigger('rendered');
+		return this.$el;
+	},
+	checkComic: function(e){
+		if( $(e.target).is(':checked') ){
+			mylar.pubsub.trigger("selection:comic:add", this.model);
+		} else {
+			mylar.pubsub.trigger("selection:comic:remove", this.model);
+		}
+	},
+	markComic: function(e){
+		mylar.pubsub.trigger("mark:single", $(e.currentTarget).data('action'), this.model);
+	},
+	postRendered: function(){}
+});
+
+mylar.views.comicRow = mylar.views.itemRow.extend({
+	model: mylar.models.comic,
+	template: Handlebars.compile( $('#comics-table-single-row').html() ),
+});
+mylar.views.issueRow = mylar.views.itemRow.extend({
+	model: mylar.models.issue,
+	template: Handlebars.compile( $('#issue-table-single-row').html() ),
+});
+
+mylar.views.itemGridBrowser = mylar.views.itemBrowser.extend({
 	el: '.grid-browser',
 	template: Handlebars.compile( $('#cover-grid-container').html() ),
 	
 	layout: 'grid',
+	
 
 	renderItems: function(){
 		this.$el.find('.covers').empty();
@@ -417,7 +649,7 @@ mylar.views.comicGridBrowser = mylar.views.comicBrowser.extend({
 		this.collection.getPage( this.currentPage );
 
 		for( var single_model in this.collection.models ){
-			var thisCover = new mylar.views.comicCover({ model: this.collection.models[ single_model ], actions: this.actions });
+			var thisCover = new this.itemView({ model: this.collection.models[ single_model ], actions: this.actions });
 			thisCover.setActions( this.actions );
 			this.$el.find('.covers').append( thisCover.render() );
 		}
@@ -442,7 +674,18 @@ mylar.views.comicGridBrowser = mylar.views.comicBrowser.extend({
 	}
 });
 
-mylar.views.comicCoverBrowser = mylar.views.comicBrowser.extend({
+mylar.views.comicGridBrowser = mylar.views.itemGridBrowser.extend({
+	context: "comics",
+	itemView: mylar.views.comicCover,
+	sortBy: "ComicSortName"
+});
+mylar.views.issueGridBrowser = mylar.views.itemGridBrowser.extend({
+	context: "issues",
+	itemView: mylar.views.issueCover,
+	sortBy: "IssueName"
+});
+
+mylar.views.itemCoverBrowser = mylar.views.itemBrowser.extend({
 	el: '.cover-browser',
 	template: Handlebars.compile( $('#cover-flow-container').html() ),
 	
@@ -462,7 +705,7 @@ mylar.views.comicCoverBrowser = mylar.views.comicBrowser.extend({
 		this.collection.getPage( this.currentPage );
 
 		for( var single_model in this.collection.models ){
-			var thisCover = new mylar.views.comicFlowCover({ model: this.collection.models[ single_model ], actions: this.actions });
+			var thisCover = new this.itemView({ model: this.collection.models[ single_model ], actions: this.actions });
 			thisCover.setActions( this.actions );
 			this.$el.find('.cover-flow > ul').append( thisCover.render() );
 		}
@@ -485,7 +728,18 @@ mylar.views.comicCoverBrowser = mylar.views.comicBrowser.extend({
 	}
 });
 
-mylar.views.comicTableBrowser = mylar.views.comicBrowser.extend({
+mylar.views.comicCoverBrowser = mylar.views.itemCoverBrowser.extend({
+	context: "comics",
+	itemView: mylar.views.comicFlowCover,
+	sortBy: "ComicSortName"
+});
+mylar.views.issueCoverBrowser = mylar.views.itemCoverBrowser.extend({
+	context: "issues",
+	itemView: mylar.views.issueFlowCover,
+	sortBy: "IssueName"
+});
+
+mylar.views.itemTableBrowser = mylar.views.itemBrowser.extend({
 	el: '.table-browser',
 	template: Handlebars.compile( $('#table-browser-container').html() ),
 
@@ -503,7 +757,7 @@ mylar.views.comicTableBrowser = mylar.views.comicBrowser.extend({
 		this.collection.getPage( this.currentPage );
 
 		for( var single_model in this.collection.models ){
-			var thisRow = new mylar.views.comicRow({ model: this.collection.models[ single_model ], actions: this.actions });
+			var thisRow = new this.itemView({ model: this.collection.models[ single_model ], actions: this.actions });
 			thisRow.setActions( this.actions );
 			this.$el.find('tbody').append( thisRow.render() );
 		}
@@ -520,133 +774,13 @@ mylar.views.comicTableBrowser = mylar.views.comicBrowser.extend({
 
 });
 
-mylar.views.comicFlowCover = Backbone.View.extend({
-	tagName: 'li',
-	model: mylar.models.comic,
-	template: Handlebars.compile( $('#cover-gallery-single-cover').html() ),
-	actions: [],
-	events: {
-		'click .checked-comic' : 'checkComic',
-		'click .mark-comic'	   : 'markComic',
-	},
-	initialize: function(){
-		//this.render()
-		mylar.pubsub.on('selection:update', this.maybeRender, this)
-	},
-	setActions: function(actions){
-		this.actions = actions;
-	},
-	maybeRender: function( models ){
-		this.render();
-	},
-	render: function(){
-		var templateData = _.extend(this.model.toJSON(), {
-			'selected': mylar.selectedComics.isSelected( this.model ),
-			actions: this.actions
-		});
-		//console.log(templateData);
-		this.$el.html( this.template( templateData ) );
-		this.$el.find('.panel-title a').css('width', this.$el.find('.panel-body > img').width() )
-		return this.$el;
-	},
-	checkComic: function(){
-		if( this.$el.find('.checked-comic .glyphicon').hasClass('glyphicon-unchecked') ){
-			this.$el.find('.checked-comic .glyphicon').removeClass('glyphicon-unchecked')
-			this.$el.find('.checked-comic .glyphicon').addClass('glyphicon-check')
-			mylar.pubsub.trigger("selection:comic:add", this.model);
-		} else {
-			this.$el.find('.checked-comic .glyphicon').addClass('glyphicon-unchecked')
-			this.$el.find('.checked-comic .glyphicon').removeClass('glyphicon-check')
-			mylar.pubsub.trigger("selection:comic:remove", this.model);
-		}
-	},
-	markComic: function(e){
-		mylar.pubsub.trigger("mark:single", $(e.currentTarget).data('action'), this.model);
-	}
+mylar.views.comicTableBrowser = mylar.views.itemTableBrowser.extend({
+	context: "comics",
+	itemView: mylar.views.comicRow,
+	sortBy: "ComicSortName"
 });
-
-mylar.views.comicCover = Backbone.View.extend({
-	tagName: 'div',
-	className: 'col-xs-6 col-sm-4 col-md-3 col-lg-2 col-xl-1 cover',
-	model: mylar.models.comic,
-	template: Handlebars.compile( $('#cover-gallery-single-cover').html() ),
-	actions: [],
-	events: {
-		'click .checked-comic' : 'checkComic',
-		'click .mark-comic'	   : 'markComic',
-	},
-	initialize: function(){
-		//this.render()
-		mylar.pubsub.on('selection:update', this.maybeRender, this)
-	},
-	setActions: function(actions){
-		this.actions = actions;
-	},
-	maybeRender: function( models ){
-		this.render();
-	},
-	render: function(){
-		var templateData = _.extend(this.model.toJSON(), {
-			'selected': mylar.selectedComics.isSelected( this.model ),
-			actions: this.actions
-		});
-		//console.log(templateData);
-		this.$el.html( this.template( templateData ) );
-		this.$el.find('.panel-title a').css('width', this.$el.find('.panel-body > img').width() )
-		return this.$el;
-	},
-	checkComic: function(){
-		if( this.$el.find('.checked-comic .glyphicon').hasClass('glyphicon-unchecked') ){
-			this.$el.find('.checked-comic .glyphicon').removeClass('glyphicon-unchecked')
-			this.$el.find('.checked-comic .glyphicon').addClass('glyphicon-check')
-			mylar.pubsub.trigger("selection:comic:add", this.model);
-		} else {
-			this.$el.find('.checked-comic .glyphicon').addClass('glyphicon-unchecked')
-			this.$el.find('.checked-comic .glyphicon').removeClass('glyphicon-check')
-			mylar.pubsub.trigger("selection:comic:remove", this.model);
-		}
-	},
-	markComic: function(e){
-		mylar.pubsub.trigger("mark:single", $(e.currentTarget).data('action'), this.model);
-	}
+mylar.views.issueTableBrowser = mylar.views.itemTableBrowser.extend({
+	context: "issues",
+	itemView: mylar.views.issueRow,
+	sortBy: "IssueName"
 });
-
-mylar.views.comicRow = Backbone.View.extend({
-	tagName: 'tr',
-	model: mylar.models.comic,
-	template: Handlebars.compile( $('#comics-table-single-row').html() ),
-	actions: [],
-	events: {
-		'click .checked-comic' : 'checkComic',
-		'click .mark-comic'	   : 'markComic',
-	},
-	initialize: function(){
-		//this.render()
-		mylar.pubsub.on('selection:update', this.maybeRender, this)
-	},
-	setActions: function(actions){
-		this.actions = actions;
-	},
-	maybeRender: function( models ){
-		this.render();
-	},
-	render: function(){
-		var templateData = _.extend(this.model.toJSON(), {
-			'selected': mylar.selectedComics.isSelected( this.model ),
-			actions: this.actions
-		});
-		//console.log(templateData);
-		this.$el.html( this.template( templateData ) );
-		return this.$el;
-	},
-	checkComic: function(e){
-		if( $(e.target).is(':checked') ){
-			mylar.pubsub.trigger("selection:comic:add", this.model);
-		} else {
-			mylar.pubsub.trigger("selection:comic:remove", this.model);
-		}
-	},
-	markComic: function(e){
-		mylar.pubsub.trigger("mark:single", $(e.currentTarget).data('action'), this.model);
-	}
-})

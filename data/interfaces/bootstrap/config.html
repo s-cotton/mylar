@@ -1353,7 +1353,21 @@
                       </label>
                       <span class="help-block">(will work regardless if Rename Files is enabled)</span>
                     </div>
-                      
+                    <div class="checkbox">
+                      <label>
+                        <input type="checkbox" name="enable_rar" value="1" ${config['enable_rar']}>
+                        Enable RAR file processing
+                      </label>
+                      <span class="help-block">(Requires the installation of a <a href="https://pypi.python.org/pypi/rarfile" target="_blank">python rar library</a>)</span>
+                    </div>
+                    <div class="checkbox">
+                      <label>
+                        <input type="checkbox" name="enable_cover_composition" value="1" ${config['enable_cover_composition']} />
+                        Enable Issue Cover Coposition
+                      </label>
+                      <span class="help-block">(Requires the installation of a <a href="https://pypi.python.org/pypi/Pillow" target="_blank">python pillow library</a>)</span>
+                    </div>
+                  
                   </div>
                   <div class="col-xs-12 col-sm-12 col-md-6">
                     

@@ -21,6 +21,12 @@ mylar.issues = new mylar.collections.Issues();
 if( initialData.hasOwnProperty( 'issues' ) ){
 	mylar.issues.reset( initialData.issues );
 }
+mylar.pageableCollections.Issues = Backbone.PageableCollection.extend({
+	model: mylar.models.issue,
+	state: {
+		sortKey: "IssueName"
+	}
+});
 
 mylar.collections.selectedComics = Backbone.Collection.extend({
 	model: mylar.models.comic,

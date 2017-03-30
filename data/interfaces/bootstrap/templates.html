@@ -133,7 +133,7 @@
 	</div>
 </script>
 
-<script type="text/x-handlebars-template" id="cover-gallery-single-cover">
+<script type="text/x-handlebars-template" id="cover-gallery-single-comic">
 	<div class="panel panel-default single-cover">
 		<div class="panel-heading">
 			<h3 class="panel-title">
@@ -180,6 +180,77 @@
 						<dd>#{{LatestIssue}} ({{LatestDate}})</dd>
 					</dl>
 				</div>	
+			</div>
+			{{#if actions}}
+			<div class="text-center">
+				<div class="btn-group" role="group">
+					{{#each actions}}
+						<a role="button" class="mark-comic btn btn-default btn-xs" data-action="{{key}}" title="{{label}}">
+							{{#if icon}}<span class="glyphicon glyphicon-{{icon}}"></span>&nbsp;{{/if}}
+						</a>
+	                {{/each}}                
+	            </div>
+			</div>
+			{{/if}}
+		</div>
+	</div>
+</script>
+
+<script type="text/x-handlebars-template" id="cover-gallery-single-issue">
+	<div class="panel panel-default single-cover">
+		<div class="panel-heading">
+			<h3 class="panel-title">
+				<span class="pull-left checked-comic">
+					{{#if selected}}
+					<span class="glyphicon glyphicon-check"></span>&nbsp;
+					{{else}}
+					<span class="glyphicon glyphicon-unchecked"></span>&nbsp;
+					{{/if}}
+				</span>
+				<span class="pull-right">
+					<span class="badge" title="Issue Date">{{IssueDateFormatted}}</span>
+
+					{{#if isSkipped}}
+					<span class="badge" title="Skipped"><span class="glyphicon glyphicon-eye-close"></span></span>
+					{{/if}}
+					{{#if isWanted}}
+					<span class="badge" title="Wanted"><span class="glyphicon glyphicon-search"></span></span>
+					{{/if}}
+					{{#if isSnatched}}
+					<span class="badge" title="Snatched"><span class="glyphicon glyphicon-download"></span></span>
+					{{/if}}
+					{{#if isDownloaded}}
+					<span class="badge" title="Downloaded"><span class="glyphicon glyphicon-ok"></span></span>
+					{{/if}}
+					{{#if isArchived}}
+					<span class="badge" title="Archived"><span class="glyphicon glyphicon-cd"></span></span>
+					{{/if}}
+					{{#if isIgnored}}
+					<span class="badge" title="Ignored"><span class="glyphicon glyphicon-erase"></span></span>
+					{{/if}}
+					{{#if isFailed}}
+					<span class="badge" title="Failed"><span class="glyphicon glyphicon-alert"></span></span>
+					{{/if}}
+				</span>
+				<span class="clearfix"></span>
+			</h3>
+		</div>
+		<div class="panel-body">
+			<h4><a href="/issueDetails?IssueID={{IssueID}}">{{IssueName}}</a></h4>
+			<div class="img-block">
+				<div class="issue-img">
+					<img src="cache/issue-{{IssueID}}.jpg" alt="{{ComicName}}" />	
+				</div>
+				<!-- <div class="overlay">
+					<dl>
+						<dt>Publisher</dt>
+						<dd>{{ComicPublisher}}</dd>
+						<dt>Recent Status</dt>
+						<dd>{{recentstatus}}</dd>
+						<dt>Latest Issue</dt>
+						<dd>#{{LatestIssue}} ({{LatestDate}})</dd>
+					</dl>
+				</div>-->
 			</div>
 			{{#if actions}}
 			<div class="text-center">
@@ -268,4 +339,38 @@
         <td id="lastupdated">
             {{DateAdded}}
         </td>
+</script>
+
+<script type="text/x-handlebars-template" id="issue-table-single-row">
+		<td id="select">
+			<input type="checkbox" name="{{IssueID}}" value="{{IssueID}}" class="checkbox checked-comic" {{#if selected}}checked="checked"{{/if}} />
+		</td>
+		<td id="issuenumber">
+			{{Issue_Number}}
+		</td>
+		<td id="issuename">
+			{{IssueName}}
+		</td>
+		<td class="edit" title="Publication Date (click to edit)" id="{{ComicID}}.{{IssueID}}">
+			{{IssueDate}}
+		</td>
+		<td id="status" data-status="{{Status}}">
+			{{Status}}
+			{{#if isDownloadedOrArcived}}
+				{{ReadableComicSize}}
+			{{/if}}
+		</td>
+		<td id="options">
+			{{#if actions}}
+			<div class="text-center">
+				<div class="btn-group" role="group">
+					{{#each actions}}
+						<a role="button" class="mark-comic btn btn-default btn-xs" data-action="{{key}}" title="{{label}}">
+							{{#if icon}}<span class="glyphicon glyphicon-{{icon}}"></span>&nbsp;{{/if}}
+						</a>
+	                {{/each}}                
+	            </div>
+			</div>
+			{{/if}}
+		</td>
 </script>

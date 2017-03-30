@@ -131,7 +131,7 @@ mylar.views.managecomics = Backbone.View.extend({
 	initialize: function(){
 		this.collection = mylar.comics;
 		
-		this.pager = new mylar.views.comicPagerAndFilter();
+		this.pager = new mylar.views.mylarPagerAndFilter();
 		this.pager.setContext("comics");
 		this.pager.setActions( this.actions );
 		this.pager.setSelectable( this.selectables );
