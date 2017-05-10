@@ -422,7 +422,8 @@ class WebInterface(object):
                 iss_arcids = []
                 for issarc in arc_chk:
                     iss_arcids.append({"IssueArcID":  issarc['IssueArcID'],
-                                       "IssueID":     issarc['IssueID']})
+                                       "IssueID":     issarc['IssueID'],
+                                       "Manual":      issarc['Manual']})
                 arcinfo = mb.storyarcinfo(cvarcid)
                 if len(arcinfo) > 1:
                     arclist = arcinfo['arclist']
@@ -461,17 +462,34 @@ class WebInterface(object):
                 issname = arcval['Issue_Name']
                 issid = str(arcval['IssueID'])
                 comicid = str(arcval['ComicID'])
-                if comicid not in cidlist:
-                    if n == 0:
-                        cidlist += str(comicid)
-                    else:
-                        cidlist += '|' + str(comicid)
+                #--- this needs to get changed so comicid within a comicid doesn't exist (ie. 3092 is IN 33092)
+                cid_count = cidlist.count(comicid) +1
+                a_end = 0
+                i = 0
+                while i < cid_count:
+                    a = cidlist.find(comicid, a_end)
+                    a_end = cidlist.find('|',a)
+                    if a_end == -1: a_end = len(cidlist)
+                    a_length = cidlist[a:a_end-1]
+
+                    if a == -1 and len(a_length) != len(comicid):
+                        if n == 0:
+                            cidlist += str(comicid)
+                        else:
+                            cidlist += '|' + str(comicid)
+                        break
+                    i+=1
+
                 #don't recreate the st_issueid if it's a refresh and the issueid already exists (will create duplicates otherwise)
                 st_issueid = None
+                manual_mod = None
                 if arcrefresh:
                     for aid in iss_arcids:
                         if aid['IssueID'] == issid:
                             st_issueid = aid['IssueArcID']
+                            manual_mod = aid['Manual']
+                            break
+
                 if st_issueid is None:
                     st_issueid = str(storyarcid) + "_" + str(random.randint(1000,9999))
                 issnum = arcval['Issue_Number']
@@ -506,9 +524,9 @@ class WebInterface(object):
                                   "IssueDate":          issdate,
                                   "ReleaseDate":        storedate,
                                   "ReadingOrder":       readingorder, #n +1,
-                                  "Int_IssueNumber":    int_issnum})
+                                  "Int_IssueNumber":    int_issnum,
+                                  "Manual":             manual_mod})
                 n+=1
-
             comicid_results = mylar.cv.getComic(comicid=None, type='comicyears', comicidlist=cidlist)
             logger.fdebug(module + ' Initiating issue updating - just the info')
 
@@ -550,11 +568,10 @@ class WebInterface(object):
                            "SeriesYear":        seriesYear,
                            "IssuePublisher":    issuePublisher,
                            "CV_ArcID":          arcid,
-                           "Int_IssueNumber":   AD['Int_IssueNumber']}
+                           "Int_IssueNumber":   AD['Int_IssueNumber'],
+                           "Manual":            AD['Manual']}
 
                 myDB.upsert("readinglist", newVals, newCtrl)
-
-                #logger.info(newVals)
 
         #run the Search for Watchlist matches now.
         logger.fdebug(module + ' Now searching your watchlist for matches belonging to this story arc.')
@@ -1217,19 +1234,44 @@ class WebInterface(object):
                    logger.error("Unable to send torrent - check logs and settings.")
                    continue
                 else:
-                   logger.info('Successfully retried issue.')
-                   break
+                    if mylar.ENABLE_SNATCH_SCRIPT:
+                        #packs not supported on retry atm - Volume and Issuedate also not included due to limitations...
+                        
+                        snatch_vars = {'comicinfo':       {'comicname':        ComicName,
+                                                           'issuenumber':      IssueNumber,
+                                                           'seriesyear':       ComicYear,
+                                                           'comicid':          ComicID,
+                                                           'issueid':          IssueID},
+                                       'pack':             False,
+                                       'pack_numbers':     None,
+                                       'pack_issuelist':   None,
+                                       'provider':         fullprov,
+                                       'method':           'torrent',
+                                       'clientmode':       rcheck['clientmode'],
+                                       'torrentinfo':      rcheck}
+
+                        snatchitup = helpers.script_env('on-snatch',snatch_vars)
+                        if snatchitup is True:
+                            logger.info('Successfully submitted on-grab script as requested.')
+                        else:
+                            logger.info('Could not Successfully submit on-grab script as requested. Please check logs...')
+
+                logger.info('Successfully retried issue.')
+                break
             else:
-                annualize = myDB.selectone('SELECT * FROM annuals WHERE IssueID=?', [IssueID]).fetchone()
-                if annualize is None:
-                    modcomicname = ComicName
+                ckthis = myDB.selectone('SELECT a.ComicID, a.ComicName, a.ComicVersion, a.ComicYear, b.IssueID, b.IssueNumber, b.IssueDate FROM comics as a INNER JOIN annuals as b ON a.ComicID = b.ComicID WHERE IssueID=?', [IssueID]).fetchone()
+                if ckthis is None:
+                    ckthis = myDB.selectone('SELECT a.ComicID, a.ComicName, a.Volume, a.ComicYear, b.IssueID, b.IssueNumber, b.IssueDate FROM comics as a INNER JOIN issues as b ON a.ComicID = b.ComicID WHERE IssueID=?', [IssueID]).fetchone()
+                    modcomicname = chkthis['ComicName']
                 else:
-                    modcomicname = ComicName + ' Annual'
+                    modcomicname = chkthis['ComicName'] + ' Annual'
 
                 comicinfo = []
-                comicinfo.append({"ComicName":     ComicName,
-                                  "IssueNumber":   IssueNumber,
-                                  "comyear":       ComicYear,
+                comicinfo.append({"ComicName":     chkthis['ComicName'],
+                                  "ComicVolume":   chkthis['ComicVersion'],
+                                  "IssueNumber":   chkthis['IssueNumber'],
+                                  "comyear":       chkthis['ComicYear'],
+                                  "IssueDate":     chkthis['IssueDate'],
                                   "modcomicname":  modcomicname})
 
                 newznabinfo = None
@@ -1342,7 +1384,7 @@ class WebInterface(object):
             newStatus = {"Status": "Wanted"}
             myDB.upsert("readinglist", newStatus, controlValueDict)
             foundcom, prov = search.search_init(ComicName=ComicName, IssueNumber=ComicIssue, ComicYear=ComicYear, SeriesYear=None, Publisher=Publisher, IssueDate=IssueDate, StoreDate=StoreDate, IssueID=None, AlternateSearch=None, UseFuzzy=None, ComicVersion=dateload['Volume'], SARC=SARC, IssueArcID=IssueArcID)
-            if foundcom  == "yes":
+            if foundcom['status'] is True:
                 logger.info(u"Downloaded " + ComicName + " #" + ComicIssue + " (" + str(ComicYear) + ")")
                 controlValueDict = {"IssueArcID": IssueArcID}
                 newStatus = {"Status": "Snatched"}
@@ -1362,7 +1404,7 @@ class WebInterface(object):
             if Publisher == 'COMICS': Publisher = None
             logger.info(u"Marking " + ComicName + " " + ComicIssue + " as wanted...")
             foundcom, prov = search.search_init(ComicName=ComicName, IssueNumber=ComicIssue, ComicYear=ComicYear, SeriesYear=None, Publisher=Publisher, IssueDate=IssueDate, StoreDate=IssueDate, IssueID=None, AlternateSearch=None, UseFuzzy=None, ComicVersion=None, allow_packs=False)
-            if foundcom  == "yes":
+            if foundcom['status'] is True:
                 logger.info(u"Downloaded " + ComicName + " " + ComicIssue)
             raise cherrypy.HTTPRedirect("pullist")
             #return
@@ -1422,11 +1464,11 @@ class WebInterface(object):
         #UseAFuzzy = miy['UseFuzzy']
         #ComicVersion = miy['ComicVersion']
         foundcom, prov = search.search_init(ComicName, ComicIssue, ComicYear, SeriesYear, Publisher, issues['IssueDate'], storedate, IssueID, AlternateSearch, UseAFuzzy, ComicVersion, mode=mode, ComicID=ComicID, manualsearch=manualsearch, filesafe=ComicName_Filesafe, allow_packs=AllowPacks)
-        if foundcom  == "yes":
+        if foundcom['status'] is True:
             # file check to see if issue exists and update 'have' count
             if IssueID is not None:
                 logger.info("passing to updater.")
-                return updater.foundsearch(ComicID, IssueID, mode=mode, provider=prov)
+                return updater.foundsearch(ComicID, IssueID, mode=mode, provider=prov, hash=foundcom['info']['t_hash'])
         if manualsearch:
             # if it's a manual search, return to null here so the thread will die and not cause http redirect errors.
             return
@@ -2081,7 +2123,7 @@ class WebInterface(object):
                                 annualize = 'yes'
                             else:
                                 annualize = None
-                            renameiss = helpers.rename_param(comicid, comicname, issue['Issue_Number'], filename, comicyear=None, issueid=None, annualize=annualize)
+                            renameiss = helpers.rename_param(comicid, comicname, issue['Issue_Number'], filename, comicyear=None, issueid=issue['IssueID'], annualize=annualize)
                             nfilename = renameiss['nfilename']
                             srciss = os.path.join(comicdir, filename)
                             if filename != nfilename:
@@ -2381,7 +2423,7 @@ class WebInterface(object):
         arclist = []
         alist = myDB.select("SELECT * from readinglist WHERE ComicName is not Null group by StoryArcID") #COLLATE NOCASE")
         for al in alist:
-            totalissues = myDB.select("SELECT COUNT(*) as count from readinglist WHERE StoryARcID=?", [al['StoryArcID']])
+            totalissues = myDB.select("SELECT COUNT(*) as count from readinglist WHERE StoryARcID=? AND NOT Manual is 'deleted'", [al['StoryArcID']])
 
             havecnt = myDB.select("SELECT COUNT(*) as count FROM readinglist WHERE StoryArcID=? AND (Status='Downloaded' or Status='Archived')", [al['StoryArcID']])
             havearc = havecnt[0][0]
@@ -2411,12 +2453,14 @@ class WebInterface(object):
         return serve_template(templatename="storyarc.html", title="Story Arcs", arclist=arclist, delete_type=0)
     storyarc_main.exposed = True
 
-    def detailStoryArc(self, StoryArcID, StoryArcName):
+    def detailStoryArc(self, StoryArcID, StoryArcName=None):
         myDB = db.DBConnection()
-        arcinfo = myDB.select("SELECT * from readinglist WHERE StoryArcID=? order by ReadingOrder ASC", [StoryArcID])
+        arcinfo = myDB.select("SELECT * from readinglist WHERE StoryArcID=? and NOT Manual IS 'deleted' order by ReadingOrder ASC", [StoryArcID])
         try:
             cvarcid = arcinfo[0]['CV_ArcID']
             arcpub = arcinfo[0]['Publisher']
+            if StoryArcName is None:
+                StoryArcName = arcinfo[0]['StoryArc']
             lowyear = 9999
             maxyear = 0
             issref = []
@@ -2455,12 +2499,94 @@ class WebInterface(object):
             sdir = mylar.GRABBAG_DIR
 
         if len(issref) > 0:
-            logger.info(issref)
             helpers.updatearc_locs(StoryArcID, issref)
-            arcinfo = myDB.select("SELECT * from readinglist WHERE StoryArcID=? order by ReadingOrder ASC", [StoryArcID])
+            arcinfo = myDB.select("SELECT * from readinglist WHERE StoryArcID=? AND NOT Manual IS 'deleted' order by ReadingOrder ASC", [StoryArcID])
 
         return serve_template(templatename="storyarc_detail.html", title="Detailed Arc list", readlist=arcinfo, storyarcname=StoryArcName, storyarcid=StoryArcID, cvarcid=cvarcid, sdir=sdir)
     detailStoryArc.exposed = True
+
+    def order_edit(self, id, value):
+        storyarcid = id[:id.find('.')]
+        issuearcid = id[id.find('.') +1:]
+        readingorder = value
+        #readingorder = value
+        valid_readingorder = None
+        #validate input here for reading order.
+        try:
+            if int(readingorder) > 0:
+                valid_readingorder = int(readingorder)
+        except ValueError:
+            logger.error('Non-Numeric/Negative readingorder submitted. Rejecting due to sequencing error.')
+            return
+        
+        if valid_readingorder is None:
+            logger.error('invalid readingorder supplied. Rejecting due to sequencing error')
+            return
+
+        myDB = db.DBConnection()
+        readchk = myDB.select("SELECT * FROM readinglist WHERE StoryArcID=? AND NOT Manual is 'deleted' ORDER BY ReadingOrder", [storyarcid])
+        if readchk is None:
+            logger.error('Cannot edit this for some reason (Cannot locate Storyarc) - something is wrong.')
+            return
+
+        new_readorder = []
+        for rc in readchk:
+            if issuearcid == rc['IssueArcID']:
+                oldreadorder = int(rc['ReadingOrder'])
+                new_readorder.append({'IssueArcID':   issuearcid,
+                                      'IssueID':      rc['IssueID'],
+                                      'ReadingOrder': valid_readingorder})
+            else:
+                if int(rc['ReadingOrder']) >= valid_readingorder:
+                    reading_seq = int(rc['ReadingOrder']) + 1
+                else:
+                    reading_seq = int(rc['ReadingOrder']) - 1
+                    if reading_seq == 0:
+                        reading_seq = 1
+
+                new_readorder.append({'IssueArcID':   rc['IssueArcID'],
+                                      'IssueID':      rc['IssueID'],
+                                      'ReadingOrder': reading_seq})
+
+        #we resequence in the following way: 
+        #  everything before the new reading number stays the same
+        #  everything after the new reading order gets incremented
+        #  add in the new reading order at the desired sequence
+        #  check for empty spaces (missing numbers in sequence) and fill them in.
+        logger.fdebug(new_readorder)
+        newrl = 0
+        for rl in sorted(new_readorder, key=itemgetter('ReadingOrder'), reverse=False):
+            if rl['ReadingOrder'] - 1 != newrl:
+                rorder = newrl + 1
+                logger.fdebug(rl['IssueID'] + ' - changing reading order seq to : ' + str(rorder))
+            else:
+                rorder = rl['ReadingOrder']
+                logger.fdebug(rl['IssueID'] + ' - setting reading order seq to : ' + str(rorder))
+
+            rl_ctrl = {"IssueID":           rl['IssueID'],
+                       "IssueArcID":        rl['IssueArcID'],
+                       "StoryArcID":        storyarcid}
+            r1_new = {"ReadingOrder":       rorder}
+            newrl = rorder
+
+            myDB.upsert("readinglist", r1_new, rl_ctrl)
+
+        logger.info('Updated Issue Date for issue #' + str(issuenumber))
+        return value
+
+    order_edit.exposed = True
+
+    def manual_arc_add(self, manual_issueid, manual_readingorder, storyarcid, x=None, y=None):
+
+        logger.fdebug('IssueID to be attached : ' + str(manual_issueid))
+        logger.fdebug('StoryArcID : ' + str(storyarcid))
+        logger.fdebug('Reading Order # : ' + str(manual_readingorder))
+
+        threading.Thread(target=helpers.manualArc, args=[manual_issueid, manual_readingorder, storyarcid]).start()
+
+        raise cherrypy.HTTPRedirect("detailStoryArc?StoryArcID=%s" % storyarcid)
+    manual_arc_add.exposed = True
+
 
     def markreads(self, action=None, **args):
         sendtablet_queue = []
@@ -2500,7 +2626,7 @@ class WebInterface(object):
 
     markreads.exposed = True
 
-    def removefromreadlist(self, IssueID=None, StoryArcID=None, IssueArcID=None, AllRead=None, ArcName=None, delete_type=None):
+    def removefromreadlist(self, IssueID=None, StoryArcID=None, IssueArcID=None, AllRead=None, ArcName=None, delete_type=None, manual=None):
         myDB = db.DBConnection()
         if IssueID:
             myDB.action('DELETE from readlist WHERE IssueID=?', [IssueID])
@@ -2520,7 +2646,11 @@ class WebInterface(object):
             myDB.action('DELETE from nzblog WHERE IssueID LIKE ?', [stid])
             logger.info("[DELETE-ARC] Removed " + str(StoryArcID) + " from Story Arcs.")
         elif IssueArcID:
-            myDB.action('DELETE from readinglist WHERE IssueArcID=?', [IssueArcID])
+            if manual == 'added':
+                myDB.action('DELETE from readinglist WHERE IssueArcID=?', [IssueArcID])
+            else:
+                myDB.upsert("readinglist", {"Manual": 'deleted'}, {"IssueArcID": IssueArcID})
+            #myDB.action('DELETE from readinglist WHERE IssueArcID=?', [IssueArcID])
             logger.info("[DELETE-ARC] Removed " + str(IssueArcID) + " from the Story Arc.")
         elif AllRead:
             myDB.action("DELETE from readlist WHERE Status='Read'")
@@ -2792,6 +2922,9 @@ class WebInterface(object):
             sarc_title = None
             showonreadlist = 1 # 0 won't show storyarcissues on readinglist main page, 1 will show
             for arc in ArcWatch:
+                if arc['Manual'] == 'deleted':
+                    continue
+
                 sarc_title = arc['StoryArc']
                 logger.fdebug('[' + arc['StoryArc'] + '] ' + arc['ComicName'] + ' : ' + arc['IssueNumber'])
 
@@ -3061,7 +3194,7 @@ class WebInterface(object):
                     logger.fdebug(issuechk['ComicName'] + " -- #" + str(issuechk['Issue_Number']))
                     foundcom, prov = search.search_init(ComicName=issuechk['ComicName'], IssueNumber=issuechk['Issue_Number'], ComicYear=issuechk['IssueYear'], SeriesYear=issuechk['SeriesYear'], Publisher=None, IssueDate=None, StoreDate=issuechk['ReleaseDate'], IssueID=issuechk['IssueID'], AlternateSearch=None, UseFuzzy=None, ComicVersion=None, SARC=SARC, IssueArcID=IssueArcID)
 
-                if foundcom == "yes":
+                if foundcom['status'] is True:
                     logger.fdebug('sucessfully found.')
                     #update the status - this is necessary for torrents as they are in 'snatched' status.
                     updater.foundsearch(s_comicid, s_issueid, mode=mode, provider=prov, SARC=SARC, IssueArcID=IssueArcID)
@@ -3120,7 +3253,7 @@ class WebInterface(object):
                     logger.fdebug("-- watched series queue.")
                     logger.fdebug(issuechk['ComicName'] + " -- #" + str(issuechk['Issue_Number']))
                     foundcom, prov = search.search_init(ComicName=issuechk['ComicName'], IssueNumber=issuechk['Issue_Number'], ComicYear=issuechk['IssueYear'], SeriesYear=issuechk['SeriesYear'], Publisher=None, IssueDate=None, StoreDate=issuechk['ReleaseDate'], IssueID=issuechk['IssueID'], AlternateSearch=None, UseFuzzy=None, ComicVersion=None, SARC=SARC, IssueArcID=IssueArcID, mode=None, rsscheck=None, ComicID=None)
-                if foundcom == "yes":
+                if foundcom['status'] is True:
                     updater.foundsearch(s_comicid, s_issueid, mode=mode, provider=prov, SARC=SARC, IssueArcID=IssueArcID)
                 else:
                     logger.fdebug('Watchlist issue not sucessfully found')
@@ -4017,6 +4150,7 @@ class WebInterface(object):
                     "torrent_downloader_rtorrent": helpers.radio(mylar.TORRENT_DOWNLOADER, 2),
                     "torrent_downloader_transmission": helpers.radio(mylar.TORRENT_DOWNLOADER, 3),
                     "torrent_downloader_deluge": helpers.radio(mylar.TORRENT_DOWNLOADER, 4),
+                    "torrent_downloader_qbittorrent": helpers.radio(mylar.TORRENT_DOWNLOADER, 5),
                     "utorrent_host": mylar.UTORRENT_HOST,
                     "utorrent_username": mylar.UTORRENT_USERNAME,
                     "utorrent_password": mylar.UTORRENT_PASSWORD,
@@ -4039,6 +4173,12 @@ class WebInterface(object):
                     "deluge_username": mylar.DELUGE_USERNAME,
                     "deluge_password": mylar.DELUGE_PASSWORD,
                     "deluge_label": mylar.DELUGE_LABEL,
+                    "qbittorrent_host": mylar.QBITTORRENT_HOST,
+                    "qbittorrent_username": mylar.QBITTORRENT_USERNAME,
+                    "qbittorrent_password": mylar.QBITTORRENT_PASSWORD,
+                    "qbittorrent_label": mylar.QBITTORRENT_LABEL,
+                    "qbittorrent_folder": mylar.QBITTORRENT_FOLDER,
+                    "qbittorrent_startonload": helpers.checked(mylar.QBITTORRENT_STARTONLOAD),
                     "blackhole_dir": mylar.BLACKHOLE_DIR,
                     "usenet_retention": mylar.USENET_RETENTION,
                     "use_nzbsu": helpers.checked(mylar.NZBSU),
@@ -4147,6 +4287,10 @@ class WebInterface(object):
                     "telegram_userid": mylar.TELEGRAM_USERID,
                     "enable_extra_scripts": helpers.checked(mylar.ENABLE_EXTRA_SCRIPTS),
                     "extra_scripts": mylar.EXTRA_SCRIPTS,
+                    "enable_snatch_script": helpers.checked(mylar.ENABLE_SNATCH_SCRIPT),
+                    "snatch_script": mylar.SNATCH_SCRIPT,
+                    "enable_pre_scripts": helpers.checked(mylar.ENABLE_PRE_SCRIPTS),
+                    "pre_scripts": mylar.PRE_SCRIPTS,
                     "post_processing": helpers.checked(mylar.POST_PROCESSING),
                     "file_opts": mylar.FILE_OPTS,
                     "enable_meta": helpers.checked(mylar.ENABLE_META),
@@ -4168,8 +4312,6 @@ class WebInterface(object):
                     "config_file": mylar.CONFIG_FILE,
                     "branch_history": 'None',
 #                    "branch_history" : br_hist,
-                    "enable_pre_scripts": helpers.checked(mylar.ENABLE_PRE_SCRIPTS),
-                    "pre_scripts": mylar.PRE_SCRIPTS,
                     "log_dir": mylar.LOG_DIR
                }
         return serve_template(templatename="config.html", title="Settings", config=config, comicinfo=comicinfo)
@@ -4386,8 +4528,9 @@ class WebInterface(object):
         prowl_enabled=0, prowl_onsnatch=0, prowl_keys=None, prowl_priority=None, nma_enabled=0, nma_apikey=None, nma_priority=0, nma_onsnatch=0, pushover_enabled=0, pushover_onsnatch=0, pushover_apikey=None, pushover_userkey=None, pushover_priority=None, boxcar_enabled=0, boxcar_onsnatch=0, boxcar_token=None,
         pushbullet_enabled=0, pushbullet_apikey=None, pushbullet_deviceid=None, pushbullet_onsnatch=0, telegram_enabled=0, telegram_token=None, telegram_userid=None, telegram_onsnatch=0, torrent_downloader=0, torrent_local=0, torrent_seedbox=0, utorrent_host=None, utorrent_username=None, utorrent_password=None, utorrent_label=None,
         rtorrent_host=None, rtorrent_ssl=0, rtorrent_verify=0, rtorrent_authentication='basic', rtorrent_rpc_url=None, rtorrent_username=None, rtorrent_password=None, rtorrent_directory=None, rtorrent_label=None, rtorrent_startonload=0, transmission_host=None, transmission_username=None, transmission_password=None, transmission_directory=None,deluge_host=None, deluge_username=None, deluge_password=None, deluge_label=None,
-        preferred_quality=0, move_files=0, rename_files=0, add_to_csv=1, cvinfo=0, lowercase_filenames=0, enable_rar=0, enable_cover_composition=0, folder_format=None, file_format=None, enable_extra_scripts=0, extra_scripts=None, enable_pre_scripts=0, pre_scripts=None, post_processing=0, file_opts=None, syno_fix=0, search_delay=None, enforce_perms=0, chmod_dir=0777, chmod_file=0660, chowner=None, chgroup=None,
-        tsab=None, destination_dir=None, create_folders=1, replace_spaces=0, replace_char=None, use_minsize=0, minsize=None, use_maxsize=0, maxsize=None, autowant_all=0, autowant_upcoming=0, comic_cover_local=0, zero_level=0, zero_level_n=None, interface=None, swatch=None, dupeconstraint=None, ddump=0, duplicate_dump=None, **kwargs):
+        qbittorrent_host=None, qbittorrent_username=None, qbittorrent_password=None, qbittorrent_label=None, qbittorrent_folder=None, qbittorrent_startonload=0,
+        preferred_quality=0, move_files=0, rename_files=0, add_to_csv=1, cvinfo=0, lowercase_filenames=0, folder_format=None, file_format=None, enable_extra_scripts=0, extra_scripts=None, enable_snatch_script=0, snatch_script=None, enable_pre_scripts=0, pre_scripts=None, post_processing=0, file_opts=None, syno_fix=0, search_delay=None, enforce_perms=0, chmod_dir=0777, chmod_file=0660, chowner=None, chgroup=None,
+        tsab=None, destination_dir=None, create_folders=1, replace_spaces=0, replace_char=None, use_minsize=0, minsize=None, use_maxsize=0, maxsize=None, autowant_all=0, autowant_upcoming=0, comic_cover_local=0, zero_level=0, zero_level_n=None, interface=None, dupeconstraint=None, ddump=0, duplicate_dump=None, **kwargs):
 
         mylar.COMICVINE_API = comicvine_api
         mylar.HTTP_HOST = http_host
@@ -4482,6 +4625,12 @@ class WebInterface(object):
         mylar.DELUGE_USERNAME = deluge_username
         mylar.DELUGE_PASSWORD = deluge_password
         mylar.DELUGE_LABEL = deluge_label
+        mylar.QBITTORRENT_HOST = qbittorrent_host
+        mylar.QBITTORRENT_USERNAME = qbittorrent_username
+        mylar.QBITTORRENT_PASSWORD = qbittorrent_password
+        mylar.QBITTORRENT_LABEL = qbittorrent_label
+        mylar.QBITTORRENT_FOLDER = qbittorrent_folder
+        mylar.QBITTORRENT_STARTONLOAD = int(qbittorrent_startonload)
         mylar.ENABLE_TORRENT_SEARCH = int(enable_torrent_search)
         mylar.ENABLE_TPSE = int(enable_tpse)
         mylar.ENABLE_32P = int(enable_32p)
@@ -4548,10 +4697,12 @@ class WebInterface(object):
         mylar.DUPLICATE_DUMP = duplicate_dump
         mylar.ENABLE_EXTRA_SCRIPTS = enable_extra_scripts
         mylar.EXTRA_SCRIPTS = extra_scripts
+        mylar.ENABLE_SNATCH_SCRIPT = enable_snatch_script
+        mylar.SNATCH_SCRIPT = snatch_script
         mylar.ENABLE_PRE_SCRIPTS = enable_pre_scripts
+        mylar.PRE_SCRIPTS = pre_scripts
         mylar.POST_PROCESSING = post_processing
         mylar.FILE_OPTS = file_opts
-        mylar.PRE_SCRIPTS = pre_scripts
         mylar.ENABLE_META = enable_meta
         mylar.CBR2CBZ_ONLY = cbr2cbz_only
         mylar.CMTAGGER_PATH = cmtagger_path
@@ -5100,6 +5251,10 @@ class WebInterface(object):
             download = True
         else:
             download = False
+
+        if mylar.AUTO_SNATCH is False:
+            logger.warn('Auto-Snatch is not enabled - this will ONLY work with auto-snatch enabled and configured. Aborting request.')
+            return  'Unable to complete request - please enable auto-snatch if required'
 
         torrent_info = helpers.torrentinfo(issueid, torrent_hash, download)
 

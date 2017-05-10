@@ -83,7 +83,7 @@ WeeklyScheduler = None
 VersionScheduler = None
 FolderMonitorScheduler = None
 
-QUEUE = Queue.Queue()
+SNATCHED_QUEUE = Queue.Queue()
 
 DATA_DIR = None
 DBLOCK = False
@@ -188,6 +188,7 @@ CORRECT_METADATA = False
 MOVE_FILES = False
 RENAME_FILES = False
 FOLDER_FORMAT = None
+SETDEFAULTVOLUME = False
 FILE_FORMAT = None
 REPLACE_SPACES = False
 REPLACE_CHAR = None
@@ -298,10 +299,13 @@ QUAL_SCANNER = None
 QUAL_TYPE = None
 QUAL_QUALITY = None
 
-ENABLE_EXTRA_SCRIPTS = 1
+ENABLE_EXTRA_SCRIPTS = False
 EXTRA_SCRIPTS = None
 
-ENABLE_PRE_SCRIPTS = 1
+ENABLE_SNATCH_SCRIPT = False
+SNATCH_SCRIPT = None
+
+ENABLE_PRE_SCRIPTS = False
 PRE_SCRIPTS = None
 
 COUNT_COMICS = 0
@@ -328,7 +332,7 @@ ARC_FOLDERFORMAT = None
 ARC_FILEOPS = 'copy'
 
 CVURL = None
-CV_VERIFY = 0
+CV_VERIFY = True
 CURRENT_WEEKNUMBER = None
 CURRENT_YEAR = None
 PULL_REFRESH = None
@@ -369,9 +373,11 @@ FAILED_DOWNLOAD_HANDLING = 0
 FAILED_AUTO = 0
 
 ENABLE_TORRENTS = 0
-TORRENT_DOWNLOADER = None  #0 = watchfolder, #1 = uTorrent, #2 = rTorrent, #3 = transmission
+TORRENT_DOWNLOADER = None  #0 = watchfolder, #1 = uTorrent, #2 = rTorrent, #3 = transmission, #4 = deluge, #5 = qbittorrent
 MINSEEDS = 0
 
+AUTO_SNATCH = False
+AUTO_SNATCH_SCRIPT = None
 ALLOW_PACKS = False
 
 USE_WATCHDIR = False
@@ -433,6 +439,13 @@ DELUGE_USERNAME = None
 DELUGE_PASSWORD = None
 DELUGE_LABEL = None
 
+USE_QBITTORRENT = False
+QBITTORRENT_HOST = None
+QBITTORRENT_USERNAME = None
+QBITTORRENT_PASSWORD = None
+QBITTORRENT_LABEL = None
+QBITTORRENT_FOLDER = None
+QBITTORRENT_STARTONLOAD = 0
 
 def CheckSection(sec):
     """ Check if INI section exists, if not create it """
@@ -484,7 +497,7 @@ def initialize():
 
     with INIT_LOCK:
         global __INITIALIZED__, DBCHOICE, DBUSER, DBPASS, DBNAME, DYNAMIC_UPDATE, COMICVINE_API, DEFAULT_CVAPI, CVAPI_RATE, CV_HEADERS, BLACKLISTED_PUBLISHERS, FULL_PATH, PROG_DIR, VERBOSE, DAEMON, UPCOMING_SNATCHED, COMICSORT, DATA_DIR, CONFIG_FILE, CFG, CONFIG_VERSION, LOG_DIR, CACHE_DIR, MAX_LOGSIZE, OLDCONFIG_VERSION, OS_DETECT, \
-                queue, WANTED_TAB_OFF, LOCAL_IP, EXT_IP, HTTP_PORT, HTTP_HOST, HTTP_USERNAME, HTTP_PASSWORD, HTTP_ROOT, ENABLE_HTTPS, HTTPS_CERT, HTTPS_KEY, HTTPS_CHAIN, HTTPS_FORCE_ON, HOST_RETURN, API_ENABLED, API_KEY, DOWNLOAD_APIKEY, LAUNCH_BROWSER, GIT_PATH, SAFESTART, NOWEEKLY, AUTO_UPDATE, \
+                SNATCHED_QUEUE, SNPOOL, AUTO_SNATCH, AUTO_SNATCH_SCRIPT, WANTED_TAB_OFF, LOCAL_IP, EXT_IP, HTTP_PORT, HTTP_HOST, HTTP_USERNAME, HTTP_PASSWORD, HTTP_ROOT, ENABLE_HTTPS, HTTPS_CERT, HTTPS_KEY, HTTPS_CHAIN, HTTPS_FORCE_ON, HOST_RETURN, API_ENABLED, API_KEY, DOWNLOAD_APIKEY, LAUNCH_BROWSER, GIT_PATH, SAFESTART, NOWEEKLY, AUTO_UPDATE, \
                 IMPORT_STATUS, IMPORT_FILES, IMPORT_TOTALFILES, IMPORT_CID_COUNT, IMPORT_PARSED_COUNT, IMPORT_FAILURE_COUNT, CHECKENABLED, \
                 CURRENT_VERSION, LATEST_VERSION, CHECK_GITHUB, CHECK_GITHUB_ON_STARTUP, CHECK_GITHUB_INTERVAL, GIT_USER, GIT_BRANCH, USER_AGENT, DESTINATION_DIR, MULTIPLE_DEST_DIRS, CREATE_FOLDERS, DELETE_REMOVE_DIR, \
                 DOWNLOAD_DIR, USENET_RETENTION, SEARCH_INTERVAL, NZB_STARTUP_SEARCH, INTERFACE, SWATCH, DUPECONSTRAINT, DDUMP, DUPLICATE_DUMP, AUTOWANT_ALL, AUTOWANT_UPCOMING, ZERO_LEVEL, ZERO_LEVEL_N, COMIC_COVER_LOCAL, HIGHCOUNT, \
@@ -494,17 +507,18 @@ def initialize():
                 ENABLE_TORZNAB, TORZNAB_NAME, TORZNAB_HOST, TORZNAB_APIKEY, TORZNAB_CATEGORY, TORZNAB_VERIFY, EXPERIMENTAL, ALTEXPERIMENTAL, \
                 USE_RTORRENT, RTORRENT_HOST, RTORRENT_AUTHENTICATION, RTORRENT_RPC_URL, RTORRENT_SSL, RTORRENT_VERIFY, RTORRENT_CA_BUNDLE, RTORRENT_USERNAME, RTORRENT_PASSWORD, RTORRENT_STARTONLOAD, RTORRENT_LABEL, RTORRENT_DIRECTORY, \
                 USE_UTORRENT, UTORRENT_HOST, UTORRENT_USERNAME, UTORRENT_PASSWORD, UTORRENT_LABEL, USE_TRANSMISSION, TRANSMISSION_HOST, TRANSMISSION_USERNAME, TRANSMISSION_PASSWORD, TRANSMISSION_DIRECTORY, USE_DELUGE, DELUGE_HOST, DELUGE_USERNAME, DELUGE_PASSWORD, DELUGE_LABEL,  \
+                USE_QBITTORRENT, QBITTORRENT_HOST, QBITTORRENT_USERNAME, QBITTORRENT_PASSWORD, QBITTORRENT_LABEL, QBITTORRENT_FOLDER, QBITTORRENT_STARTONLOAD, \
                 ENABLE_META, CMTAGGER_PATH, CBR2CBZ_ONLY, CT_TAG_CR, CT_TAG_CBL, CT_CBZ_OVERWRITE, UNRAR_CMD, CT_SETTINGSPATH, CMTAG_VOLUME, CMTAG_START_YEAR_AS_VOLUME, UPDATE_ENDED, INDIE_PUB, BIGGIE_PUB, IGNORE_HAVETOTAL, SNATCHED_HAVETOTAL, PROVIDER_ORDER, TMP_PROV, \
                 dbUpdateScheduler, searchScheduler, RSSScheduler, WeeklyScheduler, VersionScheduler, FolderMonitorScheduler, \
                 ALLOW_PACKS, ENABLE_TORRENTS, TORRENT_DOWNLOADER, MINSEEDS, USE_WATCHDIR, TORRENT_LOCAL, LOCAL_WATCHDIR, TORRENT_SEEDBOX, SEEDBOX_HOST, SEEDBOX_PORT, SEEDBOX_USER, SEEDBOX_PASS, SEEDBOX_WATCHDIR, \
                 ENABLE_RSS, RSS_CHECKINTERVAL, RSS_LASTRUN, FAILED_DOWNLOAD_HANDLING, FAILED_AUTO, ENABLE_TORRENT_SEARCH, ENABLE_TPSE, TPSE_PROXY, TPSE_VERIFY, ENABLE_32P, SEARCH_32P, MODE_32P, KEYS_32P, RSSFEED_32P, USERNAME_32P, PASSWORD_32P, AUTHKEY_32P, PASSKEY_32P, FEEDINFO_32P, VERIFY_32P, SNATCHEDTORRENT_NOTIFY, \
                 PROWL_ENABLED, PROWL_PRIORITY, PROWL_KEYS, PROWL_ONSNATCH, NMA_ENABLED, NMA_APIKEY, NMA_PRIORITY, NMA_ONSNATCH, PUSHOVER_ENABLED, PUSHOVER_PRIORITY, PUSHOVER_APIKEY, PUSHOVER_USERKEY, PUSHOVER_ONSNATCH, BOXCAR_ENABLED, BOXCAR_ONSNATCH, BOXCAR_TOKEN, \
                 PUSHBULLET_ENABLED, PUSHBULLET_APIKEY, PUSHBULLET_DEVICEID, PUSHBULLET_ONSNATCH, LOCMOVE, NEWCOM_DIR, FFTONEWCOM_DIR, \
-                PREFERRED_QUALITY, MOVE_FILES, RENAME_FILES, LOWERCASE_FILENAMES, ENABLE_RAR, ENABLE_COVER_COMPOSITION, USE_MINSIZE, MINSIZE, USE_MAXSIZE, MAXSIZE, CORRECT_METADATA, \
-                FOLDER_FORMAT, FILE_FORMAT, REPLACE_CHAR, REPLACE_SPACES, ADD_TO_CSV, CVINFO, LOG_LEVEL, POST_PROCESSING, POST_PROCESSING_SCRIPT, \
+                PREFERRED_QUALITY, MOVE_FILES, RENAME_FILES, LOWERCASE_FILENAMES, USE_MINSIZE, MINSIZE, USE_MAXSIZE, MAXSIZE, CORRECT_METADATA, \
+                FOLDER_FORMAT, SETDEFAULTVOLUME, FILE_FORMAT, REPLACE_CHAR, REPLACE_SPACES, ADD_TO_CSV, CVINFO, LOG_LEVEL, POST_PROCESSING, POST_PROCESSING_SCRIPT, \
                 FILE_OPTS, SEARCH_DELAY, GRABBAG_DIR, READ2FILENAME, SEND2READ, MAINTAINSERIESFOLDER, TAB_ENABLE, TAB_HOST, TAB_USER, TAB_PASS, TAB_DIRECTORY, \
                 STORYARCDIR, COPY2ARCDIR, ARC_FOLDERFORMAT, ARC_FILEOPS, CVURL, CV_VERIFY, CHECK_FOLDER, ENABLE_CHECK_FOLDER, \
-                COMIC_LOCATION, QUAL_ALTVERS, QUAL_SCANNER, QUAL_TYPE, QUAL_QUALITY, ENABLE_EXTRA_SCRIPTS, EXTRA_SCRIPTS, ENABLE_PRE_SCRIPTS, PRE_SCRIPTS, PULLNEW, ALT_PULL, PULLBYFILE, COUNT_ISSUES, COUNT_HAVES, COUNT_COMICS, \
+                COMIC_LOCATION, QUAL_ALTVERS, QUAL_SCANNER, QUAL_TYPE, QUAL_QUALITY, ENABLE_EXTRA_SCRIPTS, EXTRA_SCRIPTS, ENABLE_SNATCH_SCRIPT, SNATCH_SCRIPT, ENABLE_PRE_SCRIPTS, PRE_SCRIPTS, PULLNEW, ALT_PULL, PULLBYFILE, COUNT_ISSUES, COUNT_HAVES, COUNT_COMICS, \
                 SYNO_FIX, ENFORCE_PERMS, CHMOD_FILE, CHMOD_DIR, CHOWNER, CHGROUP, ANNUALS_ON, CV_ONLY, CV_ONETIMER, CURRENT_WEEKNUMBER, CURRENT_YEAR, PULL_REFRESH, WEEKFOLDER, WEEKFOLDER_LOC, WEEKFOLDER_FORMAT, UMASK, \
                 TELEGRAM_ENABLED, TELEGRAM_TOKEN, TELEGRAM_USERID
 
@@ -550,7 +564,7 @@ def initialize():
         if not COMICVINE_API:
             COMICVINE_API = None
         CVAPI_RATE = check_setting_int(CFG, 'General', 'cvapi_rate', 2)
-        CV_VERIFY = bool(check_setting_int(CFG, 'General', 'cv_verify', 0))
+        CV_VERIFY = bool(check_setting_int(CFG, 'General', 'cv_verify', 1))
         HTTP_HOST = check_setting_str(CFG, 'General', 'http_host', '0.0.0.0')
         HTTP_USERNAME = check_setting_str(CFG, 'General', 'http_username', '')
         HTTP_PASSWORD = check_setting_str(CFG, 'General', 'http_password', '')
@@ -614,6 +628,7 @@ def initialize():
         MOVE_FILES = bool(check_setting_int(CFG, 'General', 'move_files', 0))
         RENAME_FILES = bool(check_setting_int(CFG, 'General', 'rename_files', 0))
         FOLDER_FORMAT = check_setting_str(CFG, 'General', 'folder_format', '$Series ($Year)')
+        SETDEFAULTVOLUME = bool(check_setting_int(CFG, 'General', 'setdefaultvolume', 0))
         FILE_FORMAT = check_setting_str(CFG, 'General', 'file_format', '$Series $Issue ($Year)')
         USE_BLACKHOLE = bool(check_setting_int(CFG, 'General', 'use_blackhole', 0))
         BLACKHOLE_DIR = check_setting_str(CFG, 'General', 'blackhole_dir', '')
@@ -709,7 +724,8 @@ def initialize():
         LOG_LEVEL = check_setting_str(CFG, 'General', 'log_level', '')
         ENABLE_EXTRA_SCRIPTS = bool(check_setting_int(CFG, 'General', 'enable_extra_scripts', 0))
         EXTRA_SCRIPTS = check_setting_str(CFG, 'General', 'extra_scripts', '')
-
+        ENABLE_SNATCH_SCRIPT = bool(check_setting_int(CFG, 'General', 'enable_snatch_script', 0))
+        SNATCH_SCRIPT = check_setting_str(CFG, 'General', 'snatch_script', '')
         ENABLE_PRE_SCRIPTS = bool(check_setting_int(CFG, 'General', 'enable_pre_scripts', 0))
         PRE_SCRIPTS = check_setting_str(CFG, 'General', 'pre_scripts', '')
         POST_PROCESSING = bool(check_setting_int(CFG, 'General', 'post_processing', 1))
@@ -755,6 +771,8 @@ def initialize():
         SEEDBOX_WATCHDIR = check_setting_str(CFG, 'Torrents', 'seedbox_watchdir', '')
 
         ENABLE_TORRENT_SEARCH = bool(check_setting_int(CFG, 'Torrents', 'enable_torrent_search', 0))
+        AUTO_SNATCH = bool(check_setting_int(CFG, 'Torrents', 'auto_snatch', 0))
+        AUTO_SNATCH_SCRIPT = check_setting_str(CFG, 'Torrents', 'auto_snatch_script', '')
         ENABLE_TPSE = bool(check_setting_int(CFG, 'Torrents', 'enable_tpse', 0))
         TPSE_PROXY = check_setting_str(CFG, 'Torrents', 'tpse_proxy', '')
         TPSE_VERIFY = bool(check_setting_int(CFG, 'Torrents', 'tpse_verify', 1))
@@ -856,6 +874,9 @@ def initialize():
         elif TORRENT_DOWNLOADER == 4:
             TORRENT_LOCAL = False
             USE_DELUGE = True
+        elif TORRENT_DOWNLOADER == 5:
+            TORRENT_LOCAL = False
+            USE_QBITTORRENT = True
         else:
                 TORRENT_DOWNLOADER = 0
                 USE_WATCHDIR = True
@@ -875,6 +896,13 @@ def initialize():
         DELUGE_USERNAME = check_setting_str(CFG, 'Deluge', 'deluge_username', '')
         DELUGE_PASSWORD = check_setting_str(CFG, 'Deluge', 'deluge_password', '')
         DELUGE_LABEL = check_setting_str(CFG, 'Deluge', 'deluge_label', '')
+
+        QBITTORRENT_HOST = check_setting_str(CFG, 'qBittorrent', 'qbittorrent_host', '')
+        QBITTORRENT_USERNAME = check_setting_str(CFG, 'qBittorrent', 'qbittorrent_username', '')
+        QBITTORRENT_PASSWORD = check_setting_str(CFG, 'qBittorrent', 'qbittorrent_password', '')
+        QBITTORRENT_LABEL = check_setting_str(CFG, 'qBittorrent', 'qbittorrent_label', '')
+        QBITTORRENT_FOLDER = check_setting_str(CFG, 'qBittorrent', 'qbittorrent_folder', '')
+        QBITTORRENT_STARTONLOAD = bool(check_setting_int(CFG, 'qBittorrent', 'qbittorrent_startonload', 0))
         
         #add torrents to provider counter.
         if ENABLE_TORRENT_SEARCH:
@@ -1239,6 +1267,8 @@ def initialize():
         if LOCMOVE:
             helpers.updateComicLocation()
 
+        SNPOOL = None
+
         #logger.fdebug('platform detected as : ' + OS_DETECT)
 
         #Ordering comics here
@@ -1289,7 +1319,6 @@ def initialize():
                                                      threadName="FOLDERMONITOR",
                                                      runImmediately=True,
                                                      delay=60)
-
 
         # Store the original umask
         UMASK = os.umask(0)
@@ -1451,6 +1480,7 @@ def config_write():
     new_config['General']['move_files'] = int(MOVE_FILES)
     new_config['General']['rename_files'] = int(RENAME_FILES)
     new_config['General']['folder_format'] = FOLDER_FORMAT
+    new_config['General']['setdefaultvolume'] = int(SETDEFAULTVOLUME)
     new_config['General']['file_format'] = FILE_FORMAT
     #new_config['General']['use_blackhole'] = int(USE_BLACKHOLE)
     new_config['General']['blackhole_dir'] = BLACKHOLE_DIR
@@ -1489,6 +1519,8 @@ def config_write():
     new_config['General']['log_level'] = LOG_LEVEL
     new_config['General']['enable_extra_scripts'] = int(ENABLE_EXTRA_SCRIPTS)
     new_config['General']['extra_scripts'] = EXTRA_SCRIPTS
+    new_config['General']['enable_snatch_script'] = int(ENABLE_SNATCH_SCRIPT)
+    new_config['General']['snatch_script'] = SNATCH_SCRIPT
     new_config['General']['enable_pre_scripts'] = int(ENABLE_PRE_SCRIPTS)
     new_config['General']['pre_scripts'] = PRE_SCRIPTS
     new_config['General']['post_processing'] = int(POST_PROCESSING)
@@ -1535,6 +1567,8 @@ def config_write():
 
     new_config['Torrents'] = {}
     new_config['Torrents']['enable_torrents'] = int(ENABLE_TORRENTS)
+    new_config['Torrents']['auto_snatch'] = int(AUTO_SNATCH)
+    new_config['Torrents']['auto_snatch_script'] = AUTO_SNATCH_SCRIPT
     new_config['Torrents']['minseeds'] = int(MINSEEDS)
     new_config['Torrents']['torrent_local'] = int(TORRENT_LOCAL)
     new_config['Torrents']['local_watchdir'] = LOCAL_WATCHDIR
@@ -1595,12 +1629,12 @@ def config_write():
     new_config['NZBsu']['nzbsu'] = int(NZBSU)
     new_config['NZBsu']['nzbsu_uid'] = NZBSU_UID
     new_config['NZBsu']['nzbsu_apikey'] = NZBSU_APIKEY
-    new_config['NZBsu']['nzbsu_verify'] = NZBSU_VERIFY
+    new_config['NZBsu']['nzbsu_verify'] = int(NZBSU_VERIFY)
 
     new_config['DOGnzb'] = {}
     new_config['DOGnzb']['dognzb'] = int(DOGNZB)
     new_config['DOGnzb']['dognzb_apikey'] = DOGNZB_APIKEY
-    new_config['DOGnzb']['dognzb_verify'] = DOGNZB_VERIFY
+    new_config['DOGnzb']['dognzb_verify'] = int(DOGNZB_VERIFY)
 
     new_config['Experimental'] = {}
     new_config['Experimental']['experimental'] = int(EXPERIMENTAL)
@@ -1612,7 +1646,7 @@ def config_write():
     new_config['Torznab']['torznab_host'] = TORZNAB_HOST
     new_config['Torznab']['torznab_apikey'] = TORZNAB_APIKEY
     new_config['Torznab']['torznab_category'] = TORZNAB_CATEGORY
-    new_config['Torznab']['torznab_verify'] = TORZNAB_VERIFY
+    new_config['Torznab']['torznab_verify'] = int(TORZNAB_VERIFY)
 
     new_config['Newznab'] = {}
     new_config['Newznab']['newznab'] = int(NEWZNAB)
@@ -1634,7 +1668,15 @@ def config_write():
     new_config['Deluge']['deluge_username'] = DELUGE_USERNAME
     new_config['Deluge']['deluge_password'] = DELUGE_PASSWORD
     new_config['Deluge']['deluge_label'] = DELUGE_LABEL
-    
+
+    new_config['qBittorrent'] = {}
+    new_config['qBittorrent']['qbittorrent_host'] = QBITTORRENT_HOST
+    new_config['qBittorrent']['qbittorrent_username'] = QBITTORRENT_USERNAME
+    new_config['qBittorrent']['qbittorrent_password'] = QBITTORRENT_PASSWORD
+    new_config['qBittorrent']['qbittorrent_label'] = QBITTORRENT_LABEL
+    new_config['qBittorrent']['qbittorrent_folder'] = QBITTORRENT_FOLDER
+    new_config['qBittorrent']['qbittorrent_startonload'] = int(QBITTORRENT_STARTONLOAD)
+
     # Need to unpack the extra newznabs for saving in config.ini
     flattened_newznabs = []
     for newznab in EXTRA_NEWZNABS:
@@ -1698,6 +1740,12 @@ def start():
             #SCHED.add_interval_job(updater.dbUpdate, hours=48)
             #SCHED.add_interval_job(search.searchforissue, minutes=SEARCH_INTERVAL)
 
+            if all([ENABLE_TORRENTS, AUTO_SNATCH, OS_DETECT != 'Windows']) and any([TORRENT_DOWNLOADER == 2, TORRENT_DOWNLOADER == 4]):
+                logger.info('Auto-Snatch of comleted torrents enabled & attempting to backgroun load....')
+                SNPOOL = threading.Thread(target=helpers.worker_main, args=(SNATCHED_QUEUE,), name="AUTO-SNATCHER")
+                SNPOOL.start()
+                logger.info('Succesfully started Auto-Snatch add-on - will now monitor for completed torrents on client....')
+
             #start the db updater scheduler
             logger.info('Initializing the DB Updater.')
             dbUpdateScheduler.thread.start()
@@ -1756,14 +1804,14 @@ def dbcheck():
 
     c.execute('CREATE TABLE IF NOT EXISTS comics (ComicID TEXT UNIQUE, ComicName TEXT, ComicSortName TEXT, ComicYear TEXT, DateAdded TEXT, Status TEXT, IncludeExtras INTEGER, Have INTEGER, Total INTEGER, ComicImage TEXT, ComicPublisher TEXT, ComicLocation TEXT, ComicPublished TEXT, NewPublish TEXT, LatestIssue TEXT, LatestDate TEXT, Description TEXT, QUALalt_vers TEXT, QUALtype TEXT, QUALscanner TEXT, QUALquality TEXT, LastUpdated TEXT, AlternateSearch TEXT, UseFuzzy TEXT, ComicVersion TEXT, SortOrder INTEGER, DetailURL TEXT, ForceContinuing INTEGER, ComicName_Filesafe TEXT, AlternateFileName TEXT, ComicImageURL TEXT, ComicImageALTURL TEXT, DynamicComicName TEXT, AllowPacks TEXT, Type TEXT, Corrected_SeriesYear TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS issues (IssueID TEXT, ComicName TEXT, IssueName TEXT, Issue_Number TEXT, DateAdded TEXT, Status TEXT, Type TEXT, ComicID TEXT, ArtworkURL Text, ReleaseDate TEXT, Location TEXT, IssueDate TEXT, Int_IssueNumber INT, ComicSize TEXT, AltIssueNumber TEXT, IssueDate_Edit TEXT, ImageURL TEXT, ImageURL_ALT TEXT)')
-    c.execute('CREATE TABLE IF NOT EXISTS snatched (IssueID TEXT, ComicName TEXT, Issue_Number TEXT, Size INTEGER, DateAdded TEXT, Status TEXT, FolderName TEXT, ComicID TEXT, Provider TEXT, Hash TEXT)')
+    c.execute('CREATE TABLE IF NOT EXISTS snatched (IssueID TEXT, ComicName TEXT, Issue_Number TEXT, Size INTEGER, DateAdded TEXT, Status TEXT, FolderName TEXT, ComicID TEXT, Provider TEXT, Hash TEXT, crc TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS upcoming (ComicName TEXT, IssueNumber TEXT, ComicID TEXT, IssueID TEXT, IssueDate TEXT, Status TEXT, DisplayComicName TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS nzblog (IssueID TEXT, NZBName TEXT, SARC TEXT, PROVIDER TEXT, ID TEXT, AltNZBName TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS weekly (SHIPDATE TEXT, PUBLISHER TEXT, ISSUE TEXT, COMIC VARCHAR(150), EXTRA TEXT, STATUS TEXT, ComicID TEXT, IssueID TEXT, CV_Last_Update TEXT, DynamicName TEXT, weeknumber TEXT, year TEXT, rowid INTEGER PRIMARY KEY)')
 #    c.execute('CREATE TABLE IF NOT EXISTS sablog (nzo_id TEXT, ComicName TEXT, ComicYEAR TEXT, ComicIssue TEXT, name TEXT, nzo_complete TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS importresults (impID TEXT, ComicName TEXT, ComicYear TEXT, Status TEXT, ImportDate TEXT, ComicFilename TEXT, ComicLocation TEXT, WatchMatch TEXT, DisplayName TEXT, SRID TEXT, ComicID TEXT, IssueID TEXT, Volume TEXT, IssueNumber TEXT, DynamicName TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS readlist (IssueID TEXT, ComicName TEXT, Issue_Number TEXT, Status TEXT, DateAdded TEXT, Location TEXT, inCacheDir TEXT, SeriesYear TEXT, ComicID TEXT, StatusChange TEXT)')
-    c.execute('CREATE TABLE IF NOT EXISTS readinglist(StoryArcID TEXT, ComicName TEXT, IssueNumber TEXT, SeriesYear TEXT, IssueYEAR TEXT, StoryArc TEXT, TotalIssues TEXT, Status TEXT, inCacheDir TEXT, Location TEXT, IssueArcID TEXT, ReadingOrder INT, IssueID TEXT, ComicID TEXT, StoreDate TEXT, IssueDate TEXT, Publisher TEXT, IssuePublisher TEXT, IssueName TEXT, CV_ArcID TEXT, Int_IssueNumber INT, DynamicComicName TEXT, Volume TEXT)')
+    c.execute('CREATE TABLE IF NOT EXISTS readinglist(StoryArcID TEXT, ComicName TEXT, IssueNumber TEXT, SeriesYear TEXT, IssueYEAR TEXT, StoryArc TEXT, TotalIssues TEXT, Status TEXT, inCacheDir TEXT, Location TEXT, IssueArcID TEXT, ReadingOrder INT, IssueID TEXT, ComicID TEXT, StoreDate TEXT, IssueDate TEXT, Publisher TEXT, IssuePublisher TEXT, IssueName TEXT, CV_ArcID TEXT, Int_IssueNumber INT, DynamicComicName TEXT, Volume TEXT, Manual TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS annuals (IssueID TEXT, Issue_Number TEXT, IssueName TEXT, IssueDate TEXT, Status TEXT, ComicID TEXT, GCDComicID TEXT, Location TEXT, ComicSize TEXT, Int_IssueNumber INT, ComicName TEXT, ReleaseDate TEXT, ReleaseComicID TEXT, ReleaseComicName TEXT, IssueDate_Edit TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS rssdb (Title TEXT UNIQUE, Link TEXT, Pubdate TEXT, Site TEXT, Size TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS futureupcoming (ComicName TEXT, IssueNumber TEXT, ComicID TEXT, IssueID TEXT, IssueDate TEXT, Publisher TEXT, Status TEXT, DisplayComicName TEXT, weeknumber TEXT, year TEXT)')
@@ -2137,6 +2185,11 @@ def dbcheck():
     except sqlite3.OperationalError:
         c.execute('ALTER TABLE snatched ADD COLUMN Hash TEXT')
 
+    try:
+        c.execute('SELECT crc from snatched')
+    except sqlite3.OperationalError:
+        c.execute('ALTER TABLE snatched ADD COLUMN crc TEXT')
+
     ## -- Upcoming Table --
 
     try:
@@ -2201,6 +2254,11 @@ def dbcheck():
         c.execute('SELECT Volume from readinglist')
     except sqlite3.OperationalError:
         c.execute('ALTER TABLE readinglist ADD COLUMN Volume TEXT')
+
+    try:
+        c.execute('SELECT Manual from readinglist')
+    except sqlite3.OperationalError:
+        c.execute('ALTER TABLE readinglist ADD COLUMN Manual TEXT')
 
     ## -- searchresults Table --
     try:
@@ -2394,6 +2452,17 @@ def halt():
                 FolderMonitorScheduler.thread.join(10)
             except:
                 pass
+
+            if SNPOOL is not None:
+                logger.info('Terminating the auto-snatch thread.')
+                try:
+                    SNPOOL.join(10)
+                    logger.info('Joined pool for termination -  successful')
+                except KeyboardInterrupt:
+                    SNATCHED_QUEUE.put('exit')
+                    SNPOOL.join(5)
+                except AssertionError:
+                    os._exit(0)
 
             __INITIALIZED__ = False
 
