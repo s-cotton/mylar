@@ -1080,6 +1080,9 @@ class WebInterface(object):
                     #updater.forceRescan(mi['ComicID'])
                     issuestoArchive.append(IssueID)
                 elif action == 'Wanted' or action == 'Retry':
+                    if mi['Status'] == 'Wanted':
+                        logger.fdebug('Issue already set to Wanted status - no need to change it again.')
+                        continue
                     if action == 'Retry': newaction = 'Wanted'
                     logger.fdebug(u"Marking %s %s as %s" % (comicname, mi['Issue_Number'], newaction))
                     issuesToAdd.append(IssueID)
@@ -1335,7 +1338,7 @@ class WebInterface(object):
         threading.Thread(target=self.queueissue, kwargs=kwargs).start()
     queueit.exposed = True
 
-    def queueissue(self, mode, ComicName=None, ComicID=None, ComicYear=None, ComicIssue=None, IssueID=None, new=False, redirect=None, SeriesYear=None, SARC=None, IssueArcID=None, manualsearch=None, Publisher=None, pullinfo=None):
+    def queueissue(self, mode, ComicName=None, ComicID=None, ComicYear=None, ComicIssue=None, IssueID=None, new=False, redirect=None, SeriesYear=None, SARC=None, IssueArcID=None, manualsearch=None, Publisher=None, pullinfo=None, pullweek=None, pullyear=None):
         logger.fdebug('ComicID:' + str(ComicID))
         logger.fdebug('mode:' + str(mode))
         now = datetime.datetime.now()
@@ -1389,25 +1392,26 @@ class WebInterface(object):
                 controlValueDict = {"IssueArcID": IssueArcID}
                 newStatus = {"Status": "Snatched"}
             myDB.upsert("readinglist", newStatus, controlValueDict)
-            #raise cherrypy.HTTPRedirect("readlist")
             return foundcom
 
-        elif ComicID is None and mode == 'pullwant':
+        elif mode == 'pullwant':  #and ComicID is None
             #this is for marking individual comics from the pullist to be downloaded.
+            #--comicid & issueid may both be known (or either) at any given point if alt_pull = 2
             #because ComicID and IssueID will both be None due to pullist, it's probably
             #better to set both to some generic #, and then filter out later...
             IssueDate = pullinfo
             try:
-                ComicYear = str(pullinfo)[:4]
+                ComicYear = IssueDate[:4]
             except:
                 ComicYear == now.year
             if Publisher == 'COMICS': Publisher = None
             logger.info(u"Marking " + ComicName + " " + ComicIssue + " as wanted...")
-            foundcom, prov = search.search_init(ComicName=ComicName, IssueNumber=ComicIssue, ComicYear=ComicYear, SeriesYear=None, Publisher=Publisher, IssueDate=IssueDate, StoreDate=IssueDate, IssueID=None, AlternateSearch=None, UseFuzzy=None, ComicVersion=None, allow_packs=False)
+            foundcom, prov = search.search_init(ComicName=ComicName, IssueNumber=ComicIssue, ComicYear=ComicYear, SeriesYear=None, Publisher=Publisher, IssueDate=IssueDate, StoreDate=IssueDate, IssueID=IssueID, ComicID=ComicID, AlternateSearch=None, mode=mode, UseFuzzy=None, ComicVersion=None, allow_packs=False)
             if foundcom['status'] is True:
-                logger.info(u"Downloaded " + ComicName + " " + ComicIssue)
-            raise cherrypy.HTTPRedirect("pullist")
-            #return
+                logger.info('[ONE-OFF MODE] Successfully Downloaded ' + ComicName + ' ' + ComicIssue)
+                return updater.foundsearch(ComicID, IssueID, mode=mode, provider=prov, hash=foundcom['info']['t_hash'], pullinfo={'weeknumber': pullweek, 'year': pullyear})
+            return
+
         elif mode == 'want' or mode == 'want_ann' or manualsearch:
             cdname = myDB.selectone("SELECT * from comics where ComicID=?", [ComicID]).fetchone()
             ComicName_Filesafe = cdname['ComicName_Filesafe']
@@ -1591,6 +1595,25 @@ class WebInterface(object):
         raise cherrypy.HTTPRedirect("comicDetails?ComicID=%s" % comicid)
     archiveissue.exposed = True
 
+    def pullSearch(self, week, year):
+        myDB = db.DBConnection()
+        #retrieve a list of all the issues that are in a Wanted state from the pull that we can search for.
+        ps = myDB.select("SELECT * from weekly WHERE Status='Wanted' AND weeknumber=? AND year=?", [int(week), year])
+        if ps is None:
+            logger.info('No items are marked as Wanted on the pullist to be searched for at this time')
+            return
+        issuesToSearch = []
+        for p in ps:
+            if p['IssueID'] is not None:
+                issuesToSearch.append(p['IssueID'])
+
+        if len(issuesToSearch) > 0:
+            logger.info('Now force searching for ' + str(len(issuesToSearch)) + ' issues from the pullist for week ' + str(week))
+            threading.Thread(target=search.searchIssueIDList, args=[issuesToSearch]).start()
+        else:
+            logger.info('Issues are marked as Wanted, but no issue information is available yet so I cannot search for anything. Try Recreating the pullist if you think this is error.')
+            return
+    pullSearch.exposed = True
 
     def pullist(self, week=None, year=None):
         myDB = db.DBConnection()
@@ -1631,6 +1654,7 @@ class WebInterface(object):
 
             watchlibrary = helpers.listLibrary()
             issueLibrary = helpers.listIssues(weekinfo['weeknumber'], weekinfo['year'])
+            oneofflist = helpers.listoneoffs(weekinfo['weeknumber'], weekinfo['year'])
 
             for weekly in w_results:
                 xfound = False
@@ -1649,7 +1673,12 @@ class WebInterface(object):
                             break
 
                 else:
-                    haveit = "No"
+                    xlist = [x['Status'] for x in oneofflist if x['IssueID'] == weekly['IssueID']]
+                    if xlist:
+                        haveit = 'OneOff'
+                        tmp_status = xlist[0]
+                    else:
+                        haveit = "No"
 
                 linkit = None
                 if all([weekly['ComicID'] is not None, weekly['ComicID'] != '']) and haveit == 'No':
@@ -1707,7 +1736,6 @@ class WebInterface(object):
             weeklyresults = sorted(weeklyresults, key=itemgetter('PUBLISHER', 'COMIC'), reverse=False)
         else:
             self.manualpull()
-
         if week:
             return serve_template(templatename="weeklypull.html", title="Weekly Pull", weeklyresults=weeklyresults, pullfilter=True, weekfold=weekinfo['week_folder'], wantedcount=wantedcount, weekinfo=weekinfo)
         else:
@@ -2006,6 +2034,9 @@ class WebInterface(object):
 #           ann_cnt = anncnt[0][0]
             ann_list += annuals_list
             issues += annuals_list
+
+        issues_tmp = sorted(issues, key=itemgetter('ReleaseDate'), reverse=True)
+        issues = sorted(issues_tmp, key=itemgetter('Status'), reverse=True)
 
         for curResult in issues:
             baseissues = {'wanted': 1, 'snatched': 2, 'failed': 3}
@@ -4201,7 +4232,7 @@ class WebInterface(object):
                     "newznab_api": mylar.NEWZNAB_APIKEY,
                     "newznab_uid": mylar.NEWZNAB_UID,
                     "newznab_enabled": helpers.checked(mylar.NEWZNAB_ENABLED),
-                    "extra_newznabs": mylar.EXTRA_NEWZNABS,
+                    "extra_newznabs": sorted(mylar.EXTRA_NEWZNABS, key=itemgetter(5), reverse=True),
                     "enable_rss": helpers.checked(mylar.ENABLE_RSS),
                     "rss_checkinterval": mylar.RSS_CHECKINTERVAL,
                     "provider_order": mylar.PROVIDER_ORDER,
@@ -5186,13 +5217,14 @@ class WebInterface(object):
         return mylar.rsscheck.torrents(pickfeed='4', seriesname=search)
     search_32p.exposed = True
 
-    def testNMA(self):
-        nma = notifiers.NMA()
+    def testNMA(self, apikey):
+        nma = notifiers.NMA(test_apikey=apikey)
         result = nma.test_notify()
-        if result == True:
-            return "Successfully sent NMA test -  check to make sure it worked"
+        if result['status'] == True:
+            return result['message']
         else:
-            return "Error sending test message to NMA"
+            logger.warn('APIKEY used for test was : %s' % apikey)
+            return result['message']
     testNMA.exposed = True
 
     def testprowl(self):
@@ -5222,13 +5254,14 @@ class WebInterface(object):
             return "Error sending test message to Pushover"
     testpushover.exposed = True
 
-    def testpushbullet(self):
-        pushbullet = notifiers.PUSHBULLET()
+    def testpushbullet(self, apikey):
+        pushbullet = notifiers.PUSHBULLET(test_apikey=apikey)
         result = pushbullet.test_notify()
-        if result == True:
-            return "Successfully sent Pushbullet test -  check to make sure it worked"
+        if result['status'] == True:
+            return result['message']
         else:
-            return "Error sending test message to Pushbullet"
+            logger.warn('APIKEY used for test was : %s' % apikey)
+            return result['message']
     testpushbullet.exposed = True
 
     def testtelegram(self):

@@ -378,6 +378,7 @@ MINSEEDS = 0
 
 AUTO_SNATCH = False
 AUTO_SNATCH_SCRIPT = None
+LOCAL_TORRENT_PP = False
 ALLOW_PACKS = False
 
 USE_WATCHDIR = False
@@ -497,7 +498,7 @@ def initialize():
 
     with INIT_LOCK:
         global __INITIALIZED__, DBCHOICE, DBUSER, DBPASS, DBNAME, DYNAMIC_UPDATE, COMICVINE_API, DEFAULT_CVAPI, CVAPI_RATE, CV_HEADERS, BLACKLISTED_PUBLISHERS, FULL_PATH, PROG_DIR, VERBOSE, DAEMON, UPCOMING_SNATCHED, COMICSORT, DATA_DIR, CONFIG_FILE, CFG, CONFIG_VERSION, LOG_DIR, CACHE_DIR, MAX_LOGSIZE, OLDCONFIG_VERSION, OS_DETECT, \
-                SNATCHED_QUEUE, SNPOOL, AUTO_SNATCH, AUTO_SNATCH_SCRIPT, WANTED_TAB_OFF, LOCAL_IP, EXT_IP, HTTP_PORT, HTTP_HOST, HTTP_USERNAME, HTTP_PASSWORD, HTTP_ROOT, ENABLE_HTTPS, HTTPS_CERT, HTTPS_KEY, HTTPS_CHAIN, HTTPS_FORCE_ON, HOST_RETURN, API_ENABLED, API_KEY, DOWNLOAD_APIKEY, LAUNCH_BROWSER, GIT_PATH, SAFESTART, NOWEEKLY, AUTO_UPDATE, \
+                SNATCHED_QUEUE, SNPOOL, AUTO_SNATCH, AUTO_SNATCH_SCRIPT, LOCAL_TORRENT_PP, WANTED_TAB_OFF, LOCAL_IP, EXT_IP, HTTP_PORT, HTTP_HOST, HTTP_USERNAME, HTTP_PASSWORD, HTTP_ROOT, ENABLE_HTTPS, HTTPS_CERT, HTTPS_KEY, HTTPS_CHAIN, HTTPS_FORCE_ON, HOST_RETURN, API_ENABLED, API_KEY, DOWNLOAD_APIKEY, LAUNCH_BROWSER, GIT_PATH, SAFESTART, NOWEEKLY, AUTO_UPDATE, \
                 IMPORT_STATUS, IMPORT_FILES, IMPORT_TOTALFILES, IMPORT_CID_COUNT, IMPORT_PARSED_COUNT, IMPORT_FAILURE_COUNT, CHECKENABLED, \
                 CURRENT_VERSION, LATEST_VERSION, CHECK_GITHUB, CHECK_GITHUB_ON_STARTUP, CHECK_GITHUB_INTERVAL, GIT_USER, GIT_BRANCH, USER_AGENT, DESTINATION_DIR, MULTIPLE_DEST_DIRS, CREATE_FOLDERS, DELETE_REMOVE_DIR, \
                 DOWNLOAD_DIR, USENET_RETENTION, SEARCH_INTERVAL, NZB_STARTUP_SEARCH, INTERFACE, SWATCH, DUPECONSTRAINT, DDUMP, DUPLICATE_DUMP, AUTOWANT_ALL, AUTOWANT_UPCOMING, ZERO_LEVEL, ZERO_LEVEL_N, COMIC_COVER_LOCAL, HIGHCOUNT, \
@@ -520,7 +521,7 @@ def initialize():
                 STORYARCDIR, COPY2ARCDIR, ARC_FOLDERFORMAT, ARC_FILEOPS, CVURL, CV_VERIFY, CHECK_FOLDER, ENABLE_CHECK_FOLDER, \
                 COMIC_LOCATION, QUAL_ALTVERS, QUAL_SCANNER, QUAL_TYPE, QUAL_QUALITY, ENABLE_EXTRA_SCRIPTS, EXTRA_SCRIPTS, ENABLE_SNATCH_SCRIPT, SNATCH_SCRIPT, ENABLE_PRE_SCRIPTS, PRE_SCRIPTS, PULLNEW, ALT_PULL, PULLBYFILE, COUNT_ISSUES, COUNT_HAVES, COUNT_COMICS, \
                 SYNO_FIX, ENFORCE_PERMS, CHMOD_FILE, CHMOD_DIR, CHOWNER, CHGROUP, ANNUALS_ON, CV_ONLY, CV_ONETIMER, CURRENT_WEEKNUMBER, CURRENT_YEAR, PULL_REFRESH, WEEKFOLDER, WEEKFOLDER_LOC, WEEKFOLDER_FORMAT, UMASK, \
-                TELEGRAM_ENABLED, TELEGRAM_TOKEN, TELEGRAM_USERID
+                TELEGRAM_ENABLED, TELEGRAM_TOKEN, TELEGRAM_USERID, TELEGRAM_ONSNATCH
 
         if __INITIALIZED__:
             return False
@@ -773,6 +774,7 @@ def initialize():
         ENABLE_TORRENT_SEARCH = bool(check_setting_int(CFG, 'Torrents', 'enable_torrent_search', 0))
         AUTO_SNATCH = bool(check_setting_int(CFG, 'Torrents', 'auto_snatch', 0))
         AUTO_SNATCH_SCRIPT = check_setting_str(CFG, 'Torrents', 'auto_snatch_script', '')
+        LOCAL_TORRENT_PP = bool(check_setting_int(CFG, 'Torrents', 'local_torrent_pp', 0))
         ENABLE_TPSE = bool(check_setting_int(CFG, 'Torrents', 'enable_tpse', 0))
         TPSE_PROXY = check_setting_str(CFG, 'Torrents', 'tpse_proxy', '')
         TPSE_VERIFY = bool(check_setting_int(CFG, 'Torrents', 'tpse_verify', 1))
@@ -1569,6 +1571,7 @@ def config_write():
     new_config['Torrents']['enable_torrents'] = int(ENABLE_TORRENTS)
     new_config['Torrents']['auto_snatch'] = int(AUTO_SNATCH)
     new_config['Torrents']['auto_snatch_script'] = AUTO_SNATCH_SCRIPT
+    new_config['Torrents']['local_torrent_pp'] = int(LOCAL_TORRENT_PP)
     new_config['Torrents']['minseeds'] = int(MINSEEDS)
     new_config['Torrents']['torrent_local'] = int(TORRENT_LOCAL)
     new_config['Torrents']['local_watchdir'] = LOCAL_WATCHDIR
@@ -1806,7 +1809,7 @@ def dbcheck():
     c.execute('CREATE TABLE IF NOT EXISTS issues (IssueID TEXT, ComicName TEXT, IssueName TEXT, Issue_Number TEXT, DateAdded TEXT, Status TEXT, Type TEXT, ComicID TEXT, ArtworkURL Text, ReleaseDate TEXT, Location TEXT, IssueDate TEXT, Int_IssueNumber INT, ComicSize TEXT, AltIssueNumber TEXT, IssueDate_Edit TEXT, ImageURL TEXT, ImageURL_ALT TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS snatched (IssueID TEXT, ComicName TEXT, Issue_Number TEXT, Size INTEGER, DateAdded TEXT, Status TEXT, FolderName TEXT, ComicID TEXT, Provider TEXT, Hash TEXT, crc TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS upcoming (ComicName TEXT, IssueNumber TEXT, ComicID TEXT, IssueID TEXT, IssueDate TEXT, Status TEXT, DisplayComicName TEXT)')
-    c.execute('CREATE TABLE IF NOT EXISTS nzblog (IssueID TEXT, NZBName TEXT, SARC TEXT, PROVIDER TEXT, ID TEXT, AltNZBName TEXT)')
+    c.execute('CREATE TABLE IF NOT EXISTS nzblog (IssueID TEXT, NZBName TEXT, SARC TEXT, PROVIDER TEXT, ID TEXT, AltNZBName TEXT, OneOff TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS weekly (SHIPDATE TEXT, PUBLISHER TEXT, ISSUE TEXT, COMIC VARCHAR(150), EXTRA TEXT, STATUS TEXT, ComicID TEXT, IssueID TEXT, CV_Last_Update TEXT, DynamicName TEXT, weeknumber TEXT, year TEXT, rowid INTEGER PRIMARY KEY)')
 #    c.execute('CREATE TABLE IF NOT EXISTS sablog (nzo_id TEXT, ComicName TEXT, ComicYEAR TEXT, ComicIssue TEXT, name TEXT, nzo_complete TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS importresults (impID TEXT, ComicName TEXT, ComicYear TEXT, Status TEXT, ImportDate TEXT, ComicFilename TEXT, ComicLocation TEXT, WatchMatch TEXT, DisplayName TEXT, SRID TEXT, ComicID TEXT, IssueID TEXT, Volume TEXT, IssueNumber TEXT, DynamicName TEXT)')
@@ -1817,7 +1820,8 @@ def dbcheck():
     c.execute('CREATE TABLE IF NOT EXISTS futureupcoming (ComicName TEXT, IssueNumber TEXT, ComicID TEXT, IssueID TEXT, IssueDate TEXT, Publisher TEXT, Status TEXT, DisplayComicName TEXT, weeknumber TEXT, year TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS failed (ID TEXT, Status TEXT, ComicID TEXT, IssueID TEXT, Provider TEXT, ComicName TEXT, Issue_Number TEXT, NZBName TEXT, DateFailed TEXT)')
     c.execute('CREATE TABLE IF NOT EXISTS searchresults (SRID TEXT, results Numeric, Series TEXT, publisher TEXT, haveit TEXT, name TEXT, deck TEXT, url TEXT, description TEXT, comicid TEXT, comicimage TEXT, issues TEXT, comicyear TEXT, ogcname TEXT)')
-    c.execute('CREATE TABLE IF NOT EXISTS ref32p (ComicID TEXT UNIQUE, ID TEXT, Series TEXT)')
+    c.execute('CREATE TABLE IF NOT EXISTS ref32p (ComicID TEXT UNIQUE, ID TEXT, Series TEXT, Updated TEXT)')
+    c.execute('CREATE TABLE IF NOT EXISTS oneoffhistory (ComicName TEXT, IssueNumber TEXT, ComicID TEXT, IssueID TEXT, Status TEXT, weeknumber TEXT, year TEXT)')
     conn.commit
     c.close
     #new
@@ -2124,6 +2128,10 @@ def dbcheck():
     except sqlite3.OperationalError:
         c.execute('ALTER TABLE nzblog ADD COLUMN AltNZBName TEXT')
 
+    try:
+        c.execute('SELECT OneOff from nzblog')
+    except sqlite3.OperationalError:
+        c.execute('ALTER TABLE nzblog ADD COLUMN OneOff TEXT')
     ## -- Annuals Table --
 
     try:
@@ -2297,6 +2305,13 @@ def dbcheck():
         c.execute('SELECT DateFailed from Failed')
     except sqlite3.OperationalError:
         c.execute('ALTER TABLE Failed ADD COLUMN DateFailed TEXT')
+
+    ## -- Failed Table --
+    try:
+        c.execute('SELECT Updated from ref32p')
+    except sqlite3.OperationalError:
+        c.execute('ALTER TABLE ref32p ADD COLUMN Updated TEXT')
+
 
     #if it's prior to Wednesday, the issue counts will be inflated by one as the online db's everywhere
     #prepare for the next 'new' release of a series. It's caught in updater.py, so let's just store the
