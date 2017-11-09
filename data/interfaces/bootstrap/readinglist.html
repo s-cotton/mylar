@@ -7,6 +7,9 @@
 %>
 
 <%def name="headerIncludes()">
+
+  
+  <!--
   <div class="row">
     <div class="col-xs-12">
       <div class="btn-group pull-right">
@@ -27,9 +30,39 @@
       </div>
     </div>
   </div>
+  -->
 </%def>
 
 <%def name="body()">
+  <script type="text/javascript">
+    var initialData = initialData || {};
+  <%
+  import simplejson as json
+  %>
+  % if len(issuelist) > 0 :
+    <% json_output = json.dumps( [dict(ix) for ix in issuelist] ) %>
+    initialData.issues = ${json_output}
+  % endif
+  </script>
+
+  <div class="container-fluid comicdetails">
+    <div class="row">
+        <div class="col-xs-12">
+            <h1><span class="glyphicon glyphicon-book"></span>&nbsp;&nbsp;Reading List Management</h1>
+        </div>
+    </div>
+    
+    <div class="row">
+      <div class="comic-pager col-xs-12"></div>
+      <div class="grid-browser col-xs-12"></div>
+      <div class="table-browser col-xs-12"></div>
+      <div class="cover-browser col-xs-12"></div>
+      <div class="comic-pager col-xs-12"></div>
+    </div>
+  </div>
+
+  <hr />
+
   <div class="row">
     <div class="col-xs-12">
       <h1>
@@ -252,4 +285,5 @@
 
 <%def name="javascriptIncludes()">
   <script type="text/javascript" src="interfaces/bootstrap/js/views/readlist.js"></script>
+  <script type="text/javascript" src="interfaces/bootstrap/js/views/readinglist.js"></script>
 </%def>

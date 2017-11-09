@@ -17,7 +17,7 @@
 #  along with Mylar.  If not, see <http://www.gnu.org/licenses/>.
 
 import mylar
-from mylar import db, mb, importer, search, PostProcessor, versioncheck, logger
+from mylar import db, mb, importer, search, PostProcessor, versioncheck, logger, updater
 import simplejson as simplejson
 import cherrypy
 import os
@@ -27,6 +27,7 @@ import imghdr
 from operator import itemgetter
 from cherrypy.lib.static import serve_file, serve_download
 import datetime
+import threading
 
 cmd_list = ['getIndex', 'getComic', 'getUpcoming', 'getWanted', 'getHistory',
             'getLogs', 'clearLogs','findComic', 'addComic', 'delComic',
@@ -252,7 +253,15 @@ class Api(object):
             self.id = kwargs['id']
 
         try:
-            importer.addComictoDB(self.id)
+            commaPosition = self.id.upper().find(",");
+            if commaPosition < 0:
+                comicsToAdd = [self.id]
+            else:
+                comicsToAdd = self.id.split(",");
+            logger.fdebug("Refreshing comic: %s" % comicsToAdd)
+            threading.Thread(target=updater.dbUpdate, args=[comicsToAdd]).start()
+            #updater.dbUpdate(comicsToAdd)
+            self.data = 'OK'
         except Exception, e:
             self.data = e
 
@@ -266,7 +275,8 @@ class Api(object):
             self.id = kwargs['id']
 
         try:
-            importer.addComictoDB(self.id)
+            threading.Thread(target=importer.addComictoDB, args=[self.id]).start()
+            #importer.addComictoDB(self.id)
         except Exception, e:
             self.data = e
 
